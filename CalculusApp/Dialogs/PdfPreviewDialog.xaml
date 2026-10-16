@@ -1,0 +1,347 @@
+<Window x:Class="CalculusApp.Dialogs.PdfPreviewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:CalculusApp.Controls"
+        Title="Vista Previa de PDF - Infinite Calculus" 
+        Height="840" Width="1160"
+        MinHeight="600" MinWidth="850"
+        WindowStartupLocation="CenterOwner"
+        Background="#2D2D30"
+        FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <!-- Dark Tool Button Style -->
+        <Style x:Key="PreviewToolBtn" TargetType="Button">
+            <Setter Property="Background" Value="#2E2E33"/>
+            <Setter Property="Foreground" Value="#EEEEF0"/>
+            <Setter Property="BorderBrush" Value="#4A4A52"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5,10,5"/>
+            <Setter Property="Margin" Value="2,0,2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#404048"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#6A6A78"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1E1E22"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Accent Primary Button Style -->
+        <Style x:Key="PreviewPrimaryBtn" TargetType="Button" BasedOn="{StaticResource PreviewToolBtn}">
+            <Setter Property="Background" Value="#2D7A46"/>
+            <Setter Property="BorderBrush" Value="#3EA861"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#358E52"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#215B34"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PreviewToggleBtn" TargetType="ToggleButton">
+            <Setter Property="Background" Value="#2E2E33"/>
+            <Setter Property="Foreground" Value="#EEEEF0"/>
+            <Setter Property="BorderBrush" Value="#4A4A52"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5,8,5"/>
+            <Setter Property="Margin" Value="2,0,2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#4E4280"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#7E6ED0"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#8A8A98"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- High-Contrast Dark ComboBox Styles -->
+        <ControlTemplate x:Key="DarkComboBoxToggleButton" TargetType="ToggleButton">
+            <Border x:Name="border" Background="#26262C" BorderBrush="#585868" BorderThickness="1" CornerRadius="3">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="22"/>
+                    </Grid.ColumnDefinitions>
+                    <Path x:Name="arrow" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Data="M 0 0 L 4 4 L 8 0 Z" Fill="#FFFFFF"/>
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="border" Property="Background" Value="#35353E"/>
+                    <Setter TargetName="border" Property="BorderBrush" Value="#78788C"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="border" Property="Background" Value="#1C1C22"/>
+                    <Setter TargetName="border" Property="BorderBrush" Value="#7E6ED0"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,6,10,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#3E3E4C"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#554499"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" 
+                                          Template="{StaticResource DarkComboBoxToggleButton}" 
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                          ClickMode="Press"/>
+                            <ContentPresenter Name="ContentSite" 
+                                              IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="10,3,26,3"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                            <Popup Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" 
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid Name="DropDown"
+                                      SnapsToDevicePixels="True"                
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="#202026"
+                                            BorderThickness="1"
+                                            BorderBrush="#585868"
+                                            CornerRadius="4"
+                                            Margin="0,2,0,4">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="3" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <ScrollViewer Margin="2" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. Top Controls Bar -->
+        <Border Grid.Row="0" Background="#1E1E22" BorderBrush="#383840" BorderThickness="0,0,0,1" Padding="8,6,8,6">
+            <DockPanel LastChildFill="False">
+                <!-- Left Section: Document title & Sidebar toggle -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ToggleButton x:Name="ToggleThumbnailsBtn" Style="{StaticResource PreviewToggleBtn}" IsChecked="True" 
+                                  ToolTip="Mostrar / Ocultar barra de miniaturas" Click="OnToggleThumbnailsClick">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🖼️" Margin="0,0,4,0"/>
+                            <TextBlock Text="Miniaturas"/>
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <Rectangle Width="1" Height="20" Fill="#3E3E46" Margin="8,0,8,0"/>
+
+                    <!-- Page Navigation -->
+                    <Button x:Name="PrevPageBtn" Style="{StaticResource PreviewToolBtn}" ToolTip="Página anterior (RePág)" Click="OnPrevPageClick">
+                        <TextBlock Text="◀"/>
+                    </Button>
+
+                    <Border Background="#121215" BorderBrush="#505060" BorderThickness="1" CornerRadius="3" Margin="4,0,4,0" Padding="10,4,10,4" VerticalAlignment="Center">
+                        <TextBlock x:Name="PageIndicatorText" Text="Página 1 de 1" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
+                    </Border>
+
+                    <Button x:Name="NextPageBtn" Style="{StaticResource PreviewToolBtn}" ToolTip="Página siguiente (AvPág)" Click="OnNextPageClick">
+                        <TextBlock Text="▶"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- Center Section: Zoom controls -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <Button x:Name="ZoomOutBtn" Style="{StaticResource PreviewToolBtn}" ToolTip="Reducir zoom (Ctrl -)" Click="OnZoomOutClick">
+                        <TextBlock Text="➖" FontSize="10"/>
+                    </Button>
+
+                    <ComboBox x:Name="ZoomPresetCombo" Width="145" Height="28" VerticalContentAlignment="Center" Margin="4,0,4,0"
+                              Style="{StaticResource DarkComboBoxStyle}"
+                              SelectionChanged="OnZoomPresetChanged">
+                        <ComboBoxItem Content="Ajustar al Ancho" IsSelected="True"/>
+                        <ComboBoxItem Content="Página Completa"/>
+                        <ComboBoxItem Content="50%"/>
+                        <ComboBoxItem Content="75%"/>
+                        <ComboBoxItem Content="100%"/>
+                        <ComboBoxItem Content="125%"/>
+                        <ComboBoxItem Content="150%"/>
+                        <ComboBoxItem Content="200%"/>
+                    </ComboBox>
+
+                    <Button x:Name="ZoomInBtn" Style="{StaticResource PreviewToolBtn}" ToolTip="Aumentar zoom (Ctrl +)" Click="OnZoomInClick">
+                        <TextBlock Text="➕" FontSize="10"/>
+                    </Button>
+
+                    <Border Background="#121215" BorderBrush="#505060" BorderThickness="1" CornerRadius="3" Margin="6,0,4,0" Padding="8,4,8,4" VerticalAlignment="Center" ToolTip="Nivel de zoom actual">
+                        <TextBlock x:Name="ZoomPercentLabel" Text="100%" Foreground="#00E5FF" FontSize="12" FontWeight="Bold"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right Section: Action Buttons -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="SavePdfBtn" Style="{StaticResource PreviewPrimaryBtn}" Click="OnSavePdfClick" ToolTip="Guardar documento como archivo PDF (Ctrl+S)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💾" Margin="0,0,5,0"/>
+                            <TextBlock Text="Guardar PDF..."/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="PrintBtn" Style="{StaticResource PreviewToolBtn}" Margin="6,0,6,0" Click="OnPrintClick" ToolTip="Imprimir documento (Ctrl+P)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🖨️" Margin="0,0,5,0"/>
+                            <TextBlock Text="Imprimir..."/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="CloseBtn" Style="{StaticResource PreviewToolBtn}" Click="OnCloseClick" ToolTip="Cerrar vista previa (Esc)">
+                        <TextBlock Text="✖ Cerrar"/>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 2. Main Work Area (Sidebar + Document Viewport) -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ThumbnailsCol" Width="200" MinWidth="140" MaxWidth="300"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Thumbnails Panel -->
+            <Border Grid.Column="0" x:Name="ThumbnailsBorder" Background="#1A1A1D" BorderBrush="#323238" BorderThickness="0,0,1,0">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top" Background="#161619" Padding="10,8,10,8" BorderBrush="#2A2A30" BorderThickness="0,0,0,1">
+                        <TextBlock x:Name="ThumbnailsHeader" Text="PÁGINAS DEL DOCUMENTO" FontSize="11" FontWeight="Bold" Foreground="#888894"/>
+                    </Border>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="ThumbnailsContainer" Margin="10,12,10,12">
+                            <!-- Page thumbnail items will be populated dynamically -->
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Splitter between thumbnails and viewport -->
+            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="#26262A" ShowsPreview="False"/>
+
+            <!-- Right: Document Viewport with WorksheetView -->
+            <Border Grid.Column="2" Background="#3E3E42">
+                <controls:WorksheetView x:Name="PreviewWorksheetView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            </Border>
+        </Grid>
+
+        <!-- 3. Bottom Status Bar -->
+        <Border Grid.Row="2" Background="#18181A" BorderBrush="#2C2C32" BorderThickness="0,1,0,0" Padding="12,4,12,4">
+            <DockPanel LastChildFill="False">
+                <TextBlock x:Name="StatusInfoText" DockPanel.Dock="Left" Foreground="#9E9EA8" FontSize="11" 
+                           Text="Modo: Vectorial de alta fidelidad | 8.5 x 11.0 pulg (Carta) | Use la rueda del mouse con Ctrl para hacer zoom"/>
+                <TextBlock x:Name="StatusDocTitle" DockPanel.Dock="Right" Foreground="#B0B0BC" FontSize="11" FontWeight="SemiBold" Text="Infinite Calculus"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

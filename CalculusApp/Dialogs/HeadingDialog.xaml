@@ -1,0 +1,49 @@
+<Window x:Class="CalculusApp.Dialogs.HeadingDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Modify Heading" 
+        Height="280" Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F7"
+        FontFamily="Segoe UI">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Assignment Title:" VerticalAlignment="Center" Margin="0,0,12,10"/>
+        <TextBox x:Name="TitleBox" Grid.Row="0" Grid.Column="1" Height="26" VerticalContentAlignment="Center" Margin="0,0,0,10"/>
+
+        <!-- Subtitle -->
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Subtitle / Brand:" VerticalAlignment="Center" Margin="0,0,12,10"/>
+        <TextBox x:Name="SubtitleBox" Grid.Row="1" Grid.Column="1" Height="26" VerticalContentAlignment="Center" Margin="0,0,0,10"/>
+
+        <!-- Teacher -->
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Teacher Name:" VerticalAlignment="Center" Margin="0,0,12,10"/>
+        <TextBox x:Name="TeacherBox" Grid.Row="2" Grid.Column="1" Height="26" VerticalContentAlignment="Center" Margin="0,0,0,10"/>
+
+        <!-- Checkboxes -->
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,4,0,12">
+            <CheckBox x:Name="NameCheck" Content="Name" IsChecked="True" Margin="0,0,16,0"/>
+            <CheckBox x:Name="DateCheck" Content="Date" IsChecked="True" Margin="0,0,16,0"/>
+            <CheckBox x:Name="PeriodCheck" Content="Period" IsChecked="True"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" Width="75" Height="26" IsDefault="True" Click="OnOkClick" Margin="0,0,8,0"/>
+            <Button Content="Cancel" Width="75" Height="26" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

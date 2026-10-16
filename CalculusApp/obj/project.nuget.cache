@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "vnes3cSbzUk=",
+  "success": true,
+  "projectFilePath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\pdfsharp\\6.5.0\\pdfsharp.6.5.0.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\wpfmath\\2.1.0\\wpfmath.2.1.0.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\xamlmath.shared\\2.1.0\\xamlmath.shared.2.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,1 @@
+Count: 2 -> --screenshot C:\NEOSERV\FUENTES2\CALCULO\snapshot.png

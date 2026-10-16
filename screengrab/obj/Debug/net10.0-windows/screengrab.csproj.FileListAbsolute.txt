@@ -1,0 +1,14 @@
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\bin\Debug\net10.0-windows\screengrab.exe
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\bin\Debug\net10.0-windows\screengrab.deps.json
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\bin\Debug\net10.0-windows\screengrab.runtimeconfig.json
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\bin\Debug\net10.0-windows\screengrab.dll
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\bin\Debug\net10.0-windows\screengrab.pdb
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.GeneratedMSBuildEditorConfig.editorconfig
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.AssemblyInfoInputs.cache
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.AssemblyInfo.cs
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.csproj.CoreCompileInputs.cache
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.dll
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\refint\screengrab.dll
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.pdb
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\screengrab.genruntimeconfig.cache
+c:\NEOSERV\FUENTES2\CALCULO\screengrab\obj\Debug\net10.0-windows\ref\screengrab.dll

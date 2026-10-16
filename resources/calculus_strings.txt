@@ -1,0 +1,718 @@
+﻿MContinuityOptions
+MDiffAppGraphicalComparisonOptions
+MLimitsAtVerticalAsymptotesOptions
+MLimitsBasicOptions
+MLimitsAtHolesOptions
+MLimitsDerivativeFormOptions
+MLimitsAtInfinityOptions
+MDifferentiationPowerRuleTangentOptions
+MIntegrationAreaByLimitsOptions
+MLimitsAtKinksJumpsOptions
+MDiffAppGraphicalComparisonGenerator
+Graphical comparison of f, f', and f''
+MDifferentiationPowerRuleTangentGenerator
+Slope, tangent, and normal lines
+MIntegrationAreaByLimitsGenerator
+Area under a curve by limits
+MContinuityGenerator
+Continuity - Determining and classifying
+MCustomQuestionGenerator
+Custom question
+First Fundamental Theorem of Calculus
+Second Fundamental Theorem of Calculus
+Derivative, definition
+Differential equations
+Definition of the derivative
+Higher order derivatives
+Fundamental Theorem of Calculus (First)
+Fundamental Theorem of Calculus (Second)
+Limits
+MLimitsAtVerticalAsymptotesGenerator
+MLimitsAtInfinityGenerator
+MLimitsAtKinksJumpsGenerator
+MLimitsAtHolesGenerator
+MLimitsBasicGenerator
+MLimitsDerivativeFormGenerator
+In form of definition of derivative
+Separable differential equations
+Tangent line to a function at a point
+Tangent line approximations (differentials)
+Continuity
+Limits in form of definition of derivative
+Area under a curve by limit of sums
+Differential Equations
+Jump discontinuity at: 
+Step discontinuity at: 
+Removable discontinuity at: 
+Point discontinuity at: 
+Essential discontinuity at: 
+Infinite discontinuity at: 
+Oscillating discontinuity at: 
+  You may use the provided graph to sketch the function.
+Continuity, Determining and Classifying
+numQuestionsLabel
+Number of questions:
+Question Type
+questionTypeGroup
+IDC_CHECK_GRAPH
+Continuity - Determining and Classifying
+Provide a blank graph
+Provide a graph of the function
+Determine continuity, find and classify discontinuities if any
+Clearly continuous polynomial functions
+No inflection points exist.
+Inflection point at: 
+Inflection points at: 
+Discontinuity at: 
+find the x-coordinates of all points of inflection
+IDC_CHECK_INFLECTION
+x-coordinates of inflection points
+No vertical asymptotes exist.
+Vertical asymptote at: 
+Vertical asymptotes at: 
+No horizontal asymptotes exist.
+Horizontal asymptote at: 
+Horizontal asymptotes at: 
+Slant asymptote: 
+No critical points exist.
+Critical point at: 
+Critical points at: 
+Sketch the graph of each function.
+asymptotes
+x-coordinates of the critical points
+x-coordinates of the inflection points
+.  Using this information, sketch the graph of the function.
+IDC_CHECK_CRITICAL_NUMBERS
+Graph size:
+graph of the function.
+Asymptotes
+x-coordinates of critical points
+Given the graph of 
+, sketch an approximate graph of 
+, sketch a possible graph of 
+find the x-coordinates of all critical points
+  The graph of [eval(s,t)] is provided.
+  The graph of [eval(v,t)] is provided.
+  You may use the blank graphs to sketch [eval(s,t)] and [eval(v,t)].
+  You may use the blank graphs to sketch [eval(v,t)] and [eval(a,t)].
+  You may use the blank graph to sketch [eval(s,t)].
+  You may use the blank graph to sketch [eval(v,t)].
+IDC_CHECK_GRAPH_FUNCTION
+Provide blank graphs to sketch relevant functions
+With the graph of the given function
+A graphic designer is asked to create a movie poster with a 
+Which points on the graph of 
+Which point on the graph of 
+IDC_RADIO_BOTH_ANSWERS
+Answers:
+Numeric answer only
+Possible setup and numeric answer
+Provide blank graph to sketch function to be minimized/maximized
+choice answers in order to fit on page.<font>
+Equation: 
+Problem setup and numeric answer
+Solving equation required (before or after differentiating):
+Differential Equations - Exponential Growth and Decay
+buttonGroupAnswers
+radioButtonAnswerExact
+radioButtonAnswerApproximate
+radioButtonAnswerBoth
+checkBoxGraph
+Find the general solution of each differential equation.
+  You may use the provided graph to make a rough sketch of the slope field.
+Differential Equations - Introduction
+Blank graph
+Function on right side of equation:
+Differential Equations - Separable
+Sketch the slope field for each differential equation.
+Differential Equations - Slope Fields
+IDC_RADIO_GIVEN_DIFFERENTIAL_EQUATION
+Given the differential equation, sketch the slope field
+Given the slope field, find a possible differential equation
+Right side of differential equation contains x and y:
+Provide graph for sketching
+Show setup in answer
+IDC_CHECK_TANGENT
+IDC_CHECK_COTANGENT
+Inverse tangent
+Inverse cotangent
+Tangent
+Cotangent
+IDC_CHECK_ANSWER_SETUP
+Answers include setup
+Differentiation - Definition of the Derivative
+For each problem, find the indicated derivative with respect to [x].
+Differentiation - Higher Order Derivatives
+Derivative order:
+buttonGroupDerivativeType
+Find derivative:
+??? Answers may vary.  Given answer assumes equation not changed before 
+   Tangent: 
+IDC_RADIO_TANGENT
+The tangent line
+The secant line and tangent line
+Find derivative of inverse function:
+No horizontal tangent line exits.
+For each problem, find the derivative of the function at the given value.
+Applications of Differentiation - Slope, Tangent, and Normal Lines
+IDC_RADIO_4_TANGENT
+Derivative at value
+Points of horizontal tangents (all problems have solutions)
+Points of horizontal tangents (some problems don't have solutions)
+Tangent line to function at point
+Provide a graph of the curves
+Unevaluated integral
+Numeric answer
+Evaluate each limit.
+  You may use the provided graph to sketch the curve.
+Definite Integration - Area Under a Curve by Limit of Sums
+radioButtonAnswerOnly
+radioButtonAnswerAndSetup
+radioButtonLimit
+Definite Integration - Area Under a Curve by Limits
+Answer only
+Possible setup and answer
+Provide graph of the function
+Evaluate limit of sum as n goes to infinity
+Find area under curve using limit as n goes to infinity of:
+Evaluate each indefinite integral.
+IDC_RADIO_UDV_ANSWER
+With question
+With Answer
+Express each definite integral in terms of [u], but do not evaluate.
+Evaluate each definite integral.
+Express the integral in terms of u, but do not evaluate
+Evaluate the integral using two methods
+Evaluate the integral using any method
+Definite Integration - First Fundamental Theorem of Calculus
+Evaluate each indefinite integral.  Use the provided substitution.
+Polynomial
+IDC_CHECK_INVERSE_TANGENT
+Integral results in function:
+IDC_CHECK_COSECANT_COTANGENT
+IDC_CHECK_SECANT_TANGENT
+  You may use the provided graph to sketch the curve and trapezoids.
+  You may use the provided graph to sketch the curve and rectangles.
+IDC_CHECK_ALSO_INTEGRAL
+Provide graph of the function and rectangles
+Also find evaluated integral
+  The function data and Riemann sums are also illustrated in a graph.
+  You may use the provided graph to sketch the function data and Riemann sums.
+IDC_COMBO_GRAPH_SIZE
+Provide a graph of the function data and rectangles
+Definite Integration - Second Fundamental Theorem of Calculus
+  Set up, but do not evaluate the integral.
+  You may use the provided graph to sketch the base.
+  A graph representing the base is provided.
+Provide a graph of the base
+Provide formula or equation
+Evaluate each limit using L'H??pital's Rule.
+Limits - At Removable Discontinuities
+Limit (x-value) range:
+Allow limits at fractions
+Limits - At Infinity
+Has limit:
+Limits - At Jump Discontinuities and Kinks
+One-sided limit
+Two-sided limit
+Jumps (Two-sided limits don't exist)
+Kinks (Two-sided limits exist)
+Include limits at fractions
+Limits - At Essential Discontinuities
+At Essential Discontinuities (Limits don't exist)
+Distractors (Limits exist)
+Limits - By Direct Evaluation
+IDC_CHECK_POLYNOMIAL
+  You may use a graphing calculator to sketch the function.
+Limits - In Form of Definition of Derivative
+f(x) in definition of derivative is:
+  You may use the provided graph to sketch the two functions.
+  The graph shows the function needed to find the root.
+Custom Question
+Variables - not available in Infinite Calculus since topics have this option
+actionToggleAnswers
+:/res/Toolbar/Scramble Answers.svg
+actionScrambleQuestionsBySet
+actionGraphAndGraphPaper
+actionScrambleQuestionsAll
+actionScrambleQuestionsByDirections
+actionConsolidateQuestionSets
+actionScrambleQuestions
+:/res/Toolbar/Scramble Questions.svg
+actionAboutKutaWorks
+:/res/Toolbar/Kuta Works.svg
+menuKutaWorks
+statusNumQuestionsLabel
+Show/hide answers
+Show/hide the answers
+Change the number of the first question
+Scramble questions within each set   
+Scramble the questions within each question set
+Regenerate all questions
+Distribute dead space at bottom of each page to questions
+Graph and graph paper...
+Create and print graphs
+Scramble all questions in assignment
+Scramble all questions in the assignment
+Scramble questions by directions
+Scramble questions with the same directions
+Consolidate identical question sets
+Merge equivalent question sets
+Scramble questions
+Reorder question sets by their directions
+Using Kuta Works...
+Kuta Works
+18 questions
+Current question sets (2):
+Current question sets
+:/res/Toolbar/Scramble Questions Dark.svg
+:/res/Toolbar/Scramble Answers Dark.svg
+Scramble questions within each set
+ScrambleQuestionsButton
+ToggleAnswersToolbarButton
+Highlight these questions
+1onSetScrambleQuestions()
+1questionSetContextMenu(QPoint)
+Enter number for first question
+%n question(s)
+Current question sets (%1):
+Enter your own question
+Could not create question generator. The topic may be unavailable.
+www.kutasoftware.com
+Kuta Software
+KutaSoftware.com
+Infinite Precalculus
+Precalculus
+Infinite Calculus
+Calculus
+All Kuta Software files
+dropQuestionNumber
+dragQuestionNumber
+on_actionShowAnswers_toggled
+on_actionShowOneQuestion_triggered
+on_actionShowTwoQuestionsLeftRight_triggered
+on_actionShowTwoQuestionsTopBottom_triggered
+on_actionShowThreeQuestions_triggered
+on_actionShowFourQuestions_triggered
+MQuestionWidget*
+setQuestion
+MQuestion*
+pQuestion
+QList<MQuestion*>
+toggleAnswers
+MAcuityGenerateAdditionalQuestionsDialog
+MGraphSettings
+MUserGraphElementListWidget
+MQuestionWidget
+on_actionToggleAnswers_triggered
+on_actionScrambleQuestionsBySet_triggered
+onSetScrambleQuestions
+questionSetContextMenu
+on_actionGraphAndGraphPaper_triggered
+on_actionScrambleQuestionsAll_triggered
+on_actionScrambleQuestionsByDirections_triggered
+on_actionConsolidateQuestionSets_triggered
+on_actionAboutKutaWorks_triggered
+showAnswers
+on_alwaysChangeAnswers_clicked
+MAddGraphToChoiceDlg
+MCustomQuestionOptions
+on_configGraph_clicked
+on_answerConfigGraph_clicked
+on_choiceAConfigGraph_clicked
+on_choiceBConfigGraph_clicked
+on_choiceCConfigGraph_clicked
+on_choiceDConfigGraph_clicked
+MAcuityGenerateAdditionalQuestionsThreadController
+MGraphDialog
+on_actionPrint_one_graph_triggered
+clearSelectedQuestions
+selectQuestionAdditional
+selectQuestionExclusive
+selectQuestionsExclusive
+deselectQuestion
+onActionQuestionChangeOptions
+onActionQuestionChangeDirections
+onActionQuestionEdit
+onActionQuestionMoveUp
+onActionQuestionMoveDown
+onActionQuestionRegen
+onActionQuestionDelete
+onActionQuestionToFreeResponse
+onActionQuestionToMultipleChoice
+onActionQuestionScrambleChoices
+onActionQuestionIncreaseSpace
+onActionQuestionDecreaseSpace
+onActionQuestionPresentationMode
+onActionQuestionExport
+onActionQuestionContext
+onActionQuestionNext
+onActionQuestionPrevious
+MQueryNumQuestionsDlg
+on_numQuestions_textChanged
+MAddGraphToQuestionDlg
+redrawQuestionPreview
+redrawAnswerPreview
+on_partOfQuestion_toggled
+MUserGraphElementWidget
+kutasoftware.com
+.kutasoftware.com
+MExpression: MIntegral
+MEquation size check
+MGraph
+Line graph & compound ineq
+Geo Graphs check
+Integrals
+Qt %1 (%2) - Integrals Print Test
+integral(2x+1)
+integral(2xy+1, y)
+integral((x/2)^2 + 1)
+integral((x/2)^2/2)
+integral((x/2)^2/2/2)
+integral((1/3)aa)
+integral(ln(z), -5, 5)
+integral(log(3, e^x), x, -PI, PI)
+integral(2sin(theta)-theta/2, 0, 2*PI)
+integral(integral(1/xx))
+integral(2/root(3, x)) / 20
+Equations
+Qt %1 (%2) - Equations Print Test
+Qt %1 (%2) - MGraph Print Test
+MLineGraph
+Qt %1 (%2) - Line Graph Print Test
+Kuta Software LLC
+GeoGraphs
+Qt %1 (%2) - Geo Graphs Print Test
+Question %1 selected
+Next question
+Previous question
+1onActionQuestionChangeOptions()
+1onActionQuestionChangeDirections()
+1onActionQuestionEdit()
+1onActionQuestionMoveUp()
+1onActionQuestionMoveDown()
+1onActionQuestionRegen()
+1onActionQuestionDelete()
+1onActionQuestionToFreeResponse()
+1onActionQuestionToMultipleChoice()
+1onActionQuestionScrambleChoices()
+1onActionQuestionIncreaseSpace()
+1onActionQuestionDecreaseSpace()
+1onActionQuestionPresentationMode()
+1onActionQuestionExport()
+1onActionQuestionContext()
+1onActionQuestionNext()
+1onActionQuestionPrevious()
+(GRAPH)
+(LINE GRAPH)
+integral
+integral(
+Invalid Limit
+MIntegral
+integral(%s)
+integral(%s, %s, %s)
+integral(%s, %s)
+integral(%s, %s, %s, %s)
+Invalid integral (AM77)
+Integral of %s
+Invalid Integral (XN2)
+MLinearEquation
+MGraphFeature
+MGraphFunction
+MGraphPoint
+  - Answer Element
+M3DGraph
+MGeometryGraph
+Horizontal Asymptote
+Exactly two expressions/equations required.  Start and stop are optional.
+First parameter must be an expression or equation
+Second parameter must be an expression or equation
+First point is not on graph
+Second point is not on graph
+Third point is not on graph
+Center is not on graph
+Circle goes off graph
+Ellipse goes off graph
+Arc goes off graph
+Only 2 questions could be generated.
+Only %n unique question(s) could be generated.
+Generating question #%1 of %2...
+Answers to %1
+Answers to %1 (ID: %2)
+?? %1 Kuta Software LLC.  All rights reserved.  Made with %2.
+Worksheet by Kuta Software LLC
+AnswersRevealed
+The minimum number of questions that you can scale to is %1.
+Shorten the assignment by deleting some question sets and then try again.
+You can only scale the number of questions into the range %1 to %2.
+Custom questions cannot be duplicated.
+Question sets from other programs can only be shortened.
+Unable to make that many questions.
+Unable to make so few questions.
+Failed to shorten read-only question set.
+questionList
+The First Fundamental Theorem of Calculus
+The Second Fundamental Theorem of Calculus
+Limits - At
+Limits - By
+Read-Only Question Set
+Infinite Pre-Calculus
+Abbreviation for Infinite Precalculus
+Abbreviation for Infinite Calculus
+Infinite Calculus 1
+Abbreviation for Infinite Calculus 1
+Infinite Calculus 2
+Abbreviation for Infinite Calculus 2
+Infinite Calculus 3
+Abbreviation for Infinite Calculus 3
+Number of questions
+Question preview
+Question type
+MExpQuestion
+This question can not be manually edited.
+Answer shape
+Still show answer with work shape
+Special free response answer
+?? %1 Kuta Software LLC.  All rights reserved.
+regenQuestions
+scrambleQuestions
+Print assignment and answers
+Print just the answers
+Answer sheet
+Answer sheet, odds only
+Answers in context
+How to print answers
+Regenerate questions
+numQuestions
+Enter the total number of questions you would like the
+HKEY_LOCAL_MACHINE\Software\WOW6432Node\Kuta Software
+HKEY_LOCAL_MACHINE\Software\Kuta Software
+HKEY_CURRENT_USER\Software\Kuta Software
+HKEY_CURRENT_USER\Software\Kuta Software\
+HKEY_LOCAL_USER/Software/Kuta Software/
+?? 2026 Kuta Software LLC.  All rights reserved.
+Question Layout
+Show notifications from Kuta Software
+Put similar questions together
+Thickness and darkness of lines in diagrams and graphs
+Thickness and darkness of lines in diagrams and graphs:
+alwaysChangeAnswers
+Scrambling choices always changes the answer
+Kuta Software LLC Customer Feedback Agent
+MEquation('xx+2x+1 = 9'): %1
+actionShowAnswers
+:/res/Toolbar/Hide Answer Change.svg
+:/res/Toolbar/Discard Questions.svg
+:/res/Toolbar/Replace Questions.svg
+:/res/Toolbar/Add Questions.svg
+actionShowOneQuestion
+actionShowTwoQuestionsLeftRight
+actionShowTwoQuestionsTopBottom
+actionShowThreeQuestions
+actionShowFourQuestions
+questionWidgetTL
+questionWidgetBL
+questionWidgetTR
+questionWidgetBR
+Question numbers
+Display question numbers
+Answers
+Reveal the answers
+Hide answers when questions change
+Hide answers when the questions change
+Generate new questions like these
+Replace old questions with these
+Add these questions to the worksheet
+Jump to question...
+One question
+Display one question at a time
+Two questions (left/right)
+Display two questions at a time (left/right)
+Two questions (top/bottom)
+Display two questions at a time (top/bottom)
+Three questions
+Display three questions at a time
+Four questions
+Display four questions at a time
+Presented questions
+:/res/Toolbar/Hide Answer Change Dark.svg
+AutoHideAnswer
+PrintAnswer
+Read-Only Questions
+cdn.kutasoftware.com
+addGraph
+:/res/Toolbar/Include Graph.svg
+configGraph
+:/res/Toolbar/Configure Graph.svg
+questionText
+answerText
+answerHasGraph
+answerConfigGraph
+choiceAHasGraph
+choiceAConfigGraph
+choiceBHasGraph
+choiceBConfigGraph
+choiceCHasGraph
+choiceCConfigGraph
+choiceDHasGraph
+choiceDConfigGraph
+Add/remove a graph to the question
+Add/remove graph to question
+Configure the graph that's in the question
+Configure question graph
+Question
+Answer
+Add/remove a graph to the answer
+Add/remove graph to answer
+Configure the graph that's in this choice
+Configure answer graph
+Add/remove a graph to this choice
+Add/remove graph to choice 1
+Configure choice 1 graph
+Add/remove graph to choice 2
+Configure choice 2 graph
+Add/remove graph to choice 3
+Configure choice 3 graph
+Add/remove graph to choice 4
+Configure choice 4 graph
+Is the following an expression, equation, or inequality: [2x-8 >= 0]
+Equation
+Limit
+Left-hand limit
+Right-hand limit
+Derivative
+[integral( 2x )]
+Indefinite integral
+[integral( 3xx, x, 10, 20 )]
+Definite integral
+Arc tangent
+Arc cotangent
+Derivatives
+partOfQuestion
+questionElements
+questionPartPreview
+answerElementsLabel
+answerElements
+answerPartPreview
+Insert Graph
+The answer to the question goes on the graph
+Only show the graph in free response mode
+Always show the graph
+The graph is just part of the question
+Place it above the question text
+Place it below the question text
+Graph options
+The width of the graph
+The height of the graph
+Add to graph as part of the question:
+Add to graph as the answer:
+1redrawAnswerPreview()
+<Question Text>
+Graph element expression
+questionElement_1
+questionElement_2
+addQuestionElement
+actionPrint_one_graph
+graphElements
+graphPreview
+Graphing and Graph Paper Utility
+Print one graph...
+Graph preview
+Place the graph above the text for the choice
+Place the graph below the text for the choice
+Add to the graph
+Unable to connect to Kuta Software.
+Kuta Software Notification
+FreeResponseWithAnswer
+MultipleChoiceWithAnswer
+AnswerIndex
+AdditionalQuestions
+Identical Questions
+sameQuestions
+differentQuestions
+groupBoxAdditionalQuestions
+askAdditionalQuestions
+hideAnswers
+Every student gets the same questions
+Scramble choices for each question
+Students get different questions
+Additional Questions
+Give additional questions to students until they get a certain number correct
+Answers hidden until after due date
+No question sets are capable to generating additional questions
+api.works.kutasoftware.com
+/faculty_/kutagetcourses
+/faculty_/kutaaddcourse
+Kuta-Client
+Kuta-HMAC
+SameQuestions
+ScrambleQuestions
+DifferentQuestions
+AskAdditionalQuestions
+AdditionalQuestionsRule
+HideAnswers
+Sign in to Kuta Works
+Generating additional question #1...
+Generating additional question #%1 of %2...
+Couldn't generate as many additional questions as intended.
+Kuta Works Couldn't generate as many additional questions as intended.
+stroke-miterlimit
+HKEY_CURRENT_USER\Software\Kuta Software\Auth
+HKEY_LOCAL_MACHINE\SOFTWARE\Kuta Software\Auth
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Kuta Software\Auth
+.Only %n unique question(s) could be generated.
+        stroke-miterlimit: 10;
+?hash@QCryptographicHash@@SA?AVQByteArray@@VQByteArrayView@@W4Algorithm@1@@Z
+.?AVMCustomQuestionOptions@@
+.?AVMQuestion@@
+.?AVMExpQuestion@@
+.?AVMGeometryGraph@@
+.?AVM3DGraph@@
+.?AVMQueryNumQuestionsDlg@@
+.?AVMUserGraphElementWidget@@
+.?AVMGraphDialog@@
+.?AVMContinuityGenerator@@
+.?AVMContinuityOptions@@
+.?AVMDiffAppGraphicalComparisonGenerator@@
+.?AVMDiffAppGraphicalComparisonOptions@@
+.?AVMDifferentiationPowerRuleTangentGenerator@@
+.?AVMDifferentiationPowerRuleTangentOptions@@
+.?AVMIntegrationAreaByLimitsGenerator@@
+.?AVMIntegrationAreaByLimitsOptions@@
+.?AVMLimitsAtHolesGenerator@@
+.?AVMLimitsAtHolesOptions@@
+.?AVMLimitsAtInfinityGenerator@@
+.?AVMLimitsAtInfinityOptions@@
+.?AVMLimitsAtKinksJumpsGenerator@@
+.?AVMLimitsAtKinksJumpsOptions@@
+.?AVMLimitsAtVerticalAsymptotesGenerator@@
+.?AVMLimitsAtVerticalAsymptotesOptions@@
+.?AVMLimitsBasicGenerator@@
+.?AVMLimitsBasicOptions@@
+.?AVMLimitsDerivativeFormGenerator@@
+.?AVMLimitsDerivativeFormOptions@@
+.?AVMUserQuestionGraph@@
+.?AVMUserChoiceGraph@@
+.?AVMCustomQuestionGenerator@@
+.?AVMQuestionWidget@@
+.?AVMIntegral@@
+.?AVMEquation@@
+.?AVMLinearEquation@@
+.?AVMGraphFeature@@
+.?AVMGraphFunction@@
+.?AVMGraphPoint@@
+.?AVMUserGraphElement@@
+.?AVMUserGraphElementList@@
+.?AVMGraph@@
+.?AVMLineGraph@@
+.?AVMGraphSettings@@
+.?AVMAddGraphToQuestionDlg@@
+.?AVMUserGraphElementListWidget@@
+.?AVMAddGraphToChoiceDlg@@
+.?AVMAcuityGenerateAdditionalQuestionsThreadController@@
+.?AVMAcuityGenerateAdditionalQuestionsDialog@@
+Kuta Software LLC1
+Kuta Software LLC0?
+Sectigo Limited100.
+Sectigo Limited1,0*
+Sectigo Limited1.0,

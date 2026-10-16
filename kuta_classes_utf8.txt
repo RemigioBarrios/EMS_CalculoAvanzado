@@ -1,0 +1,997 @@
+Total option classes: 47
+
+==========================================
+CLASS: MDiffAppAbsoluteExtremaOptions
+  Prompts / Titles:
+    - Applications of Differentiation -  Absolute Extrema
+    - Applications of Differentiation - Absolute Extrema
+    - Applications of Differentiation - Intervals of Concavity
+    - For each problem,
+    - For each problem, find all points of absolute extrema over:
+    - For each problem, find all points of absolute minima and maxima on the given int
+  Radios (5):
+    - IDC_RADIO_ALL
+    - IDC_RADIO_ANY
+    - IDC_RADIO_CLOSED
+    - IDC_RADIO_HALF
+    - IDC_RADIO_OPEN
+  Checks (12):
+    - IDC_CHECK_CHAIN
+    - IDC_CHECK_CUBIC
+    - IDC_CHECK_DISCONTINUITIES
+    - IDC_CHECK_INFLECTION
+    - IDC_CHECK_INTERVALS
+    - IDC_CHECK_QUADRATIC
+    - IDC_CHECK_QUARTIC
+    - IDC_CHECK_QUINTIC
+
+==========================================
+CLASS: MDiffAppConcavityOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Intervals of Concavity
+    - Critical point at:
+    - Critical points at:
+    - For each problem,
+    - For each problem, find the:
+    - For each problem, find:
+  Radios (2):
+    - IDC_RADIO_1616
+    - IDC_RADIO_3232
+  Checks (9):
+    - IDC_CHECK_CRITICAL_NUMBERS
+    - IDC_CHECK_DISCONTINUITIES
+    - IDC_CHECK_EXTREMA
+    - IDC_CHECK_INFLECTION
+    - IDC_CHECK_INTERVALS
+    - IDC_CHECK_INTERVALS2
+    - IDC_CHECK_QUINTIC
+    - IDC_CHECK_RATIONAL_HARD
+
+==========================================
+CLASS: MDiffAppIncDecOptions
+  Prompts / Titles:
+    - .  For each problem, find
+    - Applications of Differentiation - Intervals of Increase and Decrease
+    - Find values of c or explain why The MVT cannot be applied
+    - Find values of c that satisfy the Mean Value Theorem
+    - For each problem, determine if the Mean Value Theorem can be applied.  If it can
+    - For each problem, find the values of
+  Radios (11):
+    - IDC_RADIO_0_FUNC_EASY
+    - IDC_RADIO_1_FUNC_HARD
+    - IDC_RADIO_2_FUNC_EITHER
+    - IDC_RADIO_3_GIVEN_F
+    - IDC_RADIO_4_GIVEN_FP
+    - IDC_RADIO_5_GIVEN_FPP
+    - IDC_RADIO_6_SKETCH_F
+    - IDC_RADIO_7_SKETCH_FP
+  Checks (0):
+
+==========================================
+CLASS: MDiffAppMVTOptions
+  Prompts / Titles:
+    - .  For each problem, find
+    - Find values of c or explain why The MVT cannot be applied
+    - Find values of c that satisfy the Mean Value Theorem
+    - For each problem, determine if the Mean Value Theorem can be applied.  If it can
+    - For each problem, find the values of
+    - For each problem:
+  Radios (2):
+    - IDC_RADIO_BOTH
+    - IDC_RADIO_FIND_C
+  Checks (0):
+
+==========================================
+CLASS: MDiffAppMotionLineOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Motion Along a Line
+    - Given function:
+    - Intervals when the particle is moving down/left and up/right
+    - Intervals when the particle is slowing down and speeding up
+    - buttonGroup5
+    - buttonGroup6
+  Radios (7):
+    - IDC_RADIO_ALL_TIME
+    - IDC_RADIO_HORIZ
+    - IDC_RADIO_INTERVAL_TIME
+    - IDC_RADIO_POINT_TIME
+    - IDC_RADIO_S
+    - IDC_RADIO_V
+    - IDC_RADIO_VERT
+  Checks (14):
+    - IDC_CHECK_A
+    - IDC_CHECK_ACCELERATION_FUNCTION
+    - IDC_CHECK_A_ZERO
+    - IDC_CHECK_CHANGE_DIRECTION
+    - IDC_CHECK_DISPLACEMENT
+    - IDC_CHECK_DISTANCE
+    - IDC_CHECK_GRAPH_FUNCTION
+    - IDC_CHECK_MAX_SPEED
+
+==========================================
+CLASS: MDiffAppOptimizationOptions
+  Prompts / Titles:
+    - Given rate:
+    - Intervals of concavity
+    - Intervals of increas
+    - X-Axis Group Point 1 Arrow
+    - X-Axis Group Point 2 Arrow
+    - Y-Axis Group Point 1 Arrow
+  Radios (6):
+    - IDC_RADIO_BOTH_ANSWERS
+    - IDC_RADIO_EASY_PROBLEMS
+    - IDC_RADIO_EITHER_PROBLEMS
+    - IDC_RADIO_HARD_PROBLEMS
+    - IDC_RADIO_MEDIUM_PROBLEMS
+    - IDC_RADIO_NUMERIC
+  Checks (3):
+    - IDC_CHECK_MORE2
+    - IDC_CHECK_SKETCH
+    - IDC_CHECK_SKETCH_AREA
+
+==========================================
+CLASS: MDiffAppRelatedRatesOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Related Rates
+    - Applications of Differentiation - Relative Extrema
+    - For each problem, determine if Rolle's Theorem can be applied.  If it can, find
+    - For each problem, find all points of relative extrema, where:
+    - For each problem, find all points of relative minima and maxima.
+    - For each problem, find the values of
+  Radios (10):
+    - IDC_RADIO_CONSTANT
+    - IDC_RADIO_EITHER_NEGATIVE
+    - IDC_RADIO_EITHER_RATE
+    - IDC_RADIO_EITHER_SOLVE
+    - IDC_RADIO_NO_NEGATIVE
+    - IDC_RADIO_NO_SOLVE
+    - IDC_RADIO_SOME
+    - IDC_RADIO_VARIABLE
+  Checks (6):
+    - IDC_CHECK_AREA_CIRCLE
+    - IDC_CHECK_AREA_RECTANGLE
+    - IDC_CHECK_PYTHAGOREAN
+    - IDC_CHECK_VOLUME_CONE
+    - IDC_CHECK_VOLUME_CUBE
+    - IDC_CHECK_VOLUME_SPHERE
+
+==========================================
+CLASS: MDiffAppRelativeExtremaOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Relative Extrema
+    - Find values of c or explain why Rolle's Theorem cannot be applied
+    - Find values of c that satisfy Rolle's Theorem
+    - For each problem, determine if Rolle's Theorem can be applied.  If it can, find
+    - For each problem, find all points of relative extrema, where:
+    - For each problem, find all points of relative minima and maxima.
+  Radios (9):
+    - IDC_RADIO_EITHER_NEGATIVE
+    - IDC_RADIO_EITHER_RATE
+    - IDC_RADIO_EITHER_SOLVE
+    - IDC_RADIO_NO_NEGATIVE
+    - IDC_RADIO_NO_SOLVE
+    - IDC_RADIO_SOME
+    - IDC_RADIO_VARIABLE
+    - IDC_RADIO_YES_NEGATIVE
+  Checks (6):
+    - IDC_CHECK_AREA_CIRCLE
+    - IDC_CHECK_AREA_RECTANGLE
+    - IDC_CHECK_PYTHAGOREAN
+    - IDC_CHECK_VOLUME_CONE
+    - IDC_CHECK_VOLUME_CUBE
+    - IDC_CHECK_VOLUME_SPHERE
+
+==========================================
+CLASS: MDiffAppRollesMVTOptions
+  Prompts / Titles:
+    - Find values of c or explain why Rolle's Theorem cannot be applied
+    - Find values of c that satisfy Rolle's Theorem
+    - For each problem, determine if Rolle's Theorem can be applied.  If it can, find
+    - For each problem, find all points of relative extrema, where:
+    - For each problem, find the values of
+    - buttonGroup25
+  Radios (1):
+    - IDC_RADIO_SOME
+  Checks (0):
+
+==========================================
+CLASS: MDifferentialsOptions
+  Prompts / Titles:
+    - Differentiation - Chain Rule
+    - For each problem, find
+    - For each problem, find a linear approximation of the given quantity.
+    - For each problem, find the differential
+    - For each problem, find the general formulas for
+    - Linear approximation of a number
+  Radios (11):
+    - IDC_RADIO_BOTH_SIMP
+    - IDC_RADIO_CHAIN_ANY
+    - IDC_RADIO_CHAIN_ONCE
+    - IDC_RADIO_CHAIN_TWICE
+    - IDC_RADIO_DIFFERENTIAL
+    - IDC_RADIO_DY
+    - IDC_RADIO_ERROR_ESTIMATE
+    - IDC_RADIO_GENERAL_DY
+  Checks (10):
+    - IDC_CHECK_CHAIN_INT
+    - IDC_CHECK_CHAIN_NON_INT
+    - IDC_CHECK_COSECANT
+    - IDC_CHECK_COSINE
+    - IDC_CHECK_COTANGENT
+    - IDC_CHECK_SECANT
+    - IDC_CHECK_SETUP
+    - IDC_CHECK_SETUP2
+
+==========================================
+CLASS: MDifferentiationChainRuleInvTrigOptions
+  Prompts / Titles:
+    - Differentiation - Chain Rule
+    - Linear approximation of a number
+    - buttonGroup12
+  Radios (6):
+    - IDC_RADIO_BOTH_SIMP
+    - IDC_RADIO_CHAIN_ANY
+    - IDC_RADIO_CHAIN_ONCE
+    - IDC_RADIO_CHAIN_TWICE
+    - IDC_RADIO_SIMPLIFIED
+    - IDC_RADIO_UNSIMPLIFIED
+  Checks (14):
+    - IDC_CHECK_CHAIN_FRACT
+    - IDC_CHECK_CHAIN_INT
+    - IDC_CHECK_CHAIN_NEG
+    - IDC_CHECK_CHAIN_NON_INT
+    - IDC_CHECK_CHAIN_POS
+    - IDC_CHECK_CHAIN_RAD
+    - IDC_CHECK_COSECANT
+    - IDC_CHECK_COSINE
+
+==========================================
+CLASS: MDifferentiationChainRuleOptions
+  Prompts / Titles:
+    - Differentiation - Rules, Using Tables
+    - For each problem, you are given a table containing some values of differentiable
+    - buttonGroup12
+  Radios (6):
+    - IDC_RADIO_BOTH_SIMP
+    - IDC_RADIO_CHAIN_ANY
+    - IDC_RADIO_CHAIN_ONCE
+    - IDC_RADIO_CHAIN_TWICE
+    - IDC_RADIO_SIMPLIFIED
+    - IDC_RADIO_UNSIMPLIFIED
+  Checks (20):
+    - IDC_CHECK_ANSWER_SETUP
+    - IDC_CHECK_CHAIN_FRACT
+    - IDC_CHECK_CHAIN_INT
+    - IDC_CHECK_CHAIN_NEG
+    - IDC_CHECK_CHAIN_NON_INT
+    - IDC_CHECK_CHAIN_POS
+    - IDC_CHECK_CHAIN_RAD
+    - IDC_CHECK_COSECANT
+
+==========================================
+CLASS: MDifferentiationChainRuleTrigOptions
+  Prompts / Titles:
+    - Differentiation - Rules, Using Tables
+    - Differentiation - Rules, using Tables
+    - For each problem, you are given a table containing some values of differentiable
+  Radios (0):
+  Checks (13):
+    - IDC_CHECK_ANSWER_SETUP
+    - IDC_CHECK_CHAIN_FRACT
+    - IDC_CHECK_CHAIN_NEG
+    - IDC_CHECK_CHAIN_POS
+    - IDC_CHECK_CHAIN_RAD
+    - IDC_CHECK_NEITHER_RULE
+    - IDC_CHECK_PRODUCT
+    - IDC_CHECK_RULE_CHAIN
+
+==========================================
+CLASS: MDifferentiationDefinitionOptions
+  Prompts / Titles:
+    - Differentiation - Rules, using Tables
+    - MIntegrationVolumeKnownC
+    - buttonGroup14
+    - buttonGroup15
+    - on_IDC_BUTTON_DESELECT_ALL_clicked
+    - on_IDC_BUTTON_SELECT_ALL_clicked
+  Radios (2):
+    - IDC_RADIO_RULE_EXP
+    - IDC_RADIO_RULE_LOGS
+  Checks (14):
+    - IDC_CHECK_ANSWER_SETUP
+    - IDC_CHECK_CHAIN_TRIG
+    - IDC_CHECK_EXP
+    - IDC_CHECK_FULL_QUADRATIC
+    - IDC_CHECK_LINEAR
+    - IDC_CHECK_LOG
+    - IDC_CHECK_ROOT
+    - IDC_CHECK_RULE_CHAIN
+
+==========================================
+CLASS: MDifferentiationExponentialOptions
+  Prompts / Titles:
+    - Area between curves
+    - Area under a curve
+    - For each problem, find the indicated derivative with respect to
+    - For each problem, find the indicated derivative with respect to the given variab
+    - Intervals of concavity
+    - Intervals of increase and decrease
+  Radios (5):
+    - IDC_RADIO_5_ORDER_TWO
+    - IDC_RADIO_6_ORDER_THREE
+    - IDC_RADIO_7_
+    - IDC_RADIO_RULE_EXP
+    - IDC_RADIO_RULE_LOGS
+  Checks (7):
+    - IDC_CHECK_CHAIN_TRIG
+    - IDC_CHECK_EXP
+    - IDC_CHECK_FULL_QUADRATIC
+    - IDC_CHECK_LINEAR
+    - IDC_CHECK_LOG
+    - IDC_CHECK_ROOT
+    - IDC_CHECK_SQUARE
+
+==========================================
+CLASS: MDifferentiationHigherOrderOptions
+  Prompts / Titles:
+    - For each problem, find the indicated derivative with respect to
+    - For each problem, find the indicated derivative with respect to the given variab
+    - For each problem, use implicit differentiation to find
+    - Include terms with exponents other than positive integer
+    - buttonGroup22
+    - buttonGroup23
+  Radios (13):
+    - IDC_RADIO_1_ONE_TERM
+    - IDC_RADIO_2_TWO_TERM
+    - IDC_RADIO_3_THREE_TERM
+    - IDC_RADIO_4_R_TERM
+    - IDC_RADIO_5_ORDER_TWO
+    - IDC_RADIO_6_ORDER_THREE
+    - IDC_RADIO_7_ORDER_FOUR
+    - IDC_RADIO_8_ORDER_ANY
+  Checks (6):
+    - IDC_CHECK_EXP_OTHER
+    - IDC_CHECK_ONE_XY
+    - IDC_CHECK_ONE_Y
+    - IDC_CHECK_TW
+    - IDC_CHECK_TWO_Y
+    - IDC_CHECK_Y_XY
+
+==========================================
+CLASS: MDifferentiationImplicitOptions
+  Prompts / Titles:
+    - Answers may vary.  Given answer assumes equation not changed before
+    - Differentiation - Instantaneous Rates of Change
+    - Find derivative:
+    - For each problem, find the average rate of change of the function over the given
+    - For each problem, find the equation of the secant line that intersects the given
+    - For each problem, find the equation of the tangent line to the function at the g
+  Radios (7):
+    - IDC_RADIO_ANY_T_TERM
+    - IDC_RADIO_BO
+    - IDC_RADIO_FOUR_T_TERM
+    - IDC_RADIO_INSTANTANEOUS_RATE
+    - IDC_RADIO_ORDER_ONE
+    - IDC_RADIO_ORDER_TWO
+    - IDC_RADIO_THREE_T_TERM
+  Checks (5):
+    - IDC_CHECK_ONE_XY
+    - IDC_CHECK_ONE_Y
+    - IDC_CHECK_TWO_XY
+    - IDC_CHECK_TWO_Y
+    - IDC_CHECK_Y_XY
+
+==========================================
+CLASS: MDifferentiationInstROCOptions
+  Prompts / Titles:
+    - Differentiation - Instantaneous Rates of Change
+    - Find derivative of inverse function:
+    - For each problem, find
+    - For each problem, find the average rate of change of the function over the given
+    - For each problem, find the equation of the secant line that intersects the given
+    - For each problem, find the equation of the tangent line to the function at the g
+  Radios (14):
+    - IDC_RADIO_AT_VALUE
+    - IDC_RADIO_BOTH_LINES
+    - IDC_RADIO_BOTH_RATES
+    - IDC_RADIO_DIRECT
+    - IDC_RADIO_EITHER
+    - IDC_RADIO_INSTANTANEOUS_RATE
+    - IDC_RADIO_IN_GENERAL
+    - IDC_RADIO_LINEAR
+  Checks (0):
+
+==========================================
+CLASS: MDifferentiationInverseOptions
+  Prompts / Titles:
+    - Differentiation - Power Rule
+    - Find derivative of inverse function:
+    - For each problem, find
+    - buttonGroup
+    - buttonGroup20
+    - buttonGroup21
+  Radios (15):
+    - IDC_RADIO_AT_VALUE
+    - IDC_RADIO_BINOMIAL_INT
+    - IDC_RADIO_DIRECT
+    - IDC_RADIO_EITHER
+    - IDC_RADIO_FOUR
+    - IDC_RADIO_IN_GENERAL
+    - IDC_RADIO_LINEAR
+    - IDC_RADIO_NON_LINEAR
+  Checks (0):
+
+==========================================
+CLASS: MDifferentiationLogOptions
+  Prompts / Titles:
+    - Differentiation - Power Rule
+    - Find derivative of inverse function:
+    - For each problem, find the derivative of the function at the given v
+    - Normal line is vertical line at
+    - buttonGroup
+    - buttonGroup20
+  Radios (19):
+    - IDC_RADIO_AT_VALUE
+    - IDC_RADIO_BINOMIAL_INT
+    - IDC_RADIO_DIRECT
+    - IDC_RADIO_EITHER
+    - IDC_RADIO_FOUR
+    - IDC_RADIO_IN_GENERAL
+    - IDC_RADIO_LINEAR
+    - IDC_RADIO_NON_LINEAR
+  Checks (11):
+    - IDC_CHECK_ABC_COEF
+    - IDC_CHECK_ABC_EXP
+    - IDC_CHECK_CONSTANTS
+    - IDC_CHECK_FRACTIONAL_EXPONENTS
+    - IDC_CHECK_FRACTIONAL_TERMS
+    - IDC_CHECK_FRACT_COEF
+    - IDC_CHECK_INT_COEF
+    - IDC_CHECK_IRR_COEF
+
+==========================================
+CLASS: MDifferentiationPowerRuleOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Slope, Tangent, and Normal Lines
+    - Differentiation - Power Rule
+    - For each problem, find the derivative of the function at the given value.
+    - For each problem, find the equation of the line normal to the function at the gi
+    - For each problem, find the equation of the line tangent to the function at the g
+    - For each problem, find the points where the tangent line to the function is hori
+  Radios (9):
+    - IDC_RADIO_BINOMIAL_INT
+    - IDC_RADIO_FOUR
+    - IDC_RADIO_ONE_TERM
+    - IDC_RADIO_R_TERM
+    - IDC_RADIO_THREE
+    - IDC_RADIO_THREE_TERM
+    - IDC_RADIO_TWO_BINOMIAL_INT
+    - IDC_RADIO_TWO_TERM
+  Checks (11):
+    - IDC_CHECK_ABC_COEF
+    - IDC_CHECK_ABC_EXP
+    - IDC_CHECK_CONSTANTS
+    - IDC_CHECK_FRACTIONAL_EXPONENTS
+    - IDC_CHECK_FRACTIONAL_TERMS
+    - IDC_CHECK_FRACT_COEF
+    - IDC_CHECK_INT_COEF
+    - IDC_CHECK_IRR_COEF
+
+==========================================
+CLASS: MDifferentiationPowerRuleTangentOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Slope, Tangent, and Normal Lines
+    - Differentiation - Product Rule
+    - Differentiation - Quotient Rule
+    - For each problem, find the derivative of the function at the given value.
+    - For each problem, find the equation of the line normal to the function at the gi
+    - For each problem, find the equation of the line tangent to the function at the g
+  Radios (8):
+    - IDC_RADIO_0_AT_VALUE
+    - IDC_RADIO_1_SLOPE
+    - IDC_RADIO_2_POINT_INT
+    - IDC_RADIO_3_TAN_POINT_2
+    - IDC_RADIO_4_TANGENT
+    - IDC_RADIO_5_NORMAL
+    - IDC_RADIO_FIVE_TERM
+    - IDC_RADIO_FOUR_TERM
+  Checks (1):
+    - IDC_CHECK_LN_EXP
+
+==========================================
+CLASS: MDifferentiationProductRuleOptions
+  Prompts / Titles:
+    - Differentiation - Average Rates of Change
+    - Differentiation - Product Rule
+    - Differentiation - Quotient Rule
+    - For each problem, find the average rate of change of the function over the given
+    - For each problem, find the equation of the secant line that intersects the given
+    - Include different term types
+  Radios (10):
+    - IDC_RADIO_0_AT_VALUE
+    - IDC_RADIO_1_SLOPE
+    - IDC_RADIO_2_POINT_INT
+    - IDC_RADIO_3_TAN_POINT_2
+    - IDC_RADIO_4_TANGENT
+    - IDC_RADIO_5_NORMAL
+    - IDC_RADIO_AVERAGE_RATE
+    - IDC_RADIO_FIVE_TERM
+  Checks (1):
+    - IDC_CHECK_LN_EXP
+
+==========================================
+CLASS: MDifferentiationQuotientRuleOptions
+  Prompts / Titles:
+    - Applications of Integration - Area Between Curves
+    - Differentiation - Average Rates of Change
+    - Differentiation - Quotient Rule
+    - For each problem, find the area of the region enclosed by the curves.
+    - For each problem, find the area of the region enclosed by the curves.  Set up, b
+    - For each problem, find the average rate of change of the function over the given
+  Radios (10):
+    - IDC_RADIO_AVERAGE_RATE
+    - IDC_RADIO_ENDPOINTS_EITHER
+    - IDC_RADIO_ENDPOINTS_NO
+    - IDC_RADIO_ENDPOINTS_YES
+    - IDC_RADIO_EVALUATED
+    - IDC_RADIO_FIVE_TERM
+    - IDC_RADIO_FOUR_TERM
+    - IDC_RADIO_IN
+  Checks (0):
+
+==========================================
+CLASS: MDifferentiationSecantsOptions
+  Prompts / Titles:
+    - Applications of Integration - Area Between Curves
+    - Differentiation - Average Rates of Change
+    - Evaluate each limit.
+    - Evaluate each sum.
+    - For each problem, find the area of the region enclosed by the curves.
+    - For each problem, find the area of the region enclosed by the curves.  Set up, b
+  Radios (15):
+    - IDC_RADIO_ALGEBRAIC
+    - IDC_RADIO_AVERAGE_RATE
+    - IDC_RADIO_EITHER_FUNCTION
+    - IDC_RADIO_ENDPOINTS_EITHER
+    - IDC_RADIO_ENDPOINTS_NO
+    - IDC_RADIO_ENDPOINTS_YES
+    - IDC_RADIO_EVALUATED
+    - IDC_RADIO_INTERSECTIONS_EITHER
+  Checks (1):
+    - IDC_CHECK_SYMMETRY
+
+==========================================
+CLASS: MIntegrationAreaBetweenCurvesOptions
+  Prompts / Titles:
+    - Applications of Integration - Area Between Curves
+    - Definite Integration - Area Under a Curve by Limit of Sums
+    - Evaluate each limit.
+    - Evaluate each sum.
+    - For each problem, find the area of the region enclosed by the curves.
+    - For each problem, find the area of the region enclosed by the curves.  Set up, b
+  Radios (17):
+    - IDC_RADIO_ALGEBRAIC
+    - IDC_RADIO_AVERAGE_RATE
+    - IDC_RADIO_CIRCUMSCRIBED
+    - IDC_RADIO_EITHER_FUNCTION
+    - IDC_RADIO_ENDPOINTS_EITHER
+    - IDC_RADIO_ENDPOINTS_NO
+    - IDC_RADIO_ENDPOINTS_YES
+    - IDC_RADIO_EVALUATED
+  Checks (2):
+    - IDC_CHECK_SHADE
+    - IDC_CHECK_SYMMETRY
+
+==========================================
+CLASS: MIntegrationAreaUnderCurveOptions
+  Prompts / Titles:
+    - Applications of Integration - Area Under a Curve
+    - Area between curves
+    - Area under a curve
+    - Area under a curve by limits
+    - Definite Integration - Area Under a Curve by Limits
+    - Definite Integration - Substitution with Change of Variable
+  Radios (9):
+    - IDC_RADIO_EITHER_APP
+    - IDC_RADIO_EITHER_TRICKY
+    - IDC_RADIO_NOT_TRICKY
+    - IDC_RADIO_ONE_APP
+    - IDC_RADIO_TRICKY
+    - IDC_RADIO_TWO_APP
+    - IDC_RADIO_UDV_ANSWER
+    - IDC_RADIO_UDV_GIVEN
+  Checks (1):
+    - IDC_CHECK_ALLOW_MULTIPLE
+
+==========================================
+CLASS: MIntegrationByParts2Options
+  Prompts / Titles:
+    - Definite Integration - Substitution with Change of Variable
+    - Definite Integration - Substitution with Change of Variables
+    - Evaluate each definite integral using the two
+    - Evaluate each definite integral.
+    - Evaluate each indefinite integral using integration by parts.
+    - Evaluate each indefinite integral.
+  Radios (12):
+    - IDC_RADIO_EITHER_APP
+    - IDC_RADIO_EITHER_TRICKY
+    - IDC_RADIO_EVALUATE_ANY
+    - IDC_RADIO_EVALUATE_BOTH
+    - IDC_RADIO_EXPRESS
+    - IDC_RADIO_NOT_TRICKY
+    - IDC_RADIO_ONE_APP
+    - IDC_RADIO_TRICKY
+  Checks (3):
+    - IDC_CHECK_ALLOW_MULTIPLE
+    - IDC_CHECK_ODD
+    - IDC_CHECK_PROVIDE_U
+
+==========================================
+CLASS: MIntegrationDefiniteSubsOptions
+  Prompts / Titles:
+    - Definite Integration - Substitution with Change of Variable
+    - Definite Integration - Substitution with Change of Variables
+    - Evaluate each definite integral using the two
+    - Evaluate each definite integral.
+    - Evaluate each indefinite integral.  Use the provided substitution.
+    - Evaluate the integral using any method
+  Radios (10):
+    - IDC_RADIO_EITHER_APP
+    - IDC_RADIO_EITHER_TRICKY
+    - IDC_RADIO_EVALUATE_ANY
+    - IDC_RADIO_EVALUATE_BOTH
+    - IDC_RADIO_EXPRESS
+    - IDC_RADIO_NOT_TRICKY
+    - IDC_RADIO_ONE_APP
+    - IDC_RADIO_TRICKY
+  Checks (15):
+    - IDC_CHECK_EXPONENTIAL
+    - IDC_CHECK_EXPONENTIAL_SUBS
+    - IDC_CHECK_FUNCTION2
+    - IDC_CHECK_INVERSE_TRIG
+    - IDC_CHECK_LINEAR_ABS
+    - IDC_CHECK_ODD
+    - IDC_CHECK_PIECEWISE_LINEAR
+    - IDC_CHECK_PIECEWISE_LINEAR_QUAD
+
+==========================================
+CLASS: MIntegrationFirstTheoremOptions
+  Prompts / Titles:
+    - Definite Integration - Substitution with Change of Variables
+    - Evaluate each indefinite integral.  Use the provided substitution.
+    - Evaluate the integral using any method
+    - Evaluate the integral using two methods
+    - Indefinite Integration - Inverse Trigonometric with Substitution
+    - Indefinite Integration - Logarithmic Rule and Exponentials with Substitution
+  Radios (3):
+    - IDC_RADIO_EVALUATE_ANY
+    - IDC_RADIO_EVALUATE_BOTH
+    - IDC_RADIO_EXPRESS
+  Checks (21):
+    - IDC_CHECK_EXPONENTIAL
+    - IDC_CHECK_EXPONENTIAL_SUBS
+    - IDC_CHECK_EXP_E
+    - IDC_CHECK_EXP_U
+    - IDC_CHECK_FUNCTION2
+    - IDC_CHECK_INVERSE_TRIG
+    - IDC_CHECK_LINEAR_ABS
+    - IDC_CHECK_LOG_U
+
+==========================================
+CLASS: MIntegrationIndefiniteExpOptions
+  Prompts / Titles:
+    - Indefinite Integration - Logarithmic Rule and Exponentials
+    - Indefinite Integration - Power Rule
+  Radios (1):
+    - IDC_RADIO_NONE
+  Checks (4):
+    - IDC_CHECK_INVERSE_SECANT
+    - IDC_CHECK_INVERSE_SINE
+    - IDC_CHECK_INVERSE_TANGENT
+    - IDC_CHECK_NEG_ONE
+
+==========================================
+CLASS: MIntegrationIndefiniteOptions
+  Prompts / Titles:
+    - Indefinite Integration - Logarithmic Rule and Exponentials
+    - Indefinite Integration - Power Rule
+    - Indefinite Integration - Trigonometric with Substitution
+  Radios (1):
+    - IDC_RADIO_NONE
+  Checks (5):
+    - IDC_CHECK_COSECANT_2
+    - IDC_CHECK_COSECANT_COTANGENT
+    - IDC_CHECK_NEG_ONE
+    - IDC_CHECK_SECANT_2
+    - IDC_CHECK_SECANT_TANGENT
+
+==========================================
+CLASS: MIntegrationIndefiniteTrigOptions
+  Prompts / Titles:
+    - For each problem, find the average value of the function over the given interval
+    - For each problem, find the values of
+    - Indefinite Integration - Trigonometric with Substitution
+  Radios (0):
+  Checks (4):
+    - IDC_CHECK_COSECANT_2
+    - IDC_CHECK_COSECANT_COTANGENT
+    - IDC_CHECK_SECANT_2
+    - IDC_CHECK_SECANT_TANGENT
+
+==========================================
+CLASS: MIntegrationRiemannOptions
+  Prompts / Titles:
+    - Applications of Integration - Motion Along a Line Revisited
+    - Approximate:
+    - Definite Integration - Approximating Area Under a Curve
+    - Definite Integration - Riemann Sum Tables
+    - For each problem, approximate the area under the curve over the given interval u
+    - For each problem, find
+  Radios (7):
+    - IDC_RADIO_A
+    - IDC_RADIO_CIRC
+    - IDC_RADIO_INSC
+    - IDC_RADIO_LEFT_EP
+    - IDC_RADIO_MID_P
+    - IDC_RADIO_RIGHT_EP
+    - IDC_RADIO_TRAP
+  Checks (4):
+    - IDC_CHECK_ALSO_INTEGRAL
+    - IDC_CHECK_FRACTIONAL_SUB
+    - IDC_CHECK_NEGATIVE
+    - IDC_CHECK_POSITION_FUNCTION
+
+==========================================
+CLASS: MIntegrationRiemannTableOptions
+  Prompts / Titles:
+    - Definite Integration - Riemann Sum Tables
+    - For each problem, find
+    - For each problem, use a left-hand Riemann sum to approximate the integral based
+    - For each problem, use a right-hand Riemann sum to approximate the integral based
+    - Indefinite Integration - Power Rule with Substitution
+    - Intervals of concavity
+  Radios (5):
+    - IDC_RADIO_CONSTANT_MULTIPLE
+    - IDC_RADIO_REWRITE
+    - IDC_RADIO_SOLVE_X
+    - IDC_RADIO_STRAIGHTFORWARD
+    - IDC_RADIO_SUBSTITUTE
+  Checks (1):
+    - IDC_CHECK_NEGATIVE
+
+==========================================
+CLASS: MIntegrationSecondTheoremOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Cylinders
+    - For each problem, find
+    - For each problem, use the method of cylindrical shells to find the volume of the
+    - Indefinite Integration - Power Rule with Substitution
+    - Right-hand Riemann Sum
+    - Substitution before applying theorem, then chain rule
+  Radios (5):
+    - IDC_RADIO_CONSTANT_MULTIPLE
+    - IDC_RADIO_REWRITE
+    - IDC_RADIO_SOLVE_X
+    - IDC_RADIO_STRAIGHTFORWARD
+    - IDC_RADIO_SUBSTITUTE
+  Checks (1):
+    - IDC_CHECK_NEGATIVE
+
+==========================================
+CLASS: MIntegrationUSubstitutionOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Cylinders
+    - Applications of Integration - Volume by Cylindrical Shells
+    - For each problem, use the method of cylindrical shells to find the volume of the
+    - Indefinite Integration - Power Rule with Substitution
+    - Substitution before applying theorem, then chain rule
+    - Substitution:
+  Radios (13):
+    - IDC_RADIO_ANY_ROTATE
+    - IDC_RADIO_CONSTANT_MULTIPLE
+    - IDC_RADIO_REWRITE
+    - IDC_RADIO_SOLVE_EITHER
+    - IDC_RADIO_SOLVE_NO
+    - IDC_RADIO_SOLVE_X
+    - IDC_RADIO_SOLVE_YES
+    - IDC_RADIO_STRAIGHTFORWARD
+  Checks (0):
+
+==========================================
+CLASS: MIntegrationVolumeCylindersOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Cylinders
+    - Applications of Integration - Volume by Cylindrical Shells
+    - Applications of Integration - Volume of Solids with Known Cross Sections
+    - For each problem, find the volume of the specified solid.
+    - For each problem, use the method of cylindrical shells to find the volume of the
+    - Substitution:
+  Radios (8):
+    - IDC_RADIO_ANY_ROTATE
+    - IDC_RADIO_SOLVE_EITHER
+    - IDC_RADIO_SOLVE_NO
+    - IDC_RADIO_SOLVE_YES
+    - IDC_RADIO_XS_ROTATE
+    - IDC_RADIO_X_ROTATE
+    - IDC_RADIO_YS_ROTATE
+    - IDC_RADIO_Y_ROTATE
+  Checks (0):
+
+==========================================
+CLASS: MIntegrationVolumeKnownCrossSectionsOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Slicing,  Disks and Washers
+    - Applications of Integration - Volume by Slicing, Disks and Washers
+    - Applications of Integration - Volume of Solids with Known Cross Sections
+    - Applications of Integration - Volume with Known Cross Sections
+    - For each problem, find the volume of the solid that results when the region encl
+    - For each problem, find the volume of the specified solid.
+  Radios (3):
+    - IDC_RADIO_DISK
+    - IDC_RADIO_SOLID_EITHER
+    - IDC_RADIO_WASHER
+  Checks (0):
+
+==========================================
+CLASS: MIntegrationVolumeWashersOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Slicing,  Disks and Washers
+    - Applications of Integration - Volume by Slicing, Disks and Washers
+    - Area between curves
+    - Area under a curve
+    - Area under a curve by limits
+    - Evaluate each limit using L'H
+  Radios (7):
+    - IDC_RADIO_ALL_PROBLEMS
+    - IDC_RADIO_DISK
+    - IDC_RADIO_MOST_PROBLEMS
+    - IDC_RADIO_ONE
+    - IDC_RADIO_SOLID_EITHER
+    - IDC_RADIO_TWO
+    - IDC_RADIO_WASHER
+  Checks (5):
+    - IDC_CHECK_EXPONENTS
+    - IDC_CHECK_INF_MINUS_INF
+    - IDC_CHECK_MORE
+    - IDC_CHECK_ZERO_BY_INF
+    - IDC_CHECK_ZERO_OVER_ZERO
+
+==========================================
+CLASS: MLHopitalsOptions
+  Prompts / Titles:
+    - Applications of Integration - Volume by Slicing,  Disks and Washers
+    - Evaluate each limit using L'H
+    - Evaluate each limit.  Use L'H
+    - buttonGroup16
+    - buttonGroup17
+    - buttonGroup18
+  Radios (7):
+    - IDC_RADIO_ALL_PROBLEMS
+    - IDC_RADIO_DISK
+    - IDC_RADIO_MOST_PROBLEMS
+    - IDC_RADIO_ONE
+    - IDC_RADIO_SOLID_EITHER
+    - IDC_RADIO_TWO
+    - IDC_RADIO_WASHER
+  Checks (13):
+    - IDC_CHECK_EXPONENTS
+    - IDC_CHECK_INF_MINUS_INF
+    - IDC_CHECK_MORE
+    - IDC_CHECK_MORE_TRIG
+    - IDC_CHECK_PIECEWISE
+    - IDC_CHECK_QUOTIENT_FACTOR
+    - IDC_CHECK_QUOTIENT_MULTIPLY
+    - IDC_CHECK_QUOTIENT_RATIONALIZE
+
+==========================================
+CLASS: MLimitsAtHolesOptions
+  Prompts / Titles:
+  Radios (4):
+    - IDC_RADIO_ALL_PROBLEMS
+    - IDC_RADIO_MOST_PROBLEMS
+    - IDC_RADIO_ONE
+    - IDC_RADIO_TWO
+  Checks (22):
+    - IDC_CHECK_EXPONENTS
+    - IDC_CHECK_INF_MINUS_INF
+    - IDC_CHECK_LOGE_I
+    - IDC_CHECK_LOGE_L
+    - IDC_CHECK_MORE
+    - IDC_CHECK_MORE_TRIG
+    - IDC_CHECK_PIECEWISE
+    - IDC_CHECK_POLY_I
+
+==========================================
+CLASS: MLimitsAtInfinityOptions
+  Prompts / Titles:
+    - Include limits at fractions
+    - on_IDC_BUTTON_DESELECT_ALL_clicked
+    - on_IDC_BUTTON_SELECT_ALL_clicked
+  Radios (3):
+    - IDC_RADIO_ONE_OR_TWO_SIDED
+    - IDC_RADIO_ONE_SIDED
+    - IDC_RADIO_TWO_SIDED
+  Checks (18):
+    - IDC_CHECK_ABSOLUTE_VALUE
+    - IDC_CHECK_GREATEST_INTEGER
+    - IDC_CHECK_LOGE_I
+    - IDC_CHECK_LOGE_L
+    - IDC_CHECK_PIECEWISE
+    - IDC_CHECK_POLY_I
+    - IDC_CHECK_QUOTIENT_FACTOR
+    - IDC_CHECK_QUOTIENT_L
+
+==========================================
+CLASS: MLimitsAtKinksJumpsOptions
+  Prompts / Titles:
+    - Include limits at fractions
+  Radios (3):
+    - IDC_RADIO_ONE_OR_TWO_SIDED
+    - IDC_RADIO_ONE_SIDED
+    - IDC_RADIO_TWO_SIDED
+  Checks (14):
+    - IDC_CHECK_ABSOLUTE_VALUE
+    - IDC_CHECK_COMPOSITE
+    - IDC_CHECK_GREATEST_INTEGER
+    - IDC_CHECK_LOGE_I
+    - IDC_CHECK_LOGE_L
+    - IDC_CHECK_POLYNOMIAL
+    - IDC_CHECK_POLY_I
+    - IDC_CHECK_QUOTIENT_DIRECT
+
+==========================================
+CLASS: MLimitsAtVerticalAsymptotesOptions
+  Prompts / Titles:
+    - Include limits at fractions
+    - Use Newton's Method to approximate the real zeros of each function.
+    - Use three iterations of Newton's Method to approxima
+    - Use two iterations of Newton's Method to approximate the real zeros of each func
+  Radios (3):
+    - IDC_RADIO_ONE_OR_TWO_SIDED
+    - IDC_RADIO_ONE_SIDED
+    - IDC_RADIO_TWO_SIDED
+  Checks (7):
+    - IDC_CHECK_ABSOLUTE_VALUE
+    - IDC_CHECK_COMPOSITE
+    - IDC_CHECK_GREATEST_INTEGER
+    - IDC_CHECK_LN
+    - IDC_CHECK_POLYNOMIAL
+    - IDC_CHECK_QUOTIENT_DIRECT
+    - IDC_CHECK_RADICAL
+
+==========================================
+CLASS: MLimitsBasicOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Newton's Method
+    - For each problem, use Newton's Method to approximate the positive root.
+    - Use Newton's Method to approximate the
+    - Use Newton's Method to approximate the real zeros of each function.
+    - Use Newton's Method to approximate the real zeros of each function.  Continue un
+    - Use three iterations of Newton's Method to approximate the real zeros of each fu
+  Radios (0):
+  Checks (5):
+    - IDC_CHECK_COMPOSITE
+    - IDC_CHECK_LN
+    - IDC_CHECK_POLYNOMIAL
+    - IDC_CHECK_QUOTIENT_DIRECT
+    - IDC_CHECK_RADICAL
+
+==========================================
+CLASS: MNewtonsMethodOptions
+  Prompts / Titles:
+    - Applications of Differentiation - Newton's Method
+    - Approximate:
+    - For each problem, use Newton's Method to approximate the positive root.
+    - Use Newton's Method to approximate the
+    - Use Newton's Method to approximate the real zeros of each function.  Continue un
+    - Use three iterations of Newton's Method to approximate the real zeros of each fu
+  Radios (9):
+    - IDC_RADIO_INTERSECTIONS
+    - IDC_RADIO_NO_GUESS
+    - IDC_RADIO_ONE_OR_TWO
+    - IDC_RADIO_ROOT
+    - IDC_RADIO_THREE_TIMES
+    - IDC_RADIO_TWO_TIMES
+    - IDC_RADIO_UNTIL
+    - IDC_RADIO_YES_GUESS
+  Checks (0):

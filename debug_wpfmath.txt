@@ -1,0 +1,16 @@
+FormulaControl initial HasError: False
+FormulaControl with y=x^2 HasError: False, Errors: 0
+Formula 'y = -\frac{x^2}{2} + 2x + 2;\, [0, 3]' -> HasError: False
+Formula 'y = -\frac{x^2}{2} + 2x + 2;\; [0, 3]' -> HasError: False
+Formula 'y = -\frac{x^2}{2} + 2x + 2; \quad [0, 3]' -> HasError: True
+   err: XamlMath.Exceptions.TexParseException: Unknown symbol or command or predefined TeXFormula: 'quad'
+   at XamlMath.TexFormulaParser.ProcessEscapeSequence(TexFormula formula, SourceSpan value, Int32& position, Boolean allowClosingDelimiter, Boolean& closedDelimiter, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, Int32& position, Boolean allowClosingDelimiter, String textStyle, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, String textStyle)
+   at XamlMath.TexFormulaParser.Parse(String value, String textStyle)
+   at WpfMath.Controls.FormulaControl.CoerceFormula(DependencyObject d, Object baseValue)
+Formula '\text{Absolute minimum: } (0, 2)' -> HasError: False
+Formula '\text{Absolute minimum: } (0,\,2)' -> HasError: False
+Formula '\text{Absolute minimum: }(0, 2)' -> HasError: False
+Formula '{\text{Absolute minimum: }}(0, 2)' -> HasError: False
+Formula '\text{Absolute minimum: }(0,\,2)' -> HasError: False

@@ -1,0 +1,1 @@
+Count: 2 -> --screenshot c:\NEOSERV\FUENTES2\CALCULO\calculus_app_es.png

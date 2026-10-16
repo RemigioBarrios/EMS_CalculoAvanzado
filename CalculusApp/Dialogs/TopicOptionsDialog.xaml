@@ -1,0 +1,309 @@
+<Window x:Class="CalculusApp.Dialogs.TopicOptionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Applications of Differentiation - Absolute Extrema" 
+        Height="720" Width="1060"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Background="#19191D"
+        FontFamily="Segoe UI"
+        Foreground="#D0D0D4">
+
+    <Window.Resources>
+        <!-- Dark Theme GroupBox Style matching Kuta -->
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="#4C4C55"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="12,8,12,8"/>
+            <Setter Property="Foreground" Value="#E0E0E6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupBox">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Grid.RowSpan="2" BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" 
+                                    Background="Transparent" Margin="0,8,0,0"/>
+                            <Border Grid.Row="0" Margin="10,0,0,0" HorizontalAlignment="Left" Background="#18181B" Padding="4,0,4,0">
+                                <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"/>
+                            </Border>
+                            <Border Grid.Row="1" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark Theme Button Style -->
+        <Style x:Key="DarkBtn" TargetType="Button">
+            <Setter Property="Background" Value="#2A2A2E"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#52525C"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,2,8,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#38383E"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#6A6A76"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#795290"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#9565B2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Preset Button Style -->
+        <Style x:Key="PresetBtn" TargetType="Button" BasedOn="{StaticResource DarkBtn}">
+            <Setter Property="Width" Value="88"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="6,0,6,0"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Custom Dark RadioButton Style with Kuta Cyan Dot -->
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#D8D8DF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,3,0,3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Ellipse x:Name="OuterCircle" Stroke="#5A5A64" StrokeThickness="1.5" Fill="#18181B"/>
+                                <Ellipse x:Name="InnerDot" Width="8" Height="8" Fill="#2EA4F2" Visibility="Collapsed"/>
+                            </Grid>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="InnerDot" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="OuterCircle" Property="Stroke" Value="#2EA4F2"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="OuterCircle" Property="Stroke" Value="#70B8F8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Custom Dark CheckBox Style with Kuta Cyan Square & Checkmark -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#D8D8DF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,3,0,3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Border x:Name="CheckBd" CornerRadius="2" BorderBrush="#5A5A64" BorderThickness="1.2" Background="#18181B"/>
+                                <Path x:Name="CheckMark" Data="M 3,7.5 L 6,10.5 L 12,3.5" Stroke="White" StrokeThickness="1.8" 
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed"/>
+                            </Grid>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBd" Property="Background" Value="#2EA4F2"/>
+                                <Setter TargetName="CheckBd" Property="BorderBrush" Value="#2EA4F2"/>
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBd" Property="BorderBrush" Value="#70B8F8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- Top Controls Bar -->
+            <RowDefinition Height="*"/>      <!-- Main Split: Options (Left) & Preview (Right) -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. Top Controls Bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>  <!-- Number of questions -->
+                <ColumnDefinition Width="Auto"/>  <!-- Input Box -->
+                <ColumnDefinition Width="Auto"/>  <!-- Action Buttons -->
+                <ColumnDefinition Width="*"/>     <!-- Spacing -->
+                <ColumnDefinition Width="Auto"/>  <!-- More Samples link -->
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" x:Name="NumQuestionsLabel" Text="Number of questions:" VerticalAlignment="Center" 
+                       Foreground="#E0E0E6" FontSize="12" Margin="0,0,8,0"/>
+            
+            <TextBox Grid.Column="1" x:Name="NumQuestionsBox" Text="4" Width="44" Height="26" VerticalContentAlignment="Center" 
+                     HorizontalContentAlignment="Center" Background="#232328" Foreground="#FFFFFF" 
+                     BorderBrush="#484852" BorderThickness="1" Margin="0,0,14,0" TextChanged="OnNumQuestionsChanged"/>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button x:Name="OkButton" Content="OK" Style="{StaticResource DarkBtn}" Width="75" Height="26" 
+                        FontWeight="SemiBold" IsDefault="True" Click="OnOkClick" Margin="0,0,8,0"/>
+                <Button x:Name="AddContinueButton" Content="Add &amp; Continue" Style="{StaticResource DarkBtn}" Width="118" Height="26" 
+                        Click="OnAddContinueClick" Margin="0,0,8,0"/>
+                <Button x:Name="CancelButton" Content="Cancel" Style="{StaticResource DarkBtn}" Width="75" Height="26" 
+                        IsCancel="True" Click="OnCancelClick"/>
+            </StackPanel>
+
+            <!-- More Samples link -->
+            <Button Grid.Column="4" x:Name="MoreSamplesBtn" Content="More samples" Cursor="Hand" VerticalAlignment="Center" 
+                    Background="Transparent" BorderThickness="0" Foreground="#4EA4E8" FontSize="12" FontWeight="SemiBold" 
+                    Click="OnMoreSamplesClick">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" 
+                                   TextDecorations="Underline"/>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+
+        <!-- 2. Main 2-Column Split: Parameters Left, Live Preview Right -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="470"/>  <!-- Left: Options & Parameters -->
+                <ColumnDefinition Width="14"/>   <!-- Split spacing -->
+                <ColumnDefinition Width="*"/>    <!-- Right: Paper Preview Card -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Options ScrollViewer -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,6,0">
+                    <!-- Preset choices -->
+                    <GroupBox x:Name="PresetGroupBox" Header="Preset choices">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,4">
+                            <Button x:Name="EasyBtn" Content="Easy" Style="{StaticResource PresetBtn}" Click="OnPresetEasyClick"/>
+                            <Button x:Name="MediumBtn" Content="Medium" Style="{StaticResource PresetBtn}" Click="OnPresetMediumClick"/>
+                            <Button x:Name="HardBtn" Content="Hard" Style="{StaticResource PresetBtn}" Click="OnPresetHardClick"/>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <!-- Question type -->
+                    <GroupBox x:Name="QuestionTypeGroupBox" Header="Question type">
+                        <StackPanel Orientation="Horizontal" Margin="4,4,0,4">
+                            <RadioButton x:Name="FreeResponseRadio" Content="Free response" IsChecked="True" 
+                                         Checked="OnQuestionTypeChanged" Margin="0,0,32,0"/>
+                            <RadioButton x:Name="MultipleChoiceRadio" Content="Multiple choice" 
+                                         Checked="OnQuestionTypeChanged"/>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <!-- Options -->
+                    <GroupBox x:Name="OptionsGroupBox" Header="Options">
+                        <StackPanel Margin="4,2,0,2">
+                            <!-- Notation -->
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                                <TextBlock x:Name="NotationLabel" Text="Notation: " VerticalAlignment="Center" Foreground="#B0B0B8" Margin="0,0,10,0"/>
+                                <RadioButton x:Name="NotationYRadio" Content="y =" IsChecked="True" Checked="OnNotationChanged" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="NotationFxRadio" Content="f(x) =" Checked="OnNotationChanged" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="NotationEitherRadio" Content="Either" Checked="OnNotationChanged"/>
+                            </StackPanel>
+
+                            <!-- Checkbox Options -->
+                            <CheckBox x:Name="VaryLettersCheck" Content="Vary letters for functions and variables" Checked="OnOptionToggled" Unchecked="OnOptionToggled"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,2">
+                                <CheckBox x:Name="BlankGraphCheck" Content="Provide a blank graph" Margin="0,0,20,0" Checked="OnOptionToggled" Unchecked="OnOptionToggled"/>
+                                <CheckBox x:Name="FunctionGraphCheck" Content="Provide a graph of the function" Checked="OnOptionToggled" Unchecked="OnOptionToggled"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <!-- Complexity (Adaptive per topic) -->
+                    <GroupBox x:Name="ComplexityGroupBox" Header="Complexity">
+                        <StackPanel Margin="4,2,0,2">
+                            <TextBlock x:Name="ComplexityPrompt" Text="For each problem, find all points of absolute extrema over:" 
+                                       Foreground="#B0B0B8" FontSize="11" Margin="0,2,0,6" TextWrapping="Wrap"/>
+                            
+                            <!-- Interval / Method Radio Group -->
+                            <StackPanel Margin="2,0,0,8">
+                                <RadioButton x:Name="ComplexityRadio1" Content="A closed interval" IsChecked="True" Checked="OnComplexityRadioChanged"/>
+                                <RadioButton x:Name="ComplexityRadio2" Content="An open interval" Checked="OnComplexityRadioChanged"/>
+                                <RadioButton x:Name="ComplexityRadio3" Content="A half open interval" Checked="OnComplexityRadioChanged"/>
+                                <RadioButton x:Name="ComplexityRadio4" Content="An interval involving infinity" Checked="OnComplexityRadioChanged"/>
+                                <RadioButton x:Name="ComplexityRadio5" Content="Any" Checked="OnComplexityRadioChanged"/>
+                            </StackPanel>
+
+                            <!-- Functions Subheader -->
+                            <TextBlock x:Name="FunctionsSubheader" Text="Functions:" FontWeight="SemiBold" Foreground="#E0E0E6" Margin="0,4,0,4"/>
+                            
+                            <!-- 2-Column Checkbox Grid -->
+                            <Grid Margin="2,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <CheckBox x:Name="FuncCheck1" Content="Quadratic" IsChecked="True" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck2" Content="Cubic" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck3" Content="Quartic" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck4" Content="Rational" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <CheckBox x:Name="FuncCheck5" Content="Rational exponent, easy" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck6" Content="Rational exponent, hard" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck7" Content="Simple trigonometric" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                    <CheckBox x:Name="FuncCheck8" Content="Exponential" Visibility="Collapsed" Checked="OnFuncCheckChanged" Unchecked="OnFuncCheckChanged"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Right: Paper Preview Card -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- Direction Header -->
+                    <RowDefinition Height="*"/>     <!-- White Sheet of Paper Preview -->
+                </Grid.RowDefinitions>
+
+                <!-- Direction Header -->
+                <TextBlock Grid.Row="0" x:Name="PreviewDirectionHeader" 
+                           Text="For each problem, find all points of absolute minima and maxima on the given interval." 
+                           Foreground="#FFFFFF" FontSize="12.5" FontWeight="Normal" 
+                           Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                <!-- White Paper Card -->
+                <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#505058" BorderThickness="1" CornerRadius="4" Padding="14">
+
+                    <ScrollViewer x:Name="SamplesScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="SamplesContainer" Margin="4">
+                            <!-- 4 Live Generated Questions rendered with LaTeX & Red Teacher Answers -->
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

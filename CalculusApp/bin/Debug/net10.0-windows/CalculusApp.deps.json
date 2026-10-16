@@ -1,0 +1,147 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "CalculusApp/1.0.0": {
+        "dependencies": {
+          "PDFsharp": "6.5.0",
+          "WpfMath": "2.1.0"
+        },
+        "runtime": {
+          "CalculusApp.dll": {}
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1024.46610"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/8.0.3": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1325.6609"
+          }
+        }
+      },
+      "PDFsharp/6.5.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+        },
+        "runtime": {
+          "lib/net10.0/PdfSharp.BarCodes.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.Charting.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.Cryptography.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.License.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.0.7955"
+          },
+          "lib/net10.0/PdfSharp.Quality.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.Shared.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.Snippets.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.System.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.WPFonts.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          },
+          "lib/net10.0/PdfSharp.dll": {
+            "assemblyVersion": "6.5.0.0",
+            "fileVersion": "6.5.0.7955"
+          }
+        }
+      },
+      "WpfMath/2.1.0": {
+        "dependencies": {
+          "XamlMath.Shared": "2.1.0"
+        },
+        "runtime": {
+          "lib/net6.0-windows7.0/WpfMath.dll": {
+            "assemblyVersion": "2.1.0.0",
+            "fileVersion": "2.1.0.0"
+          }
+        }
+      },
+      "XamlMath.Shared/2.1.0": {
+        "runtime": {
+          "lib/net6.0/XamlMath.Shared.dll": {
+            "assemblyVersion": "2.1.0.0",
+            "fileVersion": "2.1.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CalculusApp/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3iE7UF7MQkCv1cxzCahz+Y/guQbTqieyxyaWKhrRO91itI9cOKO76OHeQDahqG4MmW5umr3CcCvGmK92lWNlbg==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/8.0.2",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/8.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dL0QGToTxggRLMYY4ZYX5AMwBb+byQBd/5dMiZE07Nv73o6I5Are3C7eQTh7K2+A4ct0PVISSr7TZANbiNb2yQ==",
+      "path": "microsoft.extensions.logging.abstractions/8.0.3",
+      "hashPath": "microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512"
+    },
+    "PDFsharp/6.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H9PYxFBvbevuYT5Q/d64MX7YxzEUuhl887fFTwN4By9vAKy9m54yBk5/Pm989KmBbtB2i6cUNa3Gve8loPSYkg==",
+      "path": "pdfsharp/6.5.0",
+      "hashPath": "pdfsharp.6.5.0.nupkg.sha512"
+    },
+    "WpfMath/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-216GtCBYFMPw5SaArNcuTgemgAWw985LihSEf7mtOjJYTN04X4BVFGPrkJ2Fiv1ffL8gX2xiRw/o+q1SC5oSAA==",
+      "path": "wpfmath/2.1.0",
+      "hashPath": "wpfmath.2.1.0.nupkg.sha512"
+    },
+    "XamlMath.Shared/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-p7W78KZc2EWuVqAd704m4yGWg0HtxahjNYRVxDWhw7npf8oMD8C7EUc1pjkjZIcmk5PxXJ+t5FE2Fs3gBYjv1A==",
+      "path": "xamlmath.shared/2.1.0",
+      "hashPath": "xamlmath.shared.2.1.0.nupkg.sha512"
+    }
+  }
+}

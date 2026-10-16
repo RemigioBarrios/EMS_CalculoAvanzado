@@ -1,0 +1,24 @@
+<UserControl x:Class="CalculusApp.Controls.WorksheetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="1200" d:DesignWidth="900"
+             Background="#505054">
+    <UserControl.Resources>
+        <DropShadowEffect x:Key="PageShadow" BlurRadius="12" Direction="270" ShadowDepth="4" Opacity="0.35" Color="Black"/>
+    </UserControl.Resources>
+    
+    <ScrollViewer x:Name="MainScrollViewer" 
+                  HorizontalScrollBarVisibility="Auto" 
+                  VerticalScrollBarVisibility="Auto"
+                  PanningMode="Both">
+        <StackPanel x:Name="PagesContainer" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Top" 
+                    Margin="24">
+            <!-- Pages will be added dynamically here -->
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

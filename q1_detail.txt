@@ -1,0 +1,13 @@
+Test 'y = -\frac{x^2}{2}' -> HasError: False, Err: 
+Test 'y = -\frac{x^2}{2} + 2x + 2' -> HasError: False, Err: 
+Test 'y = -\frac{x^2}{2} + 2x + 2;\; [0, 3]' -> HasError: False, Err: 
+Test 'y = -\frac{x^{2}}{2} + 2x + 2;\; [0, 3]' -> HasError: False, Err: 
+Test 'y = -\frac{x^{2}}{2} + 2x + 2;\; [0,\, 3]' -> HasError: False, Err: 
+Test 'y = -{x^2 \over 2} + 2x + 2;\; [0, 3]' -> HasError: True, Err: XamlMath.Exceptions.TexParseException: Unknown symbol or command or predefined TeXFormula: 'over'
+   at XamlMath.TexFormulaParser.ProcessEscapeSequence(TexFormula formula, SourceSpan value, Int32& position, Boolean allowClosingDelimiter, Boolean& closedDelimiter, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, Int32& position, Boolean allowClosingDelimiter, String textStyle, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, String textStyle, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, Int32& position, Boolean allowClosingDelimiter, String textStyle, ICommandEnvironment environment)
+   at XamlMath.TexFormulaParser.Parse(SourceSpan value, String textStyle)
+   at XamlMath.TexFormulaParser.Parse(String value, String textStyle)
+   at WpfMath.Controls.FormulaControl.CoerceFormula(DependencyObject d, Object baseValue)

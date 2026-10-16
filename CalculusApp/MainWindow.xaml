@@ -1,0 +1,413 @@
+<Window x:Class="CalculusApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:CalculusApp.Controls"
+        xmlns:vm="clr-namespace:CalculusApp.ViewModels"
+        mc:Ignorable="d"
+        Title="Infinite Calculus" 
+        Height="870" Width="1380"
+        MinHeight="600" MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Icon="app_icon.png"
+        Background="#ECECF0"
+        FontFamily="Segoe UI">
+
+    <Window.DataContext>
+        <vm:MainViewModel x:Name="ViewModel"/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!-- Button Style for Toolbar -->
+        <Style x:Key="ToolBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="2,1,2,1"/>
+            <Setter Property="Padding" Value="5,3,5,3"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E2E2E6"/>
+                    <Setter Property="BorderBrush" Value="#C0C0C6"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#D0D0D8"/>
+                    <Setter Property="BorderBrush" Value="#A0A0A8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ToggleToolBtn" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="2,1,2,1"/>
+            <Setter Property="Padding" Value="6,3,6,3"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E2E2E6"/>
+                    <Setter Property="BorderBrush" Value="#C0C0C6"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#D4C8DE"/>
+                    <Setter Property="BorderBrush" Value="#795290"/>
+                    <Setter Property="Foreground" Value="#4A2A60"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Separator Style -->
+        <Style x:Key="ToolSep" TargetType="Separator">
+            <Setter Property="Margin" Value="4,4,4,4"/>
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="#C8C8CC"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel LastChildFill="True">
+        <!-- 1. Top MenuBar -->
+        <Menu DockPanel.Dock="Top" Background="#F6F6F8" BorderBrush="#D8D8DC" BorderThickness="0,0,0,1" Padding="4,2,4,2">
+            <MenuItem Header="{Binding [menu_file]}">
+                <MenuItem Header="{Binding [menu_new]}" Command="{Binding NewCommand}" InputGestureText="Ctrl+N"/>
+                <MenuItem Header="{Binding [menu_open]}" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O"/>
+                <MenuItem Header="{Binding [menu_save]}" Command="{Binding SaveCommand}" InputGestureText="Ctrl+S"/>
+                <Separator/>
+                <MenuItem Header="{Binding [menu_print]}" Command="{Binding PrintCommand}" InputGestureText="Ctrl+P"/>
+                <MenuItem Header="{Binding [menu_preview_pdf]}" Command="{Binding PreviewPdfCommand}" InputGestureText="Ctrl+Shift+P"/>
+                <MenuItem Header="{Binding [menu_export_pdf]}" Command="{Binding ExportPdfCommand}" InputGestureText="Ctrl+E"/>
+                <Separator/>
+                <MenuItem Header="{Binding [menu_exit]}" Click="OnMenuExitClick"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_edit]}">
+                <MenuItem Header="{Binding [menu_undo]}" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="{Binding [menu_redo]}" InputGestureText="Ctrl+Y"/>
+                <Separator/>
+                <MenuItem Header="{Binding [menu_regen_all]}" Command="{Binding RegenerateAllCommand}" InputGestureText="F5"/>
+                <MenuItem Header="{Binding [menu_scramble_q]}" Command="{Binding ScrambleQuestionsCommand}"/>
+                <MenuItem Header="{Binding [menu_scramble_a]}" Command="{Binding ScrambleChoicesCommand}"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_view]}">
+                <MenuItem Header="{Binding [menu_show_answers]}" Command="{Binding ToggleAnswersCommand}" IsCheckable="True" IsChecked="{Binding ShowAnswers}"/>
+                <MenuItem Header="{Binding [menu_punch_holes]}" IsCheckable="True" IsChecked="{Binding ShowPunchHoles}"/>
+                <Separator/>
+                <MenuItem Header="Zoom 75%" Command="{Binding SetZoomCommand}" CommandParameter="75"/>
+                <MenuItem Header="Zoom 100%" Command="{Binding SetZoomCommand}" CommandParameter="100"/>
+                <MenuItem Header="Zoom 125%" Command="{Binding SetZoomCommand}" CommandParameter="125"/>
+                <MenuItem Header="Zoom 150%" Command="{Binding SetZoomCommand}" CommandParameter="150"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_modify]}">
+                <MenuItem Header="{Binding [menu_all_mc]}" Command="{Binding ChangeAllToMultipleChoiceCommand}"/>
+                <MenuItem Header="{Binding [menu_all_fr]}" Command="{Binding ChangeAllToFreeResponseCommand}"/>
+                <Separator/>
+                <MenuItem Header="{Binding [menu_shorten]}" Command="{Binding OnePageShorterCommand}"/>
+                <MenuItem Header="{Binding [menu_lengthen]}" Command="{Binding OnePageLongerCommand}"/>
+                <MenuItem Header="{Binding [menu_distribute_space]}" Command="{Binding RespaceWithinPageCommand}"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_language]}">
+                <MenuItem Header="🇺🇸 English (US)" Command="{Binding SetLanguageCommand}" CommandParameter="en"/>
+                <MenuItem Header="🇪🇸 Español" Command="{Binding SetLanguageCommand}" CommandParameter="es"/>
+                <MenuItem Header="🇧🇷 Português" Command="{Binding SetLanguageCommand}" CommandParameter="pt"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_utilities]}">
+                <MenuItem Header="Calculus Formula Sheet"/>
+                <MenuItem Header="Function Grapher &amp; Curve Sketcher"/>
+            </MenuItem>
+            <MenuItem Header="{Binding [menu_help]}">
+                <MenuItem Header="{Binding [menu_about]}" Click="OnMenuAboutClick"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- 2. Main ToolBar -->
+        <ToolBarTray DockPanel.Dock="Top" Background="#F0F0F2">
+            <ToolBar Background="#F0F0F2" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding NewCommand}" ToolTip="New (Ctrl+N)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📄" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_new]}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding OpenCommand}" ToolTip="Open (Ctrl+O)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📂" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_open]}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding SaveCommand}" ToolTip="Save (Ctrl+S)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_save]}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding PrintCommand}" ToolTip="Print (Ctrl+P)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🖨️" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_print]}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding PreviewPdfCommand}" ToolTip="PDF Preview (Ctrl+Shift+P)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔍" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_preview_pdf]}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding ExportPdfCommand}" ToolTip="Export to PDF (Ctrl+E)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📑" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_export_pdf]}"/>
+                    </StackPanel>
+                </Button>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <Button Style="{StaticResource ToolBtn}" Click="OnEditHeadingClick" ToolTip="Modify Heading">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📝" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_heading]}"/>
+                    </StackPanel>
+                </Button>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <!-- Show/Hide Answers -->
+                <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowAnswers}" ToolTip="Show/Hide Answers">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="👁️" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_show_answers]}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </ToggleButton>
+
+                <!-- Scramble Questions -->
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding ScrambleQuestionsCommand}" ToolTip="Scramble Questions">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔀" Margin="0,0,3,0"/>
+                        <TextBlock Text="{Binding [tb_scramble]}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Regenerate Questions -->
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateAllCommand}" ToolTip="Regenerate All Questions">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔄" Margin="0,0,3,0" Foreground="#2A6090"/>
+                        <TextBlock Text="{Binding [tb_regenerate_all]}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Change to MC -->
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding ChangeAllToMultipleChoiceCommand}" ToolTip="Convert All to Multiple Choice">
+                    <TextBlock Text="{Binding [tb_all_mc]}" FontWeight="SemiBold"/>
+                </Button>
+
+                <!-- Change to Free Response -->
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding ChangeAllToFreeResponseCommand}" ToolTip="Convert All to Free Response">
+                    <TextBlock Text="{Binding [tb_all_fr]}" FontWeight="SemiBold"/>
+                </Button>
+
+                <!-- Punch holes -->
+                <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowPunchHoles}" ToolTip="Show/Hide 3-Hole Punch Guides">
+                    <TextBlock Text="{Binding [tb_punch_holes]}"/>
+                </ToggleButton>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <!-- Language Selector -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
+                    <TextBlock Text="🌐 " VerticalAlignment="Center" FontSize="11"/>
+                    <ComboBox x:Name="LanguageCombo" Width="105" Height="24" SelectionChanged="OnLanguageComboChanged">
+                        <ComboBoxItem Tag="en" Content="🇺🇸 English"/>
+                        <ComboBoxItem Tag="es" Content="🇪🇸 Español" IsSelected="True"/>
+                        <ComboBoxItem Tag="pt" Content="🇧🇷 Português"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <!-- Zoom Selector -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
+                    <TextBlock Text="{Binding [tb_zoom]}" VerticalAlignment="Center" FontSize="11" Foreground="#555" Margin="0,0,2,0"/>
+                    <ComboBox Width="72" Height="24" SelectedIndex="2" SelectionChanged="OnZoomSelectionChanged">
+                        <ComboBoxItem Content="50%"/>
+                        <ComboBoxItem Content="75%"/>
+                        <ComboBoxItem Content="100%"/>
+                        <ComboBoxItem Content="125%"/>
+                        <ComboBoxItem Content="150%"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <!-- Columns Selector -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
+                    <TextBlock Text="{Binding [tb_cols]}" VerticalAlignment="Center" FontSize="11" Foreground="#555" Margin="0,0,2,0"/>
+                    <ComboBox Width="56" Height="24" SelectedIndex="1" SelectionChanged="OnColumnsSelectionChanged">
+                        <ComboBoxItem Content="1"/>
+                        <ComboBoxItem Content="2"/>
+                    </ComboBox>
+                </StackPanel>
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- 3. Left Sidebar (DockWidget style) -->
+        <Border DockPanel.Dock="Left" Width="305" Background="#F6F6F9" BorderBrush="#D0D0D6" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- Filter & Order -->
+                    <RowDefinition Height="2*"/>     <!-- Topics List -->
+                    <RowDefinition Height="Auto"/>   <!-- Splitter -->
+                    <RowDefinition Height="Auto"/>   <!-- Page/Questions stats box -->
+                    <RowDefinition Height="1.2*"/>   <!-- Active Question Sets -->
+                </Grid.RowDefinitions>
+
+                <!-- Row 0: Search Filter -->
+                <Border Grid.Row="0" Padding="8,8,8,6" Background="#EDEDF2" BorderBrush="#D8D8DF" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <TextBox x:Name="SearchBox" 
+                                 Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}" 
+                                 Height="26" VerticalContentAlignment="Center" 
+                                 Padding="4,0,20,0"
+                                 BorderBrush="#B8B8C0"/>
+                        <TextBlock Text="{Binding [filter_topics_placeholder]}" 
+                                   Foreground="#888" 
+                                   VerticalAlignment="Center" 
+                                   Margin="6,0,0,0" 
+                                   IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+
+                <!-- Row 1: Topics TreeView -->
+                <TreeView Grid.Row="1" 
+                          ItemsSource="{Binding TopicCategories}" 
+                          BorderThickness="0" 
+                          Background="Transparent"
+                          Padding="4"
+                          MouseDoubleClick="OnTopicTreeDoubleClick">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True"/>
+                            <Setter Property="Padding" Value="2"/>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal" Margin="2,1,2,1">
+                                <TextBlock Text="{Binding Title}" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCategory}" Value="True">
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="Foreground" Value="#795290"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsCategory}" Value="False">
+                                                    <Setter Property="Foreground" Value="#222"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+
+                <!-- Row 2: Splitter -->
+                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Background="#D4D4DA" Cursor="SizeNS"/>
+
+                <!-- Row 3: Page & Questions statistics box -->
+                <Border Grid.Row="3" Background="#EAEAEF" BorderBrush="#D0D0D6" BorderThickness="0,1,0,1" Padding="8,6,8,6">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StatusPagesText}" FontWeight="Bold" FontSize="13" Foreground="#333"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StatusQuestionsText}" FontSize="11" Foreground="#666"/>
+
+                        <!-- Length buttons -->
+                        <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding OnePageShorterCommand}" ToolTip="Shorten Assignment" Width="26">
+                                <TextBlock Text="➖" FontSize="10"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding OnePageLongerCommand}" ToolTip="Lengthen Assignment" Width="26">
+                                <TextBlock Text="➕" FontSize="10"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RespaceWithinPageCommand}" ToolTip="Distribute Space at Bottom of Each Page" Width="26">
+                                <TextBlock Text="↕️" FontSize="10"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Row 4: Active Question Sets -->
+                <DockPanel Grid.Row="4" Margin="6,6,6,6">
+                    <DockPanel DockPanel.Dock="Top" Margin="2,0,2,4">
+                        <TextBlock Text="{Binding [current_question_sets]}" FontWeight="SemiBold" FontSize="11" Foreground="#555" DockPanel.Dock="Left"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource ToolBtn}" Click="OnEditSelectedQuestionSetClick" ToolTip="Options for Selected Set" Width="22" Height="22">
+                                <TextBlock Text="⚙️" FontSize="9"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveUpCommand}" ToolTip="Move Selected Up" Width="22" Height="22">
+                                <TextBlock Text="▲" FontSize="9"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveDownCommand}" ToolTip="Move Selected Down" Width="22" Height="22">
+                                <TextBlock Text="▼" FontSize="9"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateSetCommand}" ToolTip="Regenerate Selected Set" Width="22" Height="22">
+                                <TextBlock Text="🔄" FontSize="9"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RemoveQuestionSetCommand}" ToolTip="Delete Selected Set" Width="22" Height="22">
+                                <TextBlock Text="❌" FontSize="9" Foreground="#A02020"/>
+                            </Button>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <ListBox ItemsSource="{Binding QuestionSets}" 
+                             SelectedItem="{Binding SelectedQuestionSet}"
+                             MouseDoubleClick="OnQuestionSetDoubleClick"
+                             Background="White" 
+                             BorderBrush="#C4C4CA"
+                             BorderThickness="1"
+                             FontSize="11"
+                             Padding="2">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="2">
+                                    <TextBlock Text="• " Foreground="#795290" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding TopicTitle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text=" (" Foreground="#777"/>
+                                    <TextBlock Text="{Binding Questions.Count}" Foreground="#333"/>
+                                    <TextBlock Text=" q)" Foreground="#777"/>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <!-- 4. Central Canvas / Worksheet -->
+        <Border Background="#505054">
+            <controls:WorksheetView x:Name="WorksheetCanvas"/>
+        </Border>
+    </DockPanel>
+</Window>
