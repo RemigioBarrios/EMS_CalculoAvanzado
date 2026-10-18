@@ -589,10 +589,11 @@ namespace CalculusApp.Controls
                 Height = PageHeight,
                 Background = Brushes.White,
                 Margin = new Thickness(0, 0, 0, 24),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(180, 180, 185)),
+                BorderBrush = (Brush)FindResource("ThemePaperBorder"),
                 BorderThickness = new Thickness(1),
                 Effect = (System.Windows.Media.Effects.DropShadowEffect)FindResource("PageShadow")
             };
+            System.Windows.Documents.TextElement.SetForeground(pageBorder, Brushes.Black);
 
             var grid = new Grid();
 

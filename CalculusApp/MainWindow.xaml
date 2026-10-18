@@ -11,67 +11,17 @@
         MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         Icon="app_icon.png"
-        Background="#ECECF0"
+        Background="{DynamicResource ThemeWindowBackground}"
+        Foreground="{DynamicResource ThemeTextPrimary}"
         FontFamily="Segoe UI">
 
     <Window.DataContext>
         <vm:MainViewModel x:Name="ViewModel"/>
     </Window.DataContext>
 
-    <Window.Resources>
-        <!-- Button Style for Toolbar -->
-        <Style x:Key="ToolBtn" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="2,1,2,1"/>
-            <Setter Property="Padding" Value="5,3,5,3"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E2E2E6"/>
-                    <Setter Property="BorderBrush" Value="#C0C0C6"/>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#D0D0D8"/>
-                    <Setter Property="BorderBrush" Value="#A0A0A8"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="ToggleToolBtn" TargetType="ToggleButton">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="2,1,2,1"/>
-            <Setter Property="Padding" Value="6,3,6,3"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E2E2E6"/>
-                    <Setter Property="BorderBrush" Value="#C0C0C6"/>
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#D4C8DE"/>
-                    <Setter Property="BorderBrush" Value="#795290"/>
-                    <Setter Property="Foreground" Value="#4A2A60"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Separator Style -->
-        <Style x:Key="ToolSep" TargetType="Separator">
-            <Setter Property="Margin" Value="4,4,4,4"/>
-            <Setter Property="Width" Value="1"/>
-            <Setter Property="Background" Value="#C8C8CC"/>
-        </Style>
-    </Window.Resources>
-
     <DockPanel LastChildFill="True">
         <!-- 1. Top MenuBar -->
-        <Menu DockPanel.Dock="Top" Background="#F6F6F8" BorderBrush="#D8D8DC" BorderThickness="0,0,0,1" Padding="4,2,4,2">
+        <Menu DockPanel.Dock="Top" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1" Padding="4,2,4,2">
             <MenuItem Header="{Binding [menu_file]}">
                 <MenuItem Header="{Binding [menu_new]}" Command="{Binding NewCommand}" InputGestureText="Ctrl+N"/>
                 <MenuItem Header="{Binding [menu_open]}" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O"/>
@@ -94,6 +44,11 @@
             <MenuItem Header="{Binding [menu_view]}">
                 <MenuItem Header="{Binding [menu_show_answers]}" Command="{Binding ToggleAnswersCommand}" IsCheckable="True" IsChecked="{Binding ShowAnswers}"/>
                 <MenuItem Header="{Binding [menu_punch_holes]}" IsCheckable="True" IsChecked="{Binding ShowPunchHoles}"/>
+                <Separator/>
+                <MenuItem Header="{Binding [menu_theme]}">
+                    <MenuItem Header="{Binding [menu_theme_light]}" Command="{Binding SetThemeCommand}" CommandParameter="light"/>
+                    <MenuItem Header="{Binding [menu_theme_dark]}" Command="{Binding SetThemeCommand}" CommandParameter="dark"/>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="Zoom 75%" Command="{Binding SetZoomCommand}" CommandParameter="75"/>
                 <MenuItem Header="Zoom 100%" Command="{Binding SetZoomCommand}" CommandParameter="100"/>
@@ -123,8 +78,8 @@
         </Menu>
 
         <!-- 2. Main ToolBar -->
-        <ToolBarTray DockPanel.Dock="Top" Background="#F0F0F2">
-            <ToolBar Background="#F0F0F2" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
+        <ToolBarTray DockPanel.Dock="Top" Background="{DynamicResource ThemePanelBackground}">
+            <ToolBar Background="{DynamicResource ThemePanelBackground}" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
                 <Button Style="{StaticResource ToolBtn}" Command="{Binding NewCommand}" ToolTip="New (Ctrl+N)">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📄" Margin="0,0,3,0"/>
@@ -192,7 +147,7 @@
                 <!-- Regenerate Questions -->
                 <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateAllCommand}" ToolTip="Regenerate All Questions">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔄" Margin="0,0,3,0" Foreground="#2A6090"/>
+                        <TextBlock Text="🔄" Margin="0,0,3,0" Foreground="{DynamicResource ThemeAccent}"/>
                         <TextBlock Text="{Binding [tb_regenerate_all]}" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
@@ -226,9 +181,19 @@
 
                 <Separator Style="{StaticResource ToolSep}"/>
 
+                <!-- Theme Toggle Button (Antigravity IDE Light/Dark) -->
+                <Button Style="{StaticResource ToolBtn}" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding [tb_theme_toggle]}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🌓" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ThemeStatusText}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
                 <!-- Zoom Selector -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="{Binding [tb_zoom]}" VerticalAlignment="Center" FontSize="11" Foreground="#555" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding [tb_zoom]}" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,2,0"/>
                     <ComboBox Width="72" Height="24" SelectedIndex="2" SelectionChanged="OnZoomSelectionChanged">
                         <ComboBoxItem Content="50%"/>
                         <ComboBoxItem Content="75%"/>
@@ -242,7 +207,7 @@
 
                 <!-- Columns Selector -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="{Binding [tb_cols]}" VerticalAlignment="Center" FontSize="11" Foreground="#555" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding [tb_cols]}" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,2,0"/>
                     <ComboBox Width="56" Height="24" SelectedIndex="1" SelectionChanged="OnColumnsSelectionChanged">
                         <ComboBoxItem Content="1"/>
                         <ComboBoxItem Content="2"/>
@@ -252,7 +217,7 @@
         </ToolBarTray>
 
         <!-- 3. Left Sidebar (DockWidget style) -->
-        <Border DockPanel.Dock="Left" Width="305" Background="#F6F6F9" BorderBrush="#D0D0D6" BorderThickness="0,0,1,0">
+        <Border DockPanel.Dock="Left" Width="305" Background="{DynamicResource ThemeSidebarBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>   <!-- Filter & Order -->
@@ -263,17 +228,16 @@
                 </Grid.RowDefinitions>
 
                 <!-- Row 0: Search Filter -->
-                <Border Grid.Row="0" Padding="8,8,8,6" Background="#EDEDF2" BorderBrush="#D8D8DF" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Padding="8,8,8,6" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1">
                     <Grid>
                         <TextBox x:Name="SearchBox" 
                                  Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}" 
                                  Height="26" VerticalContentAlignment="Center" 
-                                 Padding="4,0,20,0"
-                                 BorderBrush="#B8B8C0"/>
+                                 Padding="6,0,20,0"/>
                         <TextBlock Text="{Binding [filter_topics_placeholder]}" 
-                                   Foreground="#888" 
+                                   Foreground="{DynamicResource ThemeTextMuted}" 
                                    VerticalAlignment="Center" 
-                                   Margin="6,0,0,0" 
+                                   Margin="8,0,0,0" 
                                    IsHitTestVisible="False">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
@@ -300,6 +264,7 @@
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True"/>
                             <Setter Property="Padding" Value="2"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
                         </Style>
                     </TreeView.ItemContainerStyle>
                     <TreeView.ItemTemplate>
@@ -311,10 +276,10 @@
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsCategory}" Value="True">
                                                     <Setter Property="FontWeight" Value="Bold"/>
-                                                    <Setter Property="Foreground" Value="#795290"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsCategory}" Value="False">
-                                                    <Setter Property="Foreground" Value="#222"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -326,10 +291,10 @@
                 </TreeView>
 
                 <!-- Row 2: Splitter -->
-                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Background="#D4D4DA" Cursor="SizeNS"/>
+                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Background="{DynamicResource ThemeSplitter}" Cursor="SizeNS"/>
 
                 <!-- Row 3: Page & Questions statistics box -->
-                <Border Grid.Row="3" Background="#EAEAEF" BorderBrush="#D0D0D6" BorderThickness="0,1,0,1" Padding="8,6,8,6">
+                <Border Grid.Row="3" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,1,0,1" Padding="8,6,8,6">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -340,8 +305,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StatusPagesText}" FontWeight="Bold" FontSize="13" Foreground="#333"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StatusQuestionsText}" FontSize="11" Foreground="#666"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StatusPagesText}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StatusQuestionsText}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
 
                         <!-- Length buttons -->
                         <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -361,7 +326,7 @@
                 <!-- Row 4: Active Question Sets -->
                 <DockPanel Grid.Row="4" Margin="6,6,6,6">
                     <DockPanel DockPanel.Dock="Top" Margin="2,0,2,4">
-                        <TextBlock Text="{Binding [current_question_sets]}" FontWeight="SemiBold" FontSize="11" Foreground="#555" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding [current_question_sets]}" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" DockPanel.Dock="Left"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Style="{StaticResource ToolBtn}" Click="OnEditSelectedQuestionSetClick" ToolTip="Options for Selected Set" Width="22" Height="22">
                                 <TextBlock Text="⚙️" FontSize="9"/>
@@ -376,7 +341,7 @@
                                 <TextBlock Text="🔄" FontSize="9"/>
                             </Button>
                             <Button Style="{StaticResource ToolBtn}" Command="{Binding RemoveQuestionSetCommand}" ToolTip="Delete Selected Set" Width="22" Height="22">
-                                <TextBlock Text="❌" FontSize="9" Foreground="#A02020"/>
+                                <TextBlock Text="❌" FontSize="9" Foreground="#E11D48"/>
                             </Button>
                         </StackPanel>
                     </DockPanel>
@@ -384,19 +349,19 @@
                     <ListBox ItemsSource="{Binding QuestionSets}" 
                              SelectedItem="{Binding SelectedQuestionSet}"
                              MouseDoubleClick="OnQuestionSetDoubleClick"
-                             Background="White" 
-                             BorderBrush="#C4C4CA"
+                             Background="{DynamicResource ThemeControlBackground}" 
+                             BorderBrush="{DynamicResource ThemeControlBorder}"
                              BorderThickness="1"
                              FontSize="11"
                              Padding="2">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel Margin="2">
-                                    <TextBlock Text="• " Foreground="#795290" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding TopicTitle}" FontWeight="SemiBold"/>
-                                    <TextBlock Text=" (" Foreground="#777"/>
-                                    <TextBlock Text="{Binding Questions.Count}" Foreground="#333"/>
-                                    <TextBlock Text=" q)" Foreground="#777"/>
+                                    <TextBlock Text="• " Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding TopicTitle}" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                    <TextBlock Text=" (" Foreground="{DynamicResource ThemeTextMuted}"/>
+                                    <TextBlock Text="{Binding Questions.Count}" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                    <TextBlock Text=" q)" Foreground="{DynamicResource ThemeTextMuted}"/>
                                 </DockPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -406,7 +371,7 @@
         </Border>
 
         <!-- 4. Central Canvas / Worksheet -->
-        <Border Background="#505054">
+        <Border Background="{DynamicResource ThemeCanvasBackground}">
             <controls:WorksheetView x:Name="WorksheetCanvas"/>
         </Border>
     </DockPanel>

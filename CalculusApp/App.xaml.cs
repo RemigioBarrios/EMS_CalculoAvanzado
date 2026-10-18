@@ -10,13 +10,20 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        File.WriteAllText("args.txt", "Count: " + e.Args.Length + " -> " + string.Join(" ", e.Args));
-
-        for (int i = 0; i < e.Args.Length; i++)
+        Services.ThemeService.Initialize();
+        string[] args = Environment.GetCommandLineArgs();
+        try
         {
-            if (e.Args[i] == "--screenshot" && i + 1 < e.Args.Length)
+            string logPath = Path.Combine(AppContext.BaseDirectory, "args.txt");
+            File.WriteAllText(logPath, "Count: " + args.Length + " -> " + string.Join(" ", args));
+        }
+        catch { }
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--screenshot" && i + 1 < args.Length)
             {
-                string targetPath = e.Args[i + 1];
+                string targetPath = args[i + 1];
                 try
                 {
 
@@ -37,9 +44,20 @@ public partial class App : Application
                         encoder.Save(fs);
                     }
 
-                    // 1. Spanish (Default)
+                    // 1. Spanish Light (Antigravity IDE Light)
+                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
                     SaveSnapshot(targetPath);
+                    string lightPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_light.png");
+                    SaveSnapshot(lightPath);
+
+                    // 1b. Spanish Dark (Antigravity IDE Dark)
+                    Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+                    string darkPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_dark.png");
+                    SaveSnapshot(darkPath);
+
+                    // Revert to Light default
+                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
 
                     // 2. Answer overlay (Spanish)
                     win.ViewModel.ShowAnswers = true;
@@ -75,7 +93,32 @@ public partial class App : Application
                     {
                         encoderDlg.Save(fs);
                     }
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_topic_dialog_light.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbDlg));
+                        enc.Save(fs);
+                    }
                     dlg.Close();
+
+                    // Topic Options Dialog in Dark Theme
+                    Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+                    var dlgDark = new Dialogs.TopicOptionsDialog(topicExtrema, 4, Models.QuestionType.FreeResponse);
+                    dlgDark.Width = 920;
+                    dlgDark.Height = 705;
+                    dlgDark.Show();
+                    dlgDark.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    dlgDark.UpdateLayout();
+                    var rtbDlgDark = new RenderTargetBitmap(920, 705, 96, 96, PixelFormats.Pbgra32);
+                    rtbDlgDark.Render(dlgDark);
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_topic_dialog_dark.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbDlgDark));
+                        enc.Save(fs);
+                    }
+                    dlgDark.Close();
+                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
 
                     // 6. Topic Options Dialog Snapshot (Spanish - Limits Direct with Polynomial + Trig, exactly reproducing user's screenshot)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);

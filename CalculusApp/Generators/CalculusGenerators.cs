@@ -62,31 +62,54 @@ namespace CalculusApp.Generators
             return GenerateQuestions(count, type, null, rng);
         }
 
+        public static string GetQuestionArchetypeKey(Question q)
+        {
+            if (!string.IsNullOrWhiteSpace(q.TemplateId))
+                return q.TemplateId;
+
+            string raw = (string.IsNullOrWhiteSpace(q.ProblemStatement) ? q.FormulaText : q.ProblemStatement).Trim();
+            if (string.IsNullOrWhiteSpace(raw))
+                return Guid.NewGuid().ToString();
+
+            // Normalize whitespace
+            raw = System.Text.RegularExpressions.Regex.Replace(raw, @"\s+", " ");
+
+            // Replace numbers with '#', preserving powers after ^ (e.g., ^2, ^3)
+            string pattern = System.Text.RegularExpressions.Regex.Replace(raw, @"(?<!\^)\b\d+(\.\d+)?\b", "#");
+            return pattern.Trim();
+        }
+
         public List<Question> GenerateQuestions(int count, QuestionType type, TopicGeneratorParameters? parameters, Random rng)
         {
             var list = GeneratorFuncWithParams != null
                 ? GeneratorFuncWithParams(count, type, parameters, rng)
                 : GeneratorFunc(count, type, rng);
 
-            // Ensure every generated question in the batch is strictly distinct
+            // Ensure every generated question in the batch has a distinct structural archetype
+            // and distinct mathematical formula
             if (list.Count > 1)
             {
-                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var seenFormulas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var seenArchetypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var distinctList = new List<Question>();
 
                 for (int i = 0; i < list.Count; i++)
                 {
                     var q = list[i];
-                    string key = (string.IsNullOrWhiteSpace(q.ProblemStatement) ? q.FormulaText : q.ProblemStatement).Trim();
-                    if (!seen.Contains(key))
+                    string formKey = (string.IsNullOrWhiteSpace(q.ProblemStatement) ? q.FormulaText : q.ProblemStatement).Trim();
+                    string archKey = GetQuestionArchetypeKey(q);
+
+                    if (!seenFormulas.Contains(formKey) && !seenArchetypes.Contains(archKey))
                     {
-                        seen.Add(key);
+                        seenFormulas.Add(formKey);
+                        seenArchetypes.Add(archKey);
                         distinctList.Add(q);
                     }
                     else
                     {
+                        // Duplicate archetype or duplicate formula! Search for an unseen archetype.
                         bool replaced = false;
-                        for (int attempt = 1; attempt <= 40; attempt++)
+                        for (int attempt = 1; attempt <= 60; attempt++)
                         {
                             var altRng = new Random(rng.Next() ^ (attempt * 7919) ^ (i * 31));
                             int reqCount = i + attempt + 1;
@@ -97,19 +120,51 @@ namespace CalculusApp.Generators
                             if (singleList.Count > 0)
                             {
                                 var cand = singleList[singleList.Count - 1];
-                                string candKey = (string.IsNullOrWhiteSpace(cand.ProblemStatement) ? cand.FormulaText : cand.ProblemStatement).Trim();
-                                if (!seen.Contains(candKey))
+                                string candForm = (string.IsNullOrWhiteSpace(cand.ProblemStatement) ? cand.FormulaText : cand.ProblemStatement).Trim();
+                                string candArch = GetQuestionArchetypeKey(cand);
+
+                                if (!seenFormulas.Contains(candForm) && !seenArchetypes.Contains(candArch))
                                 {
-                                    seen.Add(candKey);
+                                    seenFormulas.Add(candForm);
+                                    seenArchetypes.Add(candArch);
                                     distinctList.Add(cand);
                                     replaced = true;
                                     break;
                                 }
                             }
                         }
+
+                        // If all distinct archetypes for this topic are already used in this batch
+                        // (e.g. user requested more questions than available distinct templates),
+                        // allow reusing an archetype but ensure the formula/numbers are strictly distinct!
                         if (!replaced)
                         {
-                            distinctList.Add(q);
+                            for (int attempt = 1; attempt <= 40; attempt++)
+                            {
+                                var altRng = new Random(rng.Next() ^ (attempt * 6271) ^ (i * 17));
+                                int reqCount = i + attempt + 1;
+                                var singleList = GeneratorFuncWithParams != null
+                                    ? GeneratorFuncWithParams(reqCount, type, parameters, altRng)
+                                    : GeneratorFunc(reqCount, type, altRng);
+
+                                if (singleList.Count > 0)
+                                {
+                                    var cand = singleList[singleList.Count - 1];
+                                    string candForm = (string.IsNullOrWhiteSpace(cand.ProblemStatement) ? cand.FormulaText : cand.ProblemStatement).Trim();
+                                    if (!seenFormulas.Contains(candForm))
+                                    {
+                                        seenFormulas.Add(candForm);
+                                        distinctList.Add(cand);
+                                        replaced = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!replaced)
+                            {
+                                distinctList.Add(q);
+                            }
                         }
                     }
                 }
@@ -233,10 +288,11 @@ namespace CalculusApp.Generators
                 "Evaluate each limit.", "Evalúe cada límite.", "Avalie cada limite.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, i, type, rng, "limits_direct"));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, startOffset + i, type, rng, "limits_direct"));
                     }
                     return list;
                 });
@@ -247,10 +303,11 @@ namespace CalculusApp.Generators
                 "Evaluate each one-sided or two-sided limit.", "Evalúe cada límite unilateral o bilateral.", "Avalie cada limite unilateral ou bilateral.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, i, type, rng, "limits_jumps"));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, startOffset + i, type, rng, "limits_jumps"));
                     }
                     return list;
                 });
@@ -261,10 +318,11 @@ namespace CalculusApp.Generators
                 "Evaluate each limit by factoring or algebraic manipulation.", "Evalúe cada límite factorizando o manipulando algebraicamente.", "Avalie cada limite fatorando ou manipulando algebricamente.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, i, type, rng, "limits_holes"));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, startOffset + i, type, rng, "limits_holes"));
                     }
                     return list;
                 });
@@ -275,10 +333,11 @@ namespace CalculusApp.Generators
                 "Determine the behavior of each limit at the vertical asymptote.", "Determine el comportamiento de cada límite en la asíntota vertical.", "Determine o comportamento de cada limite na assíntota vertical.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, i, type, rng, "limits_essential"));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, startOffset + i, type, rng, "limits_essential"));
                     }
                     return list;
                 });
@@ -289,10 +348,11 @@ namespace CalculusApp.Generators
                 "Evaluate each limit as x approaches infinity.", "Evalúe cada límite cuando x tiende a infinito.", "Avalie cada limite quando x tende ao infinito.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, i, type, rng, "limits_infinity"));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitProblem(parameters, startOffset + i, type, rng, "limits_infinity"));
                     }
                     return list;
                 });
@@ -305,10 +365,11 @@ namespace CalculusApp.Generators
                 "Determine and classify each point of discontinuity.", "Determine y clasifique cada punto de discontinuidad.", "Determine e classifique cada ponto de descontinuidade.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateContinuityClassifyProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateContinuityClassifyProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -321,10 +382,11 @@ namespace CalculusApp.Generators
                 "Find the average rate of change of each function over the given interval.", "Halle la tasa de cambio promedio de cada función en el intervalo dado.", "Encontre a taxa de variação média de cada função no intervalo dado.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateAverageRateOfChangeProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateAverageRateOfChangeProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -335,10 +397,11 @@ namespace CalculusApp.Generators
                 "Use the limit definition of the derivative to find f'(x).", "Use la definición de límite de la derivada para hallar f'(x).", "Use a definição de limite da derivada para encontrar f'(x).",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDerivativeDefinitionProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateDerivativeDefinitionProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -349,10 +412,11 @@ namespace CalculusApp.Generators
                 "Find the instantaneous rate of change at the specified point.", "Halle la tasa de cambio instantánea en el punto especificado.", "Encontre a taxa de variação instantânea no ponto especificado.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateInstantRateProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateInstantRateProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -363,10 +427,11 @@ namespace CalculusApp.Generators
                 "For each problem, find the derivative of the function with respect to x.", "Para cada problema, halle la derivada de la función con respecto a x.", "Para cada problema, encontre a derivada da função em relação a x.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_power"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_power"));
                     }
                     return list;
                 });
@@ -377,10 +442,11 @@ namespace CalculusApp.Generators
                 "Find the indicated higher order derivative.", "Halle la derivada de orden superior indicada.", "Encontre a derivada de ordem superior indicada.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_higher_order"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_higher_order"));
                     }
                     return list;
                 });
@@ -391,10 +457,11 @@ namespace CalculusApp.Generators
                 "Differentiate each function using the product rule.", "Derive cada función usando la regla del producto.", "Derive cada função usando a regra do produto.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_product"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_product"));
                     }
                     return list;
                 });
@@ -405,10 +472,11 @@ namespace CalculusApp.Generators
                 "Differentiate each function using the quotient rule.", "Derive cada función usando la regla del cociente.", "Derive cada função usando a regra do quociente.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_quotient"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_quotient"));
                     }
                     return list;
                 });
@@ -419,10 +487,11 @@ namespace CalculusApp.Generators
                 "Find the derivative of each function using the chain rule.", "Halle la derivada de cada función usando la regla de la cadena.", "Encontre a derivada de cada função usando a regra da cadeia.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_chain"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_chain"));
                     }
                     return list;
                 });
@@ -433,10 +502,11 @@ namespace CalculusApp.Generators
                 "Use the table of values to find the requested derivative value.", "Use la tabla de valores para hallar el valor de la derivada solicitada.", "Use a tabela de valores para encontrar o valor da derivada solicitada.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDerivTablesProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateDerivTablesProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -444,13 +514,14 @@ namespace CalculusApp.Generators
             AddTopic("deriv_trig", "differentiation",
                 "Trigonometric", "Trigonométricas", "Trigonométricas",
                 "Differentiation", "Derivación", "Derivação",
-                "Differentiate each trigonometric function.", "Derive cada función trigonométrica.", "Derive cada função trigonométrica.",
+                "Differentiate each trigonometric function.", "Derive cada función trigonométrica.", "Derive cada función trigonométrica.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, i, type, rng, "deriv_trig"));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentiationProblem(parameters, startOffset + i, type, rng, "deriv_trig"));
                     }
                     return list;
                 });
@@ -461,10 +532,11 @@ namespace CalculusApp.Generators
                 "Find the derivative of each inverse trigonometric function.", "Halle la derivada de cada función trigonométrica inversa.", "Encontre a derivada de cada função trigonométrica inversa.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateInvTrigDerivProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateInvTrigDerivProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -472,13 +544,14 @@ namespace CalculusApp.Generators
             AddTopic("deriv_exp_log_natural", "differentiation",
                 "Natural logarithms and exponentials", "Logaritmos naturales y exponenciales", "Logaritmos naturais e exponenciais",
                 "Differentiation", "Derivación", "Derivação",
-                "Differentiate each natural exponential and logarithmic function.", "Derive cada función exponencial natural y logarítmica.", "Derive cada função exponencial natural e logarítmica.",
+                "Differentiate each natural exponential and logarithmic function.", "Derive cada función exponencial natural y logarítmica.", "Derive cada función exponencial natural e logarítmica.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateExpLogDerivProblem(parameters, i, type, rng, isNatural: true));
+                        list.Add(CompositeFunctionBuilder.GenerateExpLogDerivProblem(parameters, startOffset + i, type, rng, isNatural: true));
                     }
                     return list;
                 });
@@ -489,10 +562,11 @@ namespace CalculusApp.Generators
                 "Find the derivative of each general base function.", "Halle la derivada de cada función con base general.", "Encontre a derivada de cada função com base geral.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateExpLogDerivProblem(parameters, i, type, rng, isNatural: false));
+                        list.Add(CompositeFunctionBuilder.GenerateExpLogDerivProblem(parameters, startOffset + i, type, rng, isNatural: false));
                     }
                     return list;
                 });
@@ -503,10 +577,11 @@ namespace CalculusApp.Generators
                 "Use logarithmic differentiation to find dy/dx.", "Use derivación logarítmica para hallar dy/dx.", "Use derivação logarítmica para encontrar dy/dx.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLogarithmicDerivProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateLogarithmicDerivProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -517,10 +592,11 @@ namespace CalculusApp.Generators
                 "Find dy/dx implicitly for each relation.", "Halle dy/dx implícitamente para cada relación.", "Encontre dy/dx implicitamente para cada relação.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateImplicitProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateImplicitProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -531,10 +607,11 @@ namespace CalculusApp.Generators
                 "Find the derivative of the inverse function at the given value.", "Halle la derivada de la función inversa en el valor dado.", "Encontre a derivada da função inversa no valor fornecido.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateInverseFuncDerivProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateInverseFuncDerivProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -547,10 +624,11 @@ namespace CalculusApp.Generators
                 "Find the equation of the tangent line to the function at the given point.", "Halle la ecuación de la recta tangente a la función en el punto dado.", "Encontre a equação da reta tangente à função no ponto fornecido.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, i, type, rng, "app_tangent"));
+                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, startOffset + i, type, rng, "app_tangent"));
                     }
                     return list;
                 });
@@ -561,10 +639,11 @@ namespace CalculusApp.Generators
                 "Determine if Rolle's Theorem applies and find all values of c.", "Determine si el Teorema de Rolle aplica y halle todos los valores de c.", "Determine se o Teorema de Rolle se aplica e encontre todos os valores de c.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateRolleProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateRolleProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -575,10 +654,11 @@ namespace CalculusApp.Generators
                 "Find all numbers c guaranteed by the Mean Value Theorem.", "Halle todos los valores c garantizados por el Teorema del Valor Medio.", "Encontre todos os valores c garantidos pelo Teorema do Valor Médio.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateMvtProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateMvtProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -589,10 +669,11 @@ namespace CalculusApp.Generators
                 "Find the intervals on which each function is increasing and decreasing.", "Halle los intervalos en los cuales la función es creciente y decreciente.", "Encontre os intervalos nos quais a função é crescente e decrescente.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIncreaseDecreaseProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIncreaseDecreaseProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -603,10 +684,11 @@ namespace CalculusApp.Generators
                 "Find intervals of concavity and inflection points.", "Halle los intervalos de concavidad y puntos de inflexión.", "Encontre os intervalos de concavidade e pontos de inflexão.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateConcavityProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateConcavityProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -617,10 +699,11 @@ namespace CalculusApp.Generators
                 "Find all relative extrema for each function.", "Halle todos los extremos relativos para cada función.", "Encontre todos os extremos relativos para cada función.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, i, type, rng, "app_rel_extrema"));
+                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, startOffset + i, type, rng, "app_rel_extrema"));
                     }
                     return list;
                 });
@@ -633,10 +716,11 @@ namespace CalculusApp.Generators
                 "Para cada problema, encontre todos os pontos de mínimos e máximos absolutos no intervalo dado.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, i, type, rng, "app_abs_extrema"));
+                        list.Add(CompositeFunctionBuilder.GenerateApplicationProblem(parameters, startOffset + i, type, rng, "app_abs_extrema"));
                     }
                     return list;
                 });
@@ -647,10 +731,11 @@ namespace CalculusApp.Generators
                 "Solve each optimization problem.", "Resuelva cada problema de optimización.", "Resolva cada problema de otimização.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateOptimizationProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateOptimizationProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -700,6 +785,82 @@ namespace CalculusApp.Generators
                             d3En: "Vertical asymptotes: x = -2, 4",
                             d3Es: "Asíntotas verticales: x = -2, 4",
                             d3Pt: "Assíntotas verticais: x = -2, 4"
+                        ),
+                        (
+                            formula: "f(x) = x^2 - 6x + 5",
+                            graph: "x^2 - 6*x + 5",
+                            ansEn: "No asymptotes exist; Vertex: (3, -4)",
+                            ansEs: "No existen asíntotas; Vértice: (3, -4)",
+                            ansPt: "Não existem assíntotas; Vértice: (3, -4)",
+                            stepsEn: "Parabola opens upward: no asymptotes. Vertex at x = 3, f(3) = -4, intercepts at x = 1, 5.",
+                            stepsEs: "Parábola cóncava hacia arriba: sin asíntotas. Vértice en (3, -4), interceptos en x = 1, 5.",
+                            stepsPt: "Parábola voltada para cima: sem assíntotas. Vértice em (3, -4), raízes em x = 1, 5.",
+                            d1En: "Vertical asymptote: x = 3",
+                            d1Es: "Asíntota vertical: x = 3",
+                            d1Pt: "Assíntota vertical: x = 3",
+                            d2En: "Horizontal asymptote: y = -4",
+                            d2Es: "Asíntota horizontal: y = -4",
+                            d2Pt: "Assíntota horizontal: y = -4",
+                            d3En: "Vertical asymptotes: x = 1, 5",
+                            d3Es: "Asíntotas verticales: x = 1, 5",
+                            d3Pt: "Assíntotas verticais: x = 1, 5"
+                        ),
+                        (
+                            formula: "f(x) = -x^2 - 4x",
+                            graph: "-x^2 - 4*x",
+                            ansEn: "No asymptotes exist; Vertex: (-2, 4)",
+                            ansEs: "No existen asíntotas; Vértice: (-2, 4)",
+                            ansPt: "Não existem assíntotas; Vértice: (-2, 4)",
+                            stepsEn: "Parabola opens downward: no asymptotes. Vertex at (-2, 4), intercepts at x = -4, 0.",
+                            stepsEs: "Parábola cóncava hacia abajo: sin asíntotas. Vértice en (-2, 4), interceptos en x = -4, 0.",
+                            stepsPt: "Parábola voltada para baixo: sem assíntotas. Vértice em (-2, 4), raízes em x = -4, 0.",
+                            d1En: "Vertical asymptote: x = -2",
+                            d1Es: "Asíntota vertical: x = -2",
+                            d1Pt: "Assíntota vertical: x = -2",
+                            d2En: "Horizontal asymptote: y = 4",
+                            d2Es: "Asíntota horizontal: y = 4",
+                            d2Pt: "Assíntota horizontal: y = 4",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = 2x^2 - 8x + 6",
+                            graph: "2*x^2 - 8*x + 6",
+                            ansEn: "No asymptotes exist; Vertex: (2, -2)",
+                            ansEs: "No existen asíntotas; Vértice: (2, -2)",
+                            ansPt: "Não existem assíntotas; Vértice: (2, -2)",
+                            stepsEn: "Quadratic polynomial: no asymptotes. Vertex at (2, -2), intercepts at x = 1, 3.",
+                            stepsEs: "Polinomio cuadrático: sin asíntotas. Vértice en (2, -2), interceptos en x = 1, 3.",
+                            stepsPt: "Polinômio quadrático: sem assíntotas. Vértice em (2, -2), raízes em x = 1, 3.",
+                            d1En: "Vertical asymptote: x = 2",
+                            d1Es: "Asíntota vertical: x = 2",
+                            d1Pt: "Assíntota vertical: x = 2",
+                            d2En: "Horizontal asymptote: y = -2",
+                            d2Es: "Asíntota horizontal: y = -2",
+                            d2Pt: "Assíntota horizontal: y = -2",
+                            d3En: "Vertical asymptotes: x = 1, 3",
+                            d3Es: "Asíntotas verticales: x = 1, 3",
+                            d3Pt: "Assíntotas verticais: x = 1, 3"
+                        ),
+                        (
+                            formula: "f(x) = -2x^2 + 4x + 6",
+                            graph: "-2*x^2 + 4*x + 6",
+                            ansEn: "No asymptotes exist; Vertex: (1, 8)",
+                            ansEs: "No existen asíntotas; Vértice: (1, 8)",
+                            ansPt: "Não existen assíntotas; Vértice: (1, 8)",
+                            stepsEn: "Parabola opens downward: no asymptotes. Vertex at (1, 8), intercepts at x = -1, 3.",
+                            stepsEs: "Parábola cóncava hacia abajo: sin asíntotas. Vértice en (1, 8), interceptos en x = -1, 3.",
+                            stepsPt: "Parábola voltada para baixo: sem assíntotas. Vértice em (1, 8), raízes em x = -1, 3.",
+                            d1En: "Vertical asymptote: x = 1",
+                            d1Es: "Asíntota vertical: x = 1",
+                            d1Pt: "Assíntota vertical: x = 1",
+                            d2En: "Horizontal asymptote: y = 8",
+                            d2Es: "Asíntota horizontal: y = 8",
+                            d2Pt: "Assíntota horizontal: y = 8",
+                            d3En: "Vertical asymptotes: x = -1, 3",
+                            d3Es: "Asíntotas verticales: x = -1, 3",
+                            d3Pt: "Assíntotas verticais: x = -1, 3"
                         )
                     };
 
@@ -742,6 +903,82 @@ namespace CalculusApp.Generators
                             d3En: "Vertical asymptotes: x = 0, 3",
                             d3Es: "Asíntotas verticales: x = 0, 3",
                             d3Pt: "Assíntotas verticais: x = 0, 3"
+                        ),
+                        (
+                            formula: "f(x) = x^3 - 3x^2",
+                            graph: "x^3 - 3*x^2",
+                            ansEn: "No asymptotes exist; Inflection point: (1, -2)",
+                            ansEs: "No existen asíntotas; Punto de inflexión: (1, -2)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão: (1, -2)",
+                            stepsEn: "Cubic polynomial: no asymptotes. Local max at (0, 0), local min at (2, -4), inflection at (1, -2).",
+                            stepsEs: "Polinomio cúbico: sin asíntotas. Máximo local en (0, 0), mínimo local en (2, -4), inflexión en (1, -2).",
+                            stepsPt: "Polinômio cúbico: sem assíntotas. Máximo em (0, 0), mínimo em (2, -4), inflexão em (1, -2).",
+                            d1En: "Vertical asymptote: x = 1",
+                            d1Es: "Asíntota vertical: x = 1",
+                            d1Pt: "Assíntota vertical: x = 1",
+                            d2En: "Horizontal asymptote: y = -2",
+                            d2Es: "Asíntota horizontal: y = -2",
+                            d2Pt: "Assíntota horizontal: y = -2",
+                            d3En: "Vertical asymptotes: x = 0, 3",
+                            d3Es: "Asíntotas verticales: x = 0, 3",
+                            d3Pt: "Assíntotas verticais: x = 0, 3"
+                        ),
+                        (
+                            formula: "f(x) = 2x^3 - 6x",
+                            graph: "2*x^3 - 6*x",
+                            ansEn: "No asymptotes exist; Inflection point: (0, 0)",
+                            ansEs: "No existen asíntotas; Punto de inflexión: (0, 0)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão: (0, 0)",
+                            stepsEn: "Cubic polynomial: no asymptotes. Local max at (-1, 4), local min at (1, -4), inflection at (0, 0).",
+                            stepsEs: "Polinomio cúbico: sin asíntotas. Máximo local en (-1, 4), mínimo local en (1, -4), inflexión en (0, 0).",
+                            stepsPt: "Polinômio cúbico: sem assíntotas. Máximo em (-1, 4), mínimo em (1, -4), inflexão em (0, 0).",
+                            d1En: "Vertical asymptote: x = 0",
+                            d1Es: "Asíntota vertical: x = 0",
+                            d1Pt: "Assíntota vertical: x = 0",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = -1, 1",
+                            d3Es: "Asíntotas verticales: x = -1, 1",
+                            d3Pt: "Assíntotas verticais: x = -1, 1"
+                        ),
+                        (
+                            formula: "f(x) = x^3 - 12x",
+                            graph: "x^3 - 12*x",
+                            ansEn: "No asymptotes exist; Inflection point: (0, 0)",
+                            ansEs: "No existen asíntotas; Punto de inflexión: (0, 0)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão: (0, 0)",
+                            stepsEn: "Cubic polynomial: no asymptotes. Local max at (-2, 16), local min at (2, -16), inflection at (0, 0).",
+                            stepsEs: "Polinomio cúbico: sin asíntotas. Máximo local en (-2, 16), mínimo local en (2, -16), inflexión en (0, 0).",
+                            stepsPt: "Polinômio cúbico: sem assíntotas. Máximo em (-2, 16), mínimo em (2, -16), inflexão em (0, 0).",
+                            d1En: "Vertical asymptote: x = 2",
+                            d1Es: "Asíntota vertical: x = 2",
+                            d1Pt: "Assíntota vertical: x = 2",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = -2, 2",
+                            d3Es: "Asíntotas verticales: x = -2, 2",
+                            d3Pt: "Assíntotas verticais: x = -2, 2"
+                        ),
+                        (
+                            formula: "f(x) = -x^3 + 12x",
+                            graph: "-x^3 + 12*x",
+                            ansEn: "No asymptotes exist; Inflection point: (0, 0)",
+                            ansEs: "No existen asíntotas; Punto de inflexión: (0, 0)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão: (0, 0)",
+                            stepsEn: "Cubic polynomial: no asymptotes. Local min at (-2, -16), local max at (2, 16), inflection at (0, 0).",
+                            stepsEs: "Polinomio cúbico: sin asíntotas. Mínimo local en (-2, -16), máximo local en (2, 16), inflexión en (0, 0).",
+                            stepsPt: "Polinômio cúbico: sem assíntotas. Mínimo em (-2, -16), máximo em (2, 16), inflexão em (0, 0).",
+                            d1En: "Vertical asymptote: x = -2",
+                            d1Es: "Asíntota vertical: x = -2",
+                            d1Pt: "Assíntota vertical: x = -2",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = -2, 2",
+                            d3Es: "Asíntotas verticales: x = -2, 2",
+                            d3Pt: "Assíntotas verticais: x = -2, 2"
                         )
                     };
 
@@ -762,6 +999,101 @@ namespace CalculusApp.Generators
                             d2En: "Horizontal asymptote: y = -4",
                             d2Es: "Asíntota horizontal: y = -4",
                             d2Pt: "Assíntota horizontal: y = -4",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = -x^4 + 4x^2",
+                            graph: "-x^4 + 4*x^2",
+                            ansEn: "No asymptotes exist; Relative maximums: (-1.41, 4), (1.41, 4)",
+                            ansEs: "No existen asíntotas; Mínimo relativo: (0, 0); Máximos relativos: (-1.41, 4), (1.41, 4)",
+                            ansPt: "Não existem assíntotas; Mínimo relativo: (0, 0); Máximos relativos: (-1.41, 4), (1.41, 4)",
+                            stepsEn: "Quartic polynomial: no asymptotes. Relative min at (0, 0), relative maxes at (+-sqrt(2), 4).",
+                            stepsEs: "Polinomio de grado 4: sin asíntotas. Mínimo relativo en (0, 0), máximos relativos en (+-sqrt(2), 4).",
+                            stepsPt: "Polinômio de grau 4: sem assíntotas. Mínimo em (0, 0), máximos em (+-sqrt(2), 4).",
+                            d1En: "Vertical asymptotes: x = -2, 2",
+                            d1Es: "Asíntotas verticales: x = -2, 2",
+                            d1Pt: "Assíntotas verticais: x = -2, 2",
+                            d2En: "Horizontal asymptote: y = 4",
+                            d2Es: "Asíntota horizontal: y = 4",
+                            d2Pt: "Assíntota horizontal: y = 4",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = x^4 - 2x^2 + 1",
+                            graph: "x^4 - 2*x^2 + 1",
+                            ansEn: "No asymptotes exist; Relative minimums: (-1, 0), (1, 0); Relative max: (0, 1)",
+                            ansEs: "No existen asíntotas; Mínimos relativos: (-1, 0), (1, 0); Máximo relativo: (0, 1)",
+                            ansPt: "Não existem assíntotas; Mínimos relativos: (-1, 0), (1, 0); Máximo relativo: (0, 1)",
+                            stepsEn: "Quartic (x^2 - 1)^2 >= 0: no asymptotes. Minima at (+-1, 0), local max at (0, 1).",
+                            stepsEs: "Polinomio (x^2 - 1)^2: sin asíntotas. Mínimos en (+-1, 0), máximo local en (0, 1).",
+                            stepsPt: "Polinômio (x^2 - 1)^2: sem assíntotas. Mínimos em (+-1, 0), máximo em (0, 1).",
+                            d1En: "Vertical asymptotes: x = -1, 1",
+                            d1Es: "Asíntotas verticales: x = -1, 1",
+                            d1Pt: "Assíntotas verticais: x = -1, 1",
+                            d2En: "Horizontal asymptote: y = 1",
+                            d2Es: "Asíntota horizontal: y = 1",
+                            d2Pt: "Assíntota horizontal: y = 1",
+                            d3En: "No local extrema",
+                            d3Es: "Sin extremos locales",
+                            d3Pt: "Sem extremos locais"
+                        ),
+                        (
+                            formula: "f(x) = 3x^4 - 4x^3",
+                            graph: "3*x^4 - 4*x^3",
+                            ansEn: "No asymptotes exist; Absolute minimum: (1, -1)",
+                            ansEs: "No existen asíntotas; Mínimo absoluto: (1, -1)",
+                            ansPt: "Não existem assíntotas; Mínimo absoluto: (1, -1)",
+                            stepsEn: "f'(x) = 12x^2(x - 1). Stationary inflection at (0, 0), global min at (1, -1).",
+                            stepsEs: "f'(x) = 12x^2(x - 1). Punto de inflexión con tangente horizontal en (0, 0), mínimo absoluto en (1, -1).",
+                            stepsPt: "f'(x) = 12x^2(x - 1). Inflexão estacionária em (0, 0), mínimo em (1, -1).",
+                            d1En: "Vertical asymptote: x = 1",
+                            d1Es: "Asíntota vertical: x = 1",
+                            d1Pt: "Assíntota vertical: x = 1",
+                            d2En: "Horizontal asymptote: y = -1",
+                            d2Es: "Asíntota horizontal: y = -1",
+                            d2Pt: "Assíntota horizontal: y = -1",
+                            d3En: "Relative maximum: (0, 0)",
+                            d3Es: "Máximo relativo: (0, 0)",
+                            d3Pt: "Máximo relativo: (0, 0)"
+                        ),
+                        (
+                            formula: "f(x) = x^4 - 8x^2",
+                            graph: "x^4 - 8*x^2",
+                            ansEn: "No asymptotes exist; Relative minimums: (-2, -16), (2, -16)",
+                            ansEs: "No existen asíntotas; Mínimos relativos: (-2, -16), (2, -16)",
+                            ansPt: "Não existem assíntotas; Mínimos relativos: (-2, -16), (2, -16)",
+                            stepsEn: "Quartic function: no asymptotes. Local max at (0, 0), local mins at (+-2, -16).",
+                            stepsEs: "Polinomio de grado 4: sin asíntotas. Máximo local en (0, 0), mínimos locales en (+-2, -16).",
+                            stepsPt: "Polinômio de grau 4: sem assíntotas. Máximo em (0, 0), mínimos em (+-2, -16).",
+                            d1En: "Vertical asymptotes: x = -2, 2",
+                            d1Es: "Asíntotas verticales: x = -2, 2",
+                            d1Pt: "Assíntotas verticais: x = -2, 2",
+                            d2En: "Horizontal asymptote: y = -16",
+                            d2Es: "Asíntota horizontal: y = -16",
+                            d2Pt: "Assíntota horizontal: y = -16",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = -x^4 + 2x^2 + 3",
+                            graph: "-x^4 + 2*x^2 + 3",
+                            ansEn: "No asymptotes exist; Relative maximums: (-1, 4), (1, 4)",
+                            ansEs: "No existen asíntotas; Máximos relativos: (-1, 4), (1, 4)",
+                            ansPt: "Não existem assíntotas; Máximos relativos: (-1, 4), (1, 4)",
+                            stepsEn: "Quartic polynomial: no asymptotes. Local min at (0, 3), local maxes at (+-1, 4).",
+                            stepsEs: "Polinomio de grado 4: sin asíntotas. Mínimo local en (0, 3), máximos locales en (+-1, 4).",
+                            stepsPt: "Polinômio de grau 4: sem assíntotas. Mínimo em (0, 3), máximos em (+-1, 4).",
+                            d1En: "Vertical asymptotes: x = -1, 1",
+                            d1Es: "Asíntotas verticales: x = -1, 1",
+                            d1Pt: "Assíntotas verticais: x = -1, 1",
+                            d2En: "Horizontal asymptote: y = 4",
+                            d2Es: "Asíntota horizontal: y = 4",
+                            d2Pt: "Assíntota horizontal: y = 4",
                             d3En: "Vertical asymptote: x = 0",
                             d3Es: "Asíntota vertical: x = 0",
                             d3Pt: "Assíntota vertical: x = 0"
@@ -845,6 +1177,44 @@ namespace CalculusApp.Generators
                             d3En: "No asymptotes exist",
                             d3Es: "No existen asíntotas",
                             d3Pt: "Não existem assíntotas"
+                        ),
+                        (
+                            formula: "f(x) = 2x / (x^2 + 1)",
+                            graph: "2*x / (x^2 + 1)",
+                            ansEn: "No vertical asymptotes; Horizontal asymptote: y = 0; Extrema: (1, 1), (-1, -1)",
+                            ansEs: "Sin asíntotas verticales; Asíntota horizontal: y = 0; Extremos: (1, 1), (-1, -1)",
+                            ansPt: "Sem assíntotas verticais; Assíntota horizontal: y = 0; Extremos: (1, 1), (-1, -1)",
+                            stepsEn: "Denom never 0 => no VA. lim x->+-inf = 0 => HA y = 0. f'(x) = 2(1 - x^2)/(x^2 + 1)^2 = 0 => max at (1, 1), min at (-1, -1).",
+                            stepsEs: "Denominador nunca es 0 => sin AV. Límite al infinito = 0 => AH y = 0. Máximo en (1, 1), mínimo en (-1, -1).",
+                            stepsPt: "Denominador nunca é 0 => sem AV. Limite no infinito = 0 => AH y = 0. Máximo em (1, 1), mínimo em (-1, -1).",
+                            d1En: "Vertical asymptotes: x = -1, 1",
+                            d1Es: "Asíntotas verticales: x = -1, 1",
+                            d1Pt: "Assíntotas verticais: x = -1, 1",
+                            d2En: "Horizontal asymptote: y = 1",
+                            d2Es: "Asíntota horizontal: y = 1",
+                            d2Pt: "Assíntota horizontal: y = 1",
+                            d3En: "No asymptotes exist",
+                            d3Es: "No existen asíntotas",
+                            d3Pt: "Não existen assíntotas"
+                        ),
+                        (
+                            formula: "f(x) = 1 / (x^2 - 1)",
+                            graph: "1 / (x^2 - 1)",
+                            ansEn: "Vertical asymptotes: x = -1, 1; Horizontal asymptote: y = 0; Local max: (0, -1)",
+                            ansEs: "Asíntotas verticales: x = -1, 1; Asíntota horizontal: y = 0; Máximo local: (0, -1)",
+                            ansPt: "Assíntotas verticais: x = -1, 1; Assíntota horizontal: y = 0; Máximo local: (0, -1)",
+                            stepsEn: "x^2 - 1 = 0 => x = +-1 (VA). Degree num < denom => HA y = 0. f'(x) = -2x/(x^2-1)^2 => local max at (0, -1).",
+                            stepsEs: "x^2 - 1 = 0 => x = +-1 (AV). Grado num < denom => AH y = 0. Máximo local en (0, -1).",
+                            stepsPt: "x^2 - 1 = 0 => x = +-1 (AV). Grau num < denom => AH y = 0. Máximo em (0, -1).",
+                            d1En: "Vertical asymptote: x = 0",
+                            d1Es: "Asíntota vertical: x = 0",
+                            d1Pt: "Assíntota vertical: x = 0",
+                            d2En: "Horizontal asymptote: y = 1",
+                            d2Es: "Asíntota horizontal: y = 1",
+                            d2Pt: "Assíntota horizontal: y = 1",
+                            d3En: "No asymptotes exist",
+                            d3Es: "No existen asíntotas",
+                            d3Pt: "Não existen assíntotas"
                         )
                     };
 
@@ -868,6 +1238,101 @@ namespace CalculusApp.Generators
                             d3En: "Vertical asymptote: x = 2; Horizontal asymptote: y = 1",
                             d3Es: "Asíntota vertical: x = 2; Asíntota horizontal: y = 1",
                             d3Pt: "Assíntota vertical: x = 2; Assíntota horizontal: y = 1"
+                        ),
+                        (
+                            formula: "f(x) = (x - 1)^(2/3)",
+                            graph: "(x - 1)^(2/3)",
+                            ansEn: "No asymptotes exist; Cusp at (1, 0)",
+                            ansEs: "No existen asíntotas; Cúspide en (1, 0)",
+                            ansPt: "Não existem assíntotas; Cúspide em (1, 0)",
+                            stepsEn: "Continuous on R: cusp at x = 1 where derivative is undefined.",
+                            stepsEs: "Continua en R: cúspide en x = 1 donde la derivada no está definida.",
+                            stepsPt: "Contínua em R: cúspide em x = 1 onde a derivada não existe.",
+                            d1En: "Vertical asymptote: x = 1",
+                            d1Es: "Asíntota vertical: x = 1",
+                            d1Pt: "Assíntota vertical: x = 1",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = x^(1/3)",
+                            graph: "x^(1/3)",
+                            ansEn: "No asymptotes exist; Inflection point with vertical tangent at (0, 0)",
+                            ansEs: "No existen asíntotas; Punto de inflexión con tangente vertical en (0, 0)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão com tangente vertical em (0, 0)",
+                            stepsEn: "Cube root function: continuous everywhere on R. Derivative f'(x) -> inf as x -> 0, giving a vertical tangent at origin.",
+                            stepsEs: "Función raíz cúbica: continua en R. f'(x) -> inf cuando x -> 0, tangente vertical en el origen.",
+                            stepsPt: "Raiz cúbica: contínua em R. Tangente vertical na origem.",
+                            d1En: "Vertical asymptote: x = 0",
+                            d1Es: "Asíntota vertical: x = 0",
+                            d1Pt: "Assíntota vertical: x = 0",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Cusp at (0, 0)",
+                            d3Es: "Cúspide en (0, 0)",
+                            d3Pt: "Cúspide em (0, 0)"
+                        ),
+                        (
+                            formula: "f(x) = x^(4/3) - 4x^(1/3)",
+                            graph: "x^(4/3) - 4*x^(1/3)",
+                            ansEn: "No asymptotes exist; Relative minimum at (1, -3)",
+                            ansEs: "No existen asíntotas; Mínimo relativo en (1, -3)",
+                            ansPt: "Não existem assíntotas; Mínimo relativo em (1, -3)",
+                            stepsEn: "Continuous on R: critical points at x = 0 (vertical tangent) and x = 1 (f'(1)=0, local min at (1,-3)).",
+                            stepsEs: "Continua en R: puntos críticos en x = 0 (tangente vertical) y x = 1 (mínimo relativo en (1,-3)).",
+                            stepsPt: "Contínua em R: mínimo relativo em (1,-3).",
+                            d1En: "Vertical asymptote: x = 1",
+                            d1Es: "Asíntota vertical: x = 1",
+                            d1Pt: "Assíntota vertical: x = 1",
+                            d2En: "Horizontal asymptote: y = -3",
+                            d2Es: "Asíntota horizontal: y = -3",
+                            d2Pt: "Assíntota horizontal: y = -3",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = (x + 2)^(2/3)",
+                            graph: "(x + 2)^(2/3)",
+                            ansEn: "No asymptotes exist; Cusp at (-2, 0)",
+                            ansEs: "No existen asíntotas; Cúspide en (-2, 0)",
+                            ansPt: "Não existem assíntotas; Cúspide em (-2, 0)",
+                            stepsEn: "Shifted power function: continuous on R. Cusp at x = -2 where derivative is undefined.",
+                            stepsEs: "Función potencia desplazada: continua en R. Cúspide en x = -2 donde la derivada no está definida.",
+                            stepsPt: "Função potência deslocada: contínua em R. Cúspide em x = -2.",
+                            d1En: "Vertical asymptote: x = -2",
+                            d1Es: "Asíntota vertical: x = -2",
+                            d1Pt: "Assíntota vertical: x = -2",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptote: x = 0",
+                            d3Es: "Asíntota vertical: x = 0",
+                            d3Pt: "Assíntota vertical: x = 0"
+                        ),
+                        (
+                            formula: "f(x) = (x - 2)^(1/3)",
+                            graph: "(x - 2)^(1/3)",
+                            ansEn: "No asymptotes exist; Inflection point with vertical tangent at (2, 0)",
+                            ansEs: "No existen asíntotas; Punto de inflexión con tangente vertical en (2, 0)",
+                            ansPt: "Não existem assíntotas; Ponto de inflexão com tangente vertical em (2, 0)",
+                            stepsEn: "Cube root shifted: continuous on R. Vertical tangent at x = 2.",
+                            stepsEs: "Raíz cúbica desplazada: continua en R. Tangente vertical en x = 2.",
+                            stepsPt: "Raiz cúbica deslocada: contínua em R. Tangente vertical em x = 2.",
+                            d1En: "Vertical asymptote: x = 2",
+                            d1Es: "Asíntota vertical: x = 2",
+                            d1Pt: "Assíntota vertical: x = 2",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Cusp at (2, 0)",
+                            d3Es: "Cúspide en (2, 0)",
+                            d3Pt: "Cúspide em (2, 0)"
                         )
                     };
 
@@ -891,6 +1356,101 @@ namespace CalculusApp.Generators
                             d3En: "Vertical asymptote: x = 0 only",
                             d3Es: "Asíntota vertical: x = 0 solamente",
                             d3Pt: "Assíntota vertical: apenas x = 0"
+                        ),
+                        (
+                            formula: "f(x) = sec(x)",
+                            graph: "sec(x)",
+                            ansEn: "Vertical asymptotes: x = pi/2 + pi*k; Relative minimums at y = 1, maximums at y = -1",
+                            ansEs: "Asíntotas verticales: x = pi/2 + pi*k; Mínimos relativos en y = 1, máximos en y = -1",
+                            ansPt: "Assíntotas verticais: x = pi/2 + pi*k; Mínimos em y = 1, máximos em y = -1",
+                            stepsEn: "sec(x) = 1/cos(x). cos(x) = 0 at x = pi/2 + pi*k (vertical asymptotes). Range is (-inf, -1] U [1, inf).",
+                            stepsEs: "sec(x) = 1/cos(x). cos(x) = 0 en x = pi/2 + pi*k (asíntotas verticales). Rango (-inf, -1] U [1, inf).",
+                            stepsPt: "sec(x) = 1/cos(x). cos(x) = 0 em x = pi/2 + pi*k (assíntotas verticais).",
+                            d1En: "No asymptotes exist",
+                            d1Es: "No existen asíntotas",
+                            d1Pt: "Não existem assíntotas",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = pi*k",
+                            d3Es: "Asíntotas verticales: x = pi*k",
+                            d3Pt: "Assíntotas verticais: x = pi*k"
+                        ),
+                        (
+                            formula: "f(x) = cot(x)",
+                            graph: "cot(x)",
+                            ansEn: "Vertical asymptotes: x = pi*k; Decreasing everywhere on domain",
+                            ansEs: "Asíntotas verticales: x = pi*k; Decreciente en todo su dominio",
+                            ansPt: "Assíntotas verticais: x = pi*k; Decrescente em todo o domínio",
+                            stepsEn: "cot(x) = cos(x)/sin(x). sin(x) = 0 at x = pi*k (vertical asymptotes).",
+                            stepsEs: "cot(x) = cos(x)/sen(x). sen(x) = 0 en x = pi*k (asíntotas verticales).",
+                            stepsPt: "cot(x) = cos(x)/sen(x). sen(x) = 0 em x = pi*k (assíntotas verticais).",
+                            d1En: "Vertical asymptotes: x = pi/2 + pi*k",
+                            d1Es: "Asíntotas verticales: x = pi/2 + pi*k",
+                            d1Pt: "Assíntotas verticais: x = pi/2 + pi*k",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "No asymptotes exist",
+                            d3Es: "No existen asíntotas",
+                            d3Pt: "Não existem assíntotas"
+                        ),
+                        (
+                            formula: "f(x) = csc(x)",
+                            graph: "csc(x)",
+                            ansEn: "Vertical asymptotes: x = pi*k; Relative minimums at y = 1, maximums at y = -1",
+                            ansEs: "Asíntotas verticales: x = pi*k; Mínimos relativos en y = 1, máximos en y = -1",
+                            ansPt: "Assíntotas verticais: x = pi*k; Mínimos em y = 1, máximos em y = -1",
+                            stepsEn: "csc(x) = 1/sin(x). sin(x) = 0 at x = pi*k (vertical asymptotes).",
+                            stepsEs: "csc(x) = 1/sen(x). sen(x) = 0 en x = pi*k (asíntotas verticales).",
+                            stepsPt: "csc(x) = 1/sen(x). sen(x) = 0 em x = pi*k (assíntotas verticais).",
+                            d1En: "Vertical asymptotes: x = pi/2 + pi*k",
+                            d1Es: "Asíntotas verticales: x = pi/2 + pi*k",
+                            d1Pt: "Assíntotas verticais: x = pi/2 + pi*k",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "No asymptotes exist",
+                            d3Es: "No existen asíntotas",
+                            d3Pt: "Não existen assíntotas"
+                        ),
+                        (
+                            formula: "f(x) = 2sin(x)",
+                            graph: "2*sin(x)",
+                            ansEn: "No asymptotes exist; Amplitude: 2, Period: 2*pi",
+                            ansEs: "No existen asíntotas; Amplitud: 2, Periodo: 2*pi",
+                            ansPt: "Não existem assíntotas; Amplitude: 2, Período: 2*pi",
+                            stepsEn: "Sine wave: bounded in [-2, 2], continuous everywhere on R. No asymptotes.",
+                            stepsEs: "Onda senoidal: acotada en [-2, 2], continua en todo R. Sin asíntotas.",
+                            stepsPt: "Onda senoidal: limitada em [-2, 2], contínua em R. Sem assíntotas.",
+                            d1En: "Vertical asymptotes: x = pi*k",
+                            d1Es: "Asíntotas verticales: x = pi*k",
+                            d1Pt: "Assíntotas verticais: x = pi*k",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = pi/2 + pi*k",
+                            d3Es: "Asíntotas verticales: x = pi/2 + pi*k",
+                            d3Pt: "Assíntotas verticais: x = pi/2 + pi*k"
+                        ),
+                        (
+                            formula: "f(x) = 2cos(x)",
+                            graph: "2*cos(x)",
+                            ansEn: "No asymptotes exist; Amplitude: 2, Period: 2*pi",
+                            ansEs: "No existen asíntotas; Amplitud: 2, Periodo: 2*pi",
+                            ansPt: "Não existem assíntotas; Amplitude: 2, Período: 2*pi",
+                            stepsEn: "Cosine wave: bounded in [-2, 2], continuous everywhere on R. No asymptotes.",
+                            stepsEs: "Onda cosenoidal: acotada en [-2, 2], continua en todo R. Sin asíntotas.",
+                            stepsPt: "Onda cossenoidal: limitada em [-2, 2], contínua em R. Sem assíntotas.",
+                            d1En: "Vertical asymptotes: x = pi*k",
+                            d1Es: "Asíntotas verticales: x = pi*k",
+                            d1Pt: "Assíntotas verticais: x = pi*k",
+                            d2En: "Horizontal asymptote: y = 0",
+                            d2Es: "Asíntota horizontal: y = 0",
+                            d2Pt: "Assíntota horizontal: y = 0",
+                            d3En: "Vertical asymptotes: x = pi/2 + pi*k",
+                            d3Es: "Asíntotas verticales: x = pi/2 + pi*k",
+                            d3Pt: "Assíntotas verticais: x = pi/2 + pi*k"
                         )
                     };
 
@@ -905,14 +1465,19 @@ namespace CalculusApp.Generators
 
                     if (pool.Count == 0)
                     {
-                        pool.AddRange(rationals);
                         pool.AddRange(quadratics);
+                        pool.AddRange(cubics);
+                        pool.AddRange(quartics);
+                        pool.AddRange(rationals);
+                        pool.AddRange(rationalExps);
+                        pool.AddRange(trigs);
                     }
 
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        var item = pool[(i + rng.Next(pool.Count)) % pool.Count];
+                        var item = pool[(startOffset + i) % pool.Count];
                         string ans = LocalizationService.CurrentLanguage switch
                         {
                             AppLanguage.Spanish => item.ansEs,
@@ -953,7 +1518,8 @@ namespace CalculusApp.Generators
                             SolutionSteps = steps,
                             GraphFormula = item.graph,
                             ProvideBlankGraph = parameters?.ProvideBlankGraph ?? false,
-                            ProvideFunctionGraph = parameters?.ProvideFunctionGraph ?? false
+                            ProvideFunctionGraph = parameters?.ProvideFunctionGraph ?? false,
+                            TemplateId = $"curve_sketch_{item.formula}"
                         };
 
                         if (type == QuestionType.MultipleChoice)
@@ -971,10 +1537,11 @@ namespace CalculusApp.Generators
                 "Relate features between the graphs of f, f', and f''.", "Relacione características entre las gráficas de f, f' y f''.", "Relacione características entre os gráficos de f, f' e f''.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateGraphComparisonProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateGraphComparisonProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -985,10 +1552,11 @@ namespace CalculusApp.Generators
                 "Find position, velocity, and acceleration for a particle.", "Halle posición, velocidad y aceleración para una partícula.", "Encontre posição, velocidade e aceleração para uma partícula.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateMotionProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateMotionProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -999,10 +1567,11 @@ namespace CalculusApp.Generators
                 "Solve each related rates problem.", "Resuelva cada problema de tasas de cambio relacionadas.", "Resolva cada problema de taxas relacionadas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateRelatedRatesProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateRelatedRatesProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1013,10 +1582,11 @@ namespace CalculusApp.Generators
                 "Use differentials to approximate each value.", "Use diferenciales para aproximar cada valor.", "Use diferenciais para aproximar cada valor.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDifferentialsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateDifferentialsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1027,10 +1597,11 @@ namespace CalculusApp.Generators
                 "Apply Newton's Method to find x1.", "Aplique el Método de Newton para hallar x1.", "Aplique o Método de Newton para encontrar x1.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateNewtonMethodProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateNewtonMethodProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1041,10 +1612,11 @@ namespace CalculusApp.Generators
                 "Evaluate each limit by recognizing it as a derivative.", "Evalúe cada límite reconociéndolo como una derivada.", "Avalie cada limite reconociendo-o como uma derivada.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitsDerivFormProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitsDerivFormProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1055,10 +1627,11 @@ namespace CalculusApp.Generators
                 "Evaluate each limit using L'Hôpital's Rule.", "Evalúe cada límite usando la Regla de L'Hôpital.", "Avalie cada limite usando a Regra de L'Hôpital.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLHopitalProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateLHopitalProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1071,10 +1644,11 @@ namespace CalculusApp.Generators
                 "Evaluate each indefinite integral.", "Evalúe cada integral indefinida.", "Avalie cada integral indefinida.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIntegrationProblem(parameters, i, type, rng, "indef_power"));
+                        list.Add(CompositeFunctionBuilder.GenerateIntegrationProblem(parameters, startOffset + i, type, rng, "indef_power"));
                     }
                     return list;
                 });
@@ -1085,10 +1659,11 @@ namespace CalculusApp.Generators
                 "Evaluate each integral involving e^x and 1/x.", "Evalúe cada integral que involucra e^x y 1/x.", "Avalie cada integral envolvendo e^x e 1/x.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefLogExpProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefLogExpProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1099,10 +1674,11 @@ namespace CalculusApp.Generators
                 "Evaluate each trigonometric indefinite integral.", "Evalúe cada integral trigonométrica indefinida.", "Avalie cada integral trigonométrica indefinida.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefTrigProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefTrigProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1113,10 +1689,11 @@ namespace CalculusApp.Generators
                 "Evaluate each integral yielding inverse trig functions.", "Evalúe cada integral que produce funciones trigonométricas inversas.", "Avalie cada integral que produz funções trigonométricas inversas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefInvTrigProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefInvTrigProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1127,10 +1704,11 @@ namespace CalculusApp.Generators
                 "Evaluate each indefinite integral using u-substitution.", "Evalúe cada integral indefinida usando sustitución u.", "Avalie cada integral indefinida usando substituição u.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsPowerProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsPowerProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1141,10 +1719,11 @@ namespace CalculusApp.Generators
                 "Evaluate each integral using substitution.", "Evalúe cada integral usando sustitución.", "Avalie cada integral usando substituição.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsLogExpProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsLogExpProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1155,10 +1734,11 @@ namespace CalculusApp.Generators
                 "Evaluate each trigonometric integral with u-substitution.", "Evalúe cada integral trigonométrica con sustitución u.", "Avalie cada integral trigonométrica com substituição u.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsTrigProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsTrigProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1169,10 +1749,11 @@ namespace CalculusApp.Generators
                 "Evaluate using substitution leading to inverse trig functions.", "Evalúe usando sustitución para obtener funciones trigonométricas inversas.", "Avalie usando substituição que leva a funções trigonométricas inversas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsInvTrigProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateIndefSubsInvTrigProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1183,10 +1764,11 @@ namespace CalculusApp.Generators
                 "Evaluate each integral using integration by parts.", "Evalúe cada integral usando integración por partes.", "Avalie cada integral usando integração por partes.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateIntegrationProblem(parameters, i, type, rng, "indef_parts"));
+                        list.Add(CompositeFunctionBuilder.GenerateIntegrationProblem(parameters, startOffset + i, type, rng, "indef_parts"));
                     }
                     return list;
                 });
@@ -1199,10 +1781,11 @@ namespace CalculusApp.Generators
                 "Approximate the area under each curve using Riemann sums.", "Aproxime el área bajo cada curva usando sumas de Riemann.", "Aproxime a área sob cada curva usando somas de Riemann.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateApproxAreaProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateApproxAreaProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1213,10 +1796,11 @@ namespace CalculusApp.Generators
                 "Express or evaluate the area as a limit of Riemann sums.", "Exprese o evalúe el área como límite de sumas de Riemann.", "Expresse ou avalie a área como limite de somas de Riemann.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateLimitsOfSumsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateLimitsOfSumsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1227,10 +1811,11 @@ namespace CalculusApp.Generators
                 "Approximate the definite integral from the table of values.", "Aproxime la integral definida a partir de la tabla de valores.", "Aproxime a integral definida a partir da tabela de valores.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateRiemannTableProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateRiemannTableProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1241,10 +1826,11 @@ namespace CalculusApp.Generators
                 "Evaluate each definite integral.", "Evalúe cada integral definida.", "Avalie cada integral definida.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDefiniteIntegrationProblem(parameters, i, type, rng, "def_ftc1"));
+                        list.Add(CompositeFunctionBuilder.GenerateDefiniteIntegrationProblem(parameters, startOffset + i, type, rng, "def_ftc1"));
                     }
                     return list;
                 });
@@ -1255,10 +1841,11 @@ namespace CalculusApp.Generators
                 "Evaluate by substituting and changing limits of integration.", "Evalúe sustituyendo y cambiando los límites de integración.", "Avalie substituindo e mudando os limites de integração.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateChangeOfVarsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateChangeOfVarsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1269,10 +1856,11 @@ namespace CalculusApp.Generators
                 "Find the average value of each function on the given interval.", "Halle el valor promedio de cada función en el intervalo dado.", "Encontre o valor médio de cada função no intervalo dado.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateMvtIntegralsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateMvtIntegralsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1283,10 +1871,11 @@ namespace CalculusApp.Generators
                 "Find the derivative of each accumulation function.", "Halle la derivada de cada función de acumulación.", "Encontre a derivada de cada função de acumulação.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateFtc2Problem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateFtc2Problem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1299,10 +1888,11 @@ namespace CalculusApp.Generators
                 "Find the area under the curve on the given interval.", "Halle el área bajo la curva en el intervalo dado.", "Encontre a área sob a curva no intervalo dado.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateAreaUnderCurveProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateAreaUnderCurveProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1310,13 +1900,14 @@ namespace CalculusApp.Generators
             AddTopic("app_int_area_between", "app_int",
                 "Area between curves", "Área entre curvas", "Área entre curvas",
                 "Applications of Integration", "Aplicaciones de la Integral", "Aplicações da Integração",
-                "Find the area of the region enclosed by the curves.", "Halle el área de la región encerrada por las curvas.", "Encontre a área da região delimitada pelas curvas.",
+                "Find the area of the region enclosed by the curves.", "Halle el área de la región encerrada por las curvas.", "Encontre a área da región delimitada pelas curvas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateAreaBetweenCurvesProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateAreaBetweenCurvesProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1327,10 +1918,11 @@ namespace CalculusApp.Generators
                 "Find the volume of the solid of revolution using disks/washers.", "Halle el volumen del sólido de revolución usando discos/arandelas.", "Encontre o volume do sólido de revolução usando discos/anéis.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateVolumeDisksProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateVolumeDisksProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1341,10 +1933,11 @@ namespace CalculusApp.Generators
                 "Find the volume of revolution using cylindrical shells.", "Halle el volumen de revolución usando cascarones cilíndricos.", "Encontre o volume de revolução usando cascas cilíndricas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateVolumeShellsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateVolumeShellsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1355,10 +1948,11 @@ namespace CalculusApp.Generators
                 "Find the volume of the solid with the specified cross sections.", "Halle el volumen del sólido con las secciones transversales especificadas.", "Encontre o volume do sólido com as seções transversais especificadas.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateCrossSectionsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateCrossSectionsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1369,10 +1963,11 @@ namespace CalculusApp.Generators
                 "Given velocity, find displacement and total distance traveled.", "Dada la velocidad, halle el desplazamiento y la distancia total recorrida.", "Dada a velocidade, encontre o deslocamento e a distância total percorrida.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateMotionRevisitedProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateMotionRevisitedProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1385,10 +1980,11 @@ namespace CalculusApp.Generators
                 "Match the differential equation with its slope field.", "Relacione la ecuación diferencial con su campo de pendientes.", "Associe a equação diferencial ao seu campo de direções.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateSlopeFieldsProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateSlopeFieldsProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1399,10 +1995,11 @@ namespace CalculusApp.Generators
                 "Verify whether the given function is a solution to the differential equation.", "Verifique si la función dada es solución de la ecuación diferencial.", "Verifique se a função dada é uma solução da equação diferencial.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateDiffEqIntroProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateDiffEqIntroProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1410,13 +2007,14 @@ namespace CalculusApp.Generators
             AddTopic("diff_eq_separable", "diff_eq",
                 "Separable", "Separables", "Separáveis",
                 "Differential Equations", "Ecuaciones Diferenciales", "Equações Diferenciais",
-                "Find the general solution to each separable differential equation.", "Halle la solución general para cada ecuación diferencial separable.", "Encontre a solução geral para cada equação diferencial separável.",
+                "Find the general solution to each separable differential equation.", "Halle la solución general para cada ecuación diferencial separable.", "Encontre a solução general para cada equação diferencial separável.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateSeparableProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateSeparableProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });
@@ -1427,10 +2025,11 @@ namespace CalculusApp.Generators
                 "Solve each exponential growth or decay problem.", "Resuelva cada problema de crecimiento o decaimiento exponencial.", "Resolva cada problema de crescimento ou decaimento exponencial.",
                 (count, type, parameters, rng) =>
                 {
+                    int startOffset = rng.Next(100);
                     var list = new List<Question>();
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add(CompositeFunctionBuilder.GenerateGrowthDecayProblem(parameters, i, type, rng));
+                        list.Add(CompositeFunctionBuilder.GenerateGrowthDecayProblem(parameters, startOffset + i, type, rng));
                     }
                     return list;
                 });

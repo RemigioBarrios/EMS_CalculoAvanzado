@@ -70,9 +70,9 @@ namespace CalculusApp.Dialogs
                     Width = 160,
                     Height = 215,
                     Background = Brushes.White,
-                    BorderBrush = (pageNum == 1) ? new SolidColorBrush(Color.FromRgb(78, 66, 128)) : new SolidColorBrush(Color.FromRgb(60, 60, 68)),
+                    BorderBrush = (pageNum == 1) ? (Brush)FindResource("ThemeAccent") : (Brush)FindResource("ThemeBorder"),
                     BorderThickness = (pageNum == 1) ? new Thickness(2.5) : new Thickness(1),
-                    CornerRadius = new CornerRadius(3),
+                    CornerRadius = new CornerRadius(4),
                     Cursor = Cursors.Hand,
                     Margin = new Thickness(0, 0, 0, 14),
                     Tag = pageNum
@@ -99,7 +99,7 @@ namespace CalculusApp.Dialogs
                     Text = LocalizationService.Get("pdf_page_n_of_m", pageNum, _totalPages),
                     FontSize = 10,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 180)),
+                    Foreground = (Brush)FindResource("ThemeTextSecondary"),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Margin = new Thickness(0, 4, 0, 0)
                 };
@@ -140,8 +140,8 @@ namespace CalculusApp.Dialogs
             {
                 bool isActive = (i + 1 == pageNumber);
                 _thumbnailCards[i].BorderBrush = isActive
-                    ? new SolidColorBrush(Color.FromRgb(108, 92, 231))
-                    : new SolidColorBrush(Color.FromRgb(60, 60, 68));
+                    ? (Brush)FindResource("ThemeAccent")
+                    : (Brush)FindResource("ThemeBorder");
                 _thumbnailCards[i].BorderThickness = isActive ? new Thickness(2.5) : new Thickness(1);
             }
         }

@@ -26,6 +26,7 @@ namespace CalculusApp.Models
         public string AnswerText { get; set; } = string.Empty;
         public string SolutionSteps { get; set; } = string.Empty;
         public double ExtraSpace { get; set; } = 40.0; // Space for student work
+        public string TemplateId { get; set; } = string.Empty;
 
         // Graphing properties
         public bool ProvideBlankGraph { get; set; } = false;
@@ -37,6 +38,35 @@ namespace CalculusApp.Models
         public double GraphYMax { get; set; } = 6;
         public List<System.Windows.Point> GraphHoles { get; set; } = new();
         public List<System.Windows.Point> GraphPoints { get; set; } = new();
+
+        public Question Clone()
+        {
+            var q = new Question
+            {
+                Number = Number,
+                ProblemStatement = ProblemStatement,
+                FormulaText = FormulaText,
+                Type = Type,
+                AnswerText = AnswerText,
+                SolutionSteps = SolutionSteps,
+                ExtraSpace = ExtraSpace,
+                TemplateId = TemplateId,
+                ProvideBlankGraph = ProvideBlankGraph,
+                ProvideFunctionGraph = ProvideFunctionGraph,
+                GraphFormula = GraphFormula,
+                GraphXMin = GraphXMin,
+                GraphXMax = GraphXMax,
+                GraphYMin = GraphYMin,
+                GraphYMax = GraphYMax,
+                GraphHoles = new List<System.Windows.Point>(GraphHoles),
+                GraphPoints = new List<System.Windows.Point>(GraphPoints)
+            };
+            foreach (var c in Choices)
+            {
+                q.Choices.Add(new QuestionChoice { Letter = c.Letter, Text = c.Text, IsCorrect = c.IsCorrect });
+            }
+            return q;
+        }
     }
 
     public class QuestionSet : System.ComponentModel.INotifyPropertyChanged
@@ -84,19 +114,49 @@ namespace CalculusApp.Models
         public int ComplexityOptionIndex { get; set; } = 0;
         public bool IncludePolynomial { get; set; } = true;
         public bool IncludeQuadratic { get; set; } = true;
-        public bool IncludeCubic { get; set; } = false;
-        public bool IncludeQuartic { get; set; } = false;
-        public bool IncludeRational { get; set; } = false;
-        public bool IncludeRadical { get; set; } = false;
-        public bool IncludeTrig { get; set; } = false;
-        public bool IncludeExp { get; set; } = false;
-        public bool IncludeLog { get; set; } = false;
-        public bool IncludeAbs { get; set; } = false;
-        public bool IncludeInverseTrig { get; set; } = false;
-        public bool IncludeRationalExpEasy { get; set; } = false;
-        public bool IncludeRationalExpHard { get; set; } = false;
-        public bool IncludeExpLog { get; set; } = false;
+        public bool IncludeCubic { get; set; } = true;
+        public bool IncludeQuartic { get; set; } = true;
+        public bool IncludeRational { get; set; } = true;
+        public bool IncludeRadical { get; set; } = true;
+        public bool IncludeTrig { get; set; } = true;
+        public bool IncludeExp { get; set; } = true;
+        public bool IncludeLog { get; set; } = true;
+        public bool IncludeAbs { get; set; } = true;
+        public bool IncludeInverseTrig { get; set; } = true;
+        public bool IncludeRationalExpEasy { get; set; } = true;
+        public bool IncludeRationalExpHard { get; set; } = true;
+        public bool IncludeExpLog { get; set; } = true;
         public string? CustomDirections { get; set; }
+
+        public TopicGeneratorParameters Clone()
+        {
+            return new TopicGeneratorParameters
+            {
+                QuestionCount = QuestionCount,
+                QuestionType = QuestionType,
+                Preset = Preset,
+                Notation = Notation,
+                VaryLetters = VaryLetters,
+                ProvideBlankGraph = ProvideBlankGraph,
+                ProvideFunctionGraph = ProvideFunctionGraph,
+                ComplexityOptionIndex = ComplexityOptionIndex,
+                IncludePolynomial = IncludePolynomial,
+                IncludeQuadratic = IncludeQuadratic,
+                IncludeCubic = IncludeCubic,
+                IncludeQuartic = IncludeQuartic,
+                IncludeRational = IncludeRational,
+                IncludeRadical = IncludeRadical,
+                IncludeTrig = IncludeTrig,
+                IncludeExp = IncludeExp,
+                IncludeLog = IncludeLog,
+                IncludeAbs = IncludeAbs,
+                IncludeInverseTrig = IncludeInverseTrig,
+                IncludeRationalExpEasy = IncludeRationalExpEasy,
+                IncludeRationalExpHard = IncludeRationalExpHard,
+                IncludeExpLog = IncludeExpLog,
+                CustomDirections = CustomDirections
+            };
+        }
     }
 
     public class AssignmentHeading

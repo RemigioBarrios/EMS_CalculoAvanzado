@@ -89,9 +89,9 @@ namespace CalculusApp
                 {
                     var dlg = new Dialogs.TopicOptionsDialog(topic, 4, QuestionType.FreeResponse);
                     dlg.Owner = this;
-                    dlg.QuestionsAdded += (count, type, parameters) =>
+                    dlg.QuestionsAdded += (count, type, parameters, acceptedQuestions) =>
                     {
-                        ViewModel.AddTopic(item.TopicId, count, type, parameters);
+                        ViewModel.AddTopic(item.TopicId, count, type, parameters, acceptedQuestions);
                     };
                     dlg.ShowDialog();
                 }
@@ -117,12 +117,24 @@ namespace CalculusApp
             {
                 var dlg = new Dialogs.TopicOptionsDialog(topic, qs.QuestionCount, qs.DefaultType, qs.Parameters);
                 dlg.Owner = this;
-                dlg.QuestionsAdded += (count, type, parameters) =>
+                dlg.QuestionsAdded += (count, type, parameters, acceptedQuestions) =>
                 {
                     qs.QuestionCount = count;
                     qs.DefaultType = type;
                     qs.Parameters = parameters;
-                    ViewModel.RegenerateSelectedSet();
+                    if (!string.IsNullOrWhiteSpace(parameters.CustomDirections))
+                    {
+                        qs.Directions = parameters.CustomDirections;
+                    }
+                    if (acceptedQuestions != null && acceptedQuestions.Count > 0)
+                    {
+                        qs.Questions = acceptedQuestions;
+                        ViewModel.RefreshView();
+                    }
+                    else
+                    {
+                        ViewModel.RegenerateSelectedSet();
+                    }
                 };
                 dlg.ShowDialog();
             }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CalculusApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62594260922d9d6dc336c96074f71946e09e5a11")]
 [assembly: System.Reflection.AssemblyProductAttribute("Infinite Calculus")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Infinite Calculus")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

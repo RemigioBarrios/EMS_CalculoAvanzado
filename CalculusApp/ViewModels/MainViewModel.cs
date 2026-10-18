@@ -184,6 +184,10 @@ namespace CalculusApp.ViewModels
         public ICommand SetLanguageCommand { get; }
         public ICommand ExportPdfCommand { get; }
         public ICommand PreviewPdfCommand { get; }
+        public ICommand ToggleThemeCommand { get; }
+        public ICommand SetThemeCommand { get; }
+        public bool IsDarkTheme => ThemeService.IsDark;
+        public string ThemeStatusText => ThemeService.IsDark ? LocalizationService.Get("tb_theme_dark") : LocalizationService.Get("tb_theme_light");
         #endregion
 
         public MainViewModel()
@@ -218,6 +222,22 @@ namespace CalculusApp.ViewModels
                     else LocalizationService.SetLanguage(AppLanguage.English);
                 }
             });
+
+            ToggleThemeCommand = new RelayCommand(_ => ThemeService.ToggleTheme());
+            SetThemeCommand = new RelayCommand(p =>
+            {
+                if (p is string s && s.Equals("dark", StringComparison.OrdinalIgnoreCase))
+                    ThemeService.SetTheme(AppTheme.Dark);
+                else
+                    ThemeService.SetTheme(AppTheme.Light);
+            });
+
+            ThemeService.ThemeChanged += () =>
+            {
+                OnPropertyChanged(nameof(IsDarkTheme));
+                OnPropertyChanged(nameof(ThemeStatusText));
+                OnPropertyChanged(string.Empty);
+            };
 
             LocalizationService.LanguageChanged += OnLanguageChanged;
 
@@ -336,11 +356,15 @@ namespace CalculusApp.ViewModels
             }
         }
 
-        public void AddTopic(string? topicId, int count = 4, QuestionType type = QuestionType.FreeResponse, TopicGeneratorParameters? parameters = null)
+        public void AddTopic(string? topicId, int count = 4, QuestionType type = QuestionType.FreeResponse, TopicGeneratorParameters? parameters = null, List<Question>? initialQuestions = null)
         {
             if (string.IsNullOrEmpty(topicId)) return;
             var topic = TopicRegistry.GetById(topicId);
             if (topic == null) return;
+
+            var questions = (initialQuestions != null && initialQuestions.Count > 0)
+                ? initialQuestions
+                : topic.GenerateQuestions(count, type, parameters, _rng);
 
             var qs = new QuestionSet
             {
@@ -350,8 +374,8 @@ namespace CalculusApp.ViewModels
                 Directions = !string.IsNullOrWhiteSpace(parameters?.CustomDirections) ? parameters.CustomDirections : topic.DefaultDirections,
                 QuestionCount = count,
                 DefaultType = type,
-                Parameters = parameters ?? new TopicGeneratorParameters { QuestionCount = count, QuestionType = type },
-                Questions = topic.GenerateQuestions(count, type, parameters, _rng)
+                Parameters = parameters?.Clone() ?? new TopicGeneratorParameters { QuestionCount = count, QuestionType = type },
+                Questions = questions
             };
 
             QuestionSets.Add(qs);
@@ -577,7 +601,7 @@ namespace CalculusApp.ViewModels
                 var topic = TopicRegistry.GetById(set.TopicId);
                 if (topic != null)
                 {
-                    set.Questions = topic.GenerateQuestions(set.QuestionCount, type, _rng);
+                    set.Questions = topic.GenerateQuestions(set.QuestionCount, type, set.Parameters, _rng);
                 }
             }
             RequestRender?.Invoke();
@@ -592,7 +616,7 @@ namespace CalculusApp.ViewModels
                 var topic = TopicRegistry.GetById(SelectedQuestionSet.TopicId);
                 if (topic != null)
                 {
-                    SelectedQuestionSet.Questions = topic.GenerateQuestions(newCount, SelectedQuestionSet.DefaultType, _rng);
+                    SelectedQuestionSet.Questions = topic.GenerateQuestions(newCount, SelectedQuestionSet.DefaultType, SelectedQuestionSet.Parameters, _rng);
                 }
             }
             else
@@ -604,7 +628,7 @@ namespace CalculusApp.ViewModels
                     var topic = TopicRegistry.GetById(set.TopicId);
                     if (topic != null)
                     {
-                        set.Questions = topic.GenerateQuestions(newCount, set.DefaultType, _rng);
+                        set.Questions = topic.GenerateQuestions(newCount, set.DefaultType, set.Parameters, _rng);
                     }
                 }
             }
@@ -632,7 +656,13 @@ namespace CalculusApp.ViewModels
             }
         }
 
-        private void UpdateStatus()
+        public void RefreshView()
+        {
+            UpdateStatus();
+            RequestRender?.Invoke();
+        }
+
+        public void UpdateStatus()
         {
             int totalQ = _assignment.TotalQuestions;
             StatusQuestionsText = LocalizationService.Get("questions_stat", totalQ);

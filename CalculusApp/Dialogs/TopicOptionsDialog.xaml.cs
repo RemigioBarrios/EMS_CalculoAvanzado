@@ -18,7 +18,8 @@ namespace CalculusApp.Dialogs
         private bool _isInitialized = false;
 
         public TopicGeneratorParameters Parameters { get; } = new();
-        public event Action<int, QuestionType, TopicGeneratorParameters>? QuestionsAdded;
+        private List<Question> _currentPreviewQuestions = new();
+        public event Action<int, QuestionType, TopicGeneratorParameters, List<Question>>? QuestionsAdded;
 
         public TopicOptionsDialog(TopicDefinition topic, int initialCount = 4, QuestionType initialType = QuestionType.FreeResponse, TopicGeneratorParameters? existingParams = null)
         {
@@ -980,9 +981,25 @@ namespace CalculusApp.Dialogs
 
         private void UpdatePresetButtonsHighlight(string preset)
         {
-            EasyBtn.Background = preset == "Easy" ? new SolidColorBrush(Color.FromRgb(121, 82, 144)) : new SolidColorBrush(Color.FromRgb(45, 45, 51));
-            MediumBtn.Background = preset == "Medium" ? new SolidColorBrush(Color.FromRgb(121, 82, 144)) : new SolidColorBrush(Color.FromRgb(45, 45, 51));
-            HardBtn.Background = preset == "Hard" ? new SolidColorBrush(Color.FromRgb(121, 82, 144)) : new SolidColorBrush(Color.FromRgb(45, 45, 51));
+            void ApplyPresetStyle(Button btn, bool isSelected)
+            {
+                if (isSelected)
+                {
+                    btn.Background = (Brush)FindResource("ThemeAccent");
+                    btn.Foreground = Brushes.White;
+                    btn.BorderBrush = (Brush)FindResource("ThemeAccentHover");
+                }
+                else
+                {
+                    btn.Background = (Brush)FindResource("ThemeButtonBackground");
+                    btn.Foreground = (Brush)FindResource("ThemeTextPrimary");
+                    btn.BorderBrush = (Brush)FindResource("ThemeControlBorder");
+                }
+            }
+
+            ApplyPresetStyle(EasyBtn, preset == "Easy");
+            ApplyPresetStyle(MediumBtn, preset == "Medium");
+            ApplyPresetStyle(HardBtn, preset == "Hard");
         }
 
         private void UpdateSamples()
@@ -993,8 +1010,14 @@ namespace CalculusApp.Dialogs
 
             try
             {
-                // Generate 4 sample questions for the right-hand paper preview
-                var samples = _topic.GenerateQuestions(4, Parameters.QuestionType, Parameters, _rng);
+                int count = 4;
+                if (int.TryParse(NumQuestionsBox?.Text?.Trim() ?? "4", out int parsed) && parsed > 0 && parsed <= 50)
+                {
+                    count = parsed;
+                }
+                Parameters.QuestionCount = count;
+                _currentPreviewQuestions = _topic.GenerateQuestions(count, Parameters.QuestionType, Parameters, _rng);
+                var samples = _currentPreviewQuestions;
 
                 for (int i = 0; i < samples.Count; i++)
                 {
@@ -1396,6 +1419,7 @@ namespace CalculusApp.Dialogs
             if (int.TryParse(NumQuestionsBox.Text.Trim(), out int count) && count > 0 && count <= 50)
             {
                 Parameters.QuestionCount = count;
+                UpdateSamples();
             }
         }
 
@@ -1414,7 +1438,36 @@ namespace CalculusApp.Dialogs
             }
             Parameters.QuestionCount = count;
             Parameters.CustomDirections = PreviewDirectionHeader.Text;
-            QuestionsAdded?.Invoke(count, Parameters.QuestionType, Parameters);
+
+            List<Question> accepted;
+            if (_currentPreviewQuestions != null && _currentPreviewQuestions.Count > 0)
+            {
+                if (_currentPreviewQuestions.Count == count)
+                {
+                    accepted = _currentPreviewQuestions.Select(q => q.Clone()).ToList();
+                }
+                else if (_currentPreviewQuestions.Count > count)
+                {
+                    accepted = _currentPreviewQuestions.Take(count).Select(q => q.Clone()).ToList();
+                }
+                else
+                {
+                    accepted = _currentPreviewQuestions.Select(q => q.Clone()).ToList();
+                    var extra = _topic.GenerateQuestions(count - _currentPreviewQuestions.Count, Parameters.QuestionType, Parameters, _rng);
+                    accepted.AddRange(extra.Select(q => q.Clone()));
+                }
+            }
+            else
+            {
+                accepted = _topic.GenerateQuestions(count, Parameters.QuestionType, Parameters, _rng);
+            }
+
+            for (int i = 0; i < accepted.Count; i++)
+            {
+                accepted[i].Number = i + 1;
+            }
+
+            QuestionsAdded?.Invoke(count, Parameters.QuestionType, Parameters.Clone(), accepted);
             UpdateSamples();
         }
 
@@ -1427,15 +1480,44 @@ namespace CalculusApp.Dialogs
             }
             Parameters.QuestionCount = count;
             Parameters.CustomDirections = PreviewDirectionHeader.Text;
-            QuestionsAdded?.Invoke(count, Parameters.QuestionType, Parameters);
-            DialogResult = true;
-            Close();
+
+            List<Question> accepted;
+            if (_currentPreviewQuestions != null && _currentPreviewQuestions.Count > 0)
+            {
+                if (_currentPreviewQuestions.Count == count)
+                {
+                    accepted = _currentPreviewQuestions.Select(q => q.Clone()).ToList();
+                }
+                else if (_currentPreviewQuestions.Count > count)
+                {
+                    accepted = _currentPreviewQuestions.Take(count).Select(q => q.Clone()).ToList();
+                }
+                else
+                {
+                    accepted = _currentPreviewQuestions.Select(q => q.Clone()).ToList();
+                    var extra = _topic.GenerateQuestions(count - _currentPreviewQuestions.Count, Parameters.QuestionType, Parameters, _rng);
+                    accepted.AddRange(extra.Select(q => q.Clone()));
+                }
+            }
+            else
+            {
+                accepted = _topic.GenerateQuestions(count, Parameters.QuestionType, Parameters, _rng);
+            }
+
+            for (int i = 0; i < accepted.Count; i++)
+            {
+                accepted[i].Number = i + 1;
+            }
+
+            QuestionsAdded?.Invoke(count, Parameters.QuestionType, Parameters.Clone(), accepted);
+            try { DialogResult = true; } catch (InvalidOperationException) { }
+            try { Close(); } catch (InvalidOperationException) { }
         }
 
         private void OnCancelClick(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
-            Close();
+            try { DialogResult = false; } catch (InvalidOperationException) { }
+            try { Close(); } catch (InvalidOperationException) { }
         }
         #endregion
     }
