@@ -46,6 +46,7 @@ namespace CalculusApp.Services
             { "menu_theme", ("_Theme", "_Tema", "_Tema") },
             { "menu_theme_light", ("☀️ Light Theme", "☀️ Tema Claro", "☀️ Tema Claro") },
             { "menu_theme_dark", ("🌙 Dark Theme", "🌙 Tema Oscuro", "🌙 Tema Escuro") },
+            { "menu_subject", ("_Subject", "_Materia", "_Matéria") },
             { "menu_language", ("_Language", "_Idioma", "_Idioma") },
             { "menu_modify", ("_Modify", "_Modificar", "_Modificar") },
             { "menu_all_mc", ("Change All to _Multiple Choice", "Cambiar Todo a Opción _Múltiple", "Mudar Tudo para Múltipla _Escolha") },

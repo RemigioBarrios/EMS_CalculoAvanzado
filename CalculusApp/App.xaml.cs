@@ -75,6 +75,37 @@ public partial class App : Application
                     string ptPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_pt.png");
                     SaveSnapshot(ptPath);
 
+                    // 4b. Geometry Subject Snapshot
+                    Core.SubjectRegistry.SetCurrentSubject("geometry");
+                    win.ViewModel.CurrentAssignment.QuestionSets.Clear();
+                    win.ViewModel.QuestionSets.Clear();
+                    win.ViewModel.AddTopic("geom_pythagorean", 4, Models.QuestionType.FreeResponse);
+                    win.ViewModel.AddTopic("geom_area_polygons", 4, Models.QuestionType.MultipleChoice);
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_geometry.png"));
+
+                    // 4c. Algebra Subject Snapshot
+                    Core.SubjectRegistry.SetCurrentSubject("algebra");
+                    win.ViewModel.CurrentAssignment.QuestionSets.Clear();
+                    win.ViewModel.QuestionSets.Clear();
+                    win.ViewModel.AddTopic("alg_one_two_step", 4, Models.QuestionType.FreeResponse);
+                    win.ViewModel.AddTopic("alg_factoring_simple", 4, Models.QuestionType.MultipleChoice);
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_algebra.png"));
+
+                    // 4d. Linear Systems Subject Snapshot
+                    Core.SubjectRegistry.SetCurrentSubject("linear_systems");
+                    win.ViewModel.CurrentAssignment.QuestionSets.Clear();
+                    win.ViewModel.QuestionSets.Clear();
+                    win.ViewModel.AddTopic("lin_matrix_mult", 4, Models.QuestionType.FreeResponse);
+                    win.ViewModel.AddTopic("lin_det_2x2", 4, Models.QuestionType.MultipleChoice);
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_linear_systems.png"));
+
+                    // Revert to Calculus
+                    Core.SubjectRegistry.SetCurrentSubject("calculus");
+                    win.ViewModel.CurrentAssignment.QuestionSets.Clear();
+                    win.ViewModel.QuestionSets.Clear();
+                    win.ViewModel.AddTopic("deriv_power", 4, Models.QuestionType.FreeResponse);
+                    win.ViewModel.AddTopic("limits_direct", 4, Models.QuestionType.MultipleChoice);
+
                     // 5. Topic Options Dialog Snapshot (English - Absolute Extrema 1:1 match to reference screenshot)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.English);
                     var topicExtrema = Generators.TopicRegistry.GetById("app_abs_extrema") ?? Generators.TopicRegistry.AllTopics[0];

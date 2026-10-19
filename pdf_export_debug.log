@@ -1,10 +1,7 @@
-ExportToPdf called. Total page borders found: 3
+ExportToPdf called. Total page borders found: 2
 --- Starting Page 1 ---
 PageBorder size: ActualWidth=816, ActualHeight=1056, Width=816, Height=1056, IsLoaded=True, IsVisible=True
-Page 1 rendered successfully with 262 visual nodes.
+Page 1 rendered successfully with 130 visual nodes.
 --- Starting Page 2 ---
 PageBorder size: ActualWidth=816, ActualHeight=1056, Width=816, Height=1056, IsLoaded=True, IsVisible=True
-Page 2 rendered successfully with 64 visual nodes.
---- Starting Page 3 ---
-PageBorder size: ActualWidth=816, ActualHeight=1056, Width=816, Height=1056, IsLoaded=True, IsVisible=True
-Page 3 rendered successfully with 70 visual nodes.
+Page 2 rendered successfully with 34 visual nodes.

@@ -6,7 +6,7 @@
         xmlns:controls="clr-namespace:CalculusApp.Controls"
         xmlns:vm="clr-namespace:CalculusApp.ViewModels"
         mc:Ignorable="d"
-        Title="Infinite Calculus" 
+        Title="{Binding WindowTitle}" 
         Height="870" Width="1380"
         MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
@@ -62,6 +62,15 @@
                 <MenuItem Header="{Binding [menu_shorten]}" Command="{Binding OnePageShorterCommand}"/>
                 <MenuItem Header="{Binding [menu_lengthen]}" Command="{Binding OnePageLongerCommand}"/>
                 <MenuItem Header="{Binding [menu_distribute_space]}" Command="{Binding RespaceWithinPageCommand}"/>
+            </MenuItem>
+            <!-- Materia / Subject Selector Menu -->
+            <MenuItem Header="{Binding [menu_subject]}">
+                <MenuItem Header="∫ Cálculo (Infinite Calculus)" Command="{Binding SelectSubjectCommand}" CommandParameter="calculus"/>
+                <MenuItem Header="📐 Geometría (Infinite Geometry)" Command="{Binding SelectSubjectCommand}" CommandParameter="geometry"/>
+                <MenuItem Header="🔤 Álgebra (Infinite Algebra)" Command="{Binding SelectSubjectCommand}" CommandParameter="algebra"/>
+                <MenuItem Header="▦ Sistemas Lineales y Matrices" Command="{Binding SelectSubjectCommand}" CommandParameter="linear_systems"/>
+                <Separator/>
+                <MenuItem Header="📂 Cargar Materia desde Archivo..." Command="{Binding LoadSyllabusFileCommand}"/>
             </MenuItem>
             <MenuItem Header="{Binding [menu_language]}">
                 <MenuItem Header="🇺🇸 English (US)" Command="{Binding SetLanguageCommand}" CommandParameter="en"/>
@@ -166,6 +175,18 @@
                 <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowPunchHoles}" ToolTip="Show/Hide 3-Hole Punch Guides">
                     <TextBlock Text="{Binding [tb_punch_holes]}"/>
                 </ToggleButton>
+
+                <Separator Style="{StaticResource ToolSep}"/>
+
+                <!-- Subject / Materia Selector -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
+                    <TextBlock Text="{Binding CurrentSubject.Icon}" VerticalAlignment="Center" FontSize="13" Margin="0,0,4,0"/>
+                    <ComboBox Width="135" Height="24"
+                              ItemsSource="{Binding AvailableSubjects}"
+                              SelectedItem="{Binding CurrentSubject, Mode=TwoWay}"
+                              DisplayMemberPath="Name"
+                              ToolTip="Seleccionar Materia (Subject)"/>
+                </StackPanel>
 
                 <Separator Style="{StaticResource ToolSep}"/>
 

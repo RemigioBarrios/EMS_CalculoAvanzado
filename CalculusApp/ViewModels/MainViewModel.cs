@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using CalculusApp.Core;
 using CalculusApp.Generators;
 using CalculusApp.Models;
 using CalculusApp.Services;
@@ -186,8 +187,23 @@ namespace CalculusApp.ViewModels
         public ICommand PreviewPdfCommand { get; }
         public ICommand ToggleThemeCommand { get; }
         public ICommand SetThemeCommand { get; }
+        public ICommand SelectSubjectCommand { get; }
+        public ICommand LoadSyllabusFileCommand { get; }
         public bool IsDarkTheme => ThemeService.IsDark;
         public string ThemeStatusText => ThemeService.IsDark ? LocalizationService.Get("tb_theme_dark") : LocalizationService.Get("tb_theme_light");
+        public ISubjectModule CurrentSubject
+        {
+            get => SubjectRegistry.CurrentSubject;
+            set
+            {
+                if (value != null && SubjectRegistry.CurrentSubject != value)
+                {
+                    SubjectRegistry.CurrentSubject = value;
+                }
+            }
+        }
+        public IReadOnlyList<ISubjectModule> AvailableSubjects => SubjectRegistry.AvailableSubjects;
+        public string WindowTitle => $"{SubjectRegistry.CurrentSubject.Subtitle} - [ {_assignment.Heading.Title} ]";
         #endregion
 
         public MainViewModel()
@@ -232,6 +248,20 @@ namespace CalculusApp.ViewModels
                     ThemeService.SetTheme(AppTheme.Light);
             });
 
+            SelectSubjectCommand = new RelayCommand(p =>
+            {
+                if (p is string id)
+                {
+                    SubjectRegistry.SetCurrentSubject(id);
+                }
+                else if (p is ISubjectModule mod)
+                {
+                    SubjectRegistry.CurrentSubject = mod;
+                }
+            });
+
+            LoadSyllabusFileCommand = new RelayCommand(_ => PromptLoadSyllabusFile());
+
             ThemeService.ThemeChanged += () =>
             {
                 OnPropertyChanged(nameof(IsDarkTheme));
@@ -240,9 +270,37 @@ namespace CalculusApp.ViewModels
             };
 
             LocalizationService.LanguageChanged += OnLanguageChanged;
+            SubjectRegistry.CurrentSubjectChanged += OnCurrentSubjectChanged;
 
             LoadTopicsTree();
             CreateDefaultSampleAssignment();
+        }
+
+        private void OnCurrentSubjectChanged()
+        {
+            LoadTopicsTree();
+            _assignment.Heading.Subtitle = SubjectRegistry.CurrentSubject.Subtitle;
+            OnPropertyChanged(nameof(CurrentSubject));
+            OnPropertyChanged(nameof(AvailableSubjects));
+            OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(string.Empty);
+            RequestRender?.Invoke();
+        }
+
+        private void PromptLoadSyllabusFile()
+        {
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Text Syllabus (*.txt)|*.txt|All Files (*.*)|*.*",
+                Title = "Cargar Temario de Materia (Syllabus)"
+            };
+            if (ofd.ShowDialog() == true)
+            {
+                string filename = Path.GetFileNameWithoutExtension(ofd.FileName);
+                var dynModule = SyllabusLoader.LoadFromText(ofd.FileName, filename.ToLowerInvariant(), filename);
+                SubjectRegistry.RegisterSubject(dynModule);
+                SubjectRegistry.CurrentSubject = dynModule;
+            }
         }
 
         private void OnLanguageChanged()
@@ -254,11 +312,12 @@ namespace CalculusApp.ViewModels
             {
                 _assignment.Heading.Title = LocalizationService.Get("ws_assignment");
             }
+            _assignment.Heading.Subtitle = SubjectRegistry.CurrentSubject.Subtitle;
 
             // Also update directions for current question sets to the new language
             foreach (var qs in _assignment.QuestionSets)
             {
-                var topic = TopicRegistry.GetById(qs.TopicId);
+                var topic = SubjectRegistry.GetTopicById(qs.TopicId);
                 if (topic != null)
                 {
                     qs.TopicTitle = topic.Title;
@@ -267,40 +326,25 @@ namespace CalculusApp.ViewModels
                 }
             }
 
+            OnPropertyChanged(nameof(WindowTitle));
             OnPropertyChanged(string.Empty);
             RequestRender?.Invoke();
         }
 
-        private static int GetCategoryOrder(string catId) => catId switch
-        {
-            "limits" => 1,
-            "continuity" => 2,
-            "differentiation" => 3,
-            "app_diff" => 4,
-            "indef_int" => 5,
-            "def_int" => 6,
-            "app_int" => 7,
-            "diff_eq" => 8,
-            _ => 99
-        };
-
         private void LoadTopicsTree()
         {
             TopicCategories.Clear();
+            var categories = SubjectRegistry.CurrentSubject.Categories;
 
-            var groups = TopicRegistry.AllTopics
-                .GroupBy(t => t.Category)
-                .OrderBy(g => GetCategoryOrder(g.First().CategoryId));
-
-            foreach (var group in groups)
+            foreach (var cat in categories)
             {
                 var catItem = new TopicTreeItem
                 {
-                    Title = group.Key,
+                    Title = cat.Name,
                     IsCategory = true
                 };
 
-                foreach (var topic in group)
+                foreach (var topic in cat.Topics)
                 {
                     catItem.Children.Add(new TopicTreeItem
                     {
@@ -325,41 +369,40 @@ namespace CalculusApp.ViewModels
             TopicCategories.Clear();
             var term = _searchFilter.Trim().ToLowerInvariant();
 
-            var matched = TopicRegistry.AllTopics
-                .Where(t => t.Title.ToLowerInvariant().Contains(term) ||
-                            t.Category.ToLowerInvariant().Contains(term) ||
-                            t.TitleEn.ToLowerInvariant().Contains(term) ||
-                            t.TitleEs.ToLowerInvariant().Contains(term) ||
-                            t.TitlePt.ToLowerInvariant().Contains(term))
-                .GroupBy(t => t.Category)
-                .OrderBy(g => GetCategoryOrder(g.First().CategoryId));
-
-            foreach (var group in matched)
+            foreach (var cat in SubjectRegistry.CurrentSubject.Categories)
             {
-                var catItem = new TopicTreeItem
-                {
-                    Title = group.Key,
-                    IsCategory = true
-                };
+                var matched = cat.Topics.Where(t =>
+                    t.Title.ToLowerInvariant().Contains(term) ||
+                    t.TitleEn.ToLowerInvariant().Contains(term) ||
+                    t.TitleEs.ToLowerInvariant().Contains(term) ||
+                    t.TitlePt.ToLowerInvariant().Contains(term) ||
+                    cat.Name.ToLowerInvariant().Contains(term)).ToList();
 
-                foreach (var topic in group)
+                if (matched.Count > 0)
                 {
-                    catItem.Children.Add(new TopicTreeItem
+                    var catItem = new TopicTreeItem
                     {
-                        Title = topic.Title,
-                        TopicId = topic.TopicId,
-                        IsCategory = false
-                    });
+                        Title = cat.Name,
+                        IsCategory = true
+                    };
+                    foreach (var topic in matched)
+                    {
+                        catItem.Children.Add(new TopicTreeItem
+                        {
+                            Title = topic.Title,
+                            TopicId = topic.TopicId,
+                            IsCategory = false
+                        });
+                    }
+                    TopicCategories.Add(catItem);
                 }
-
-                TopicCategories.Add(catItem);
             }
         }
 
         public void AddTopic(string? topicId, int count = 4, QuestionType type = QuestionType.FreeResponse, TopicGeneratorParameters? parameters = null, List<Question>? initialQuestions = null)
         {
             if (string.IsNullOrEmpty(topicId)) return;
-            var topic = TopicRegistry.GetById(topicId);
+            var topic = SubjectRegistry.GetTopicById(topicId);
             if (topic == null) return;
 
             var questions = (initialQuestions != null && initialQuestions.Count > 0)
@@ -389,20 +432,29 @@ namespace CalculusApp.ViewModels
         private void CreateDefaultSampleAssignment()
         {
             _assignment.Heading.Title = LocalizationService.Get("ws_assignment");
+            _assignment.Heading.Subtitle = SubjectRegistry.CurrentSubject.Subtitle;
             _assignment.QuestionSets.Clear();
             QuestionSets.Clear();
 
-            AddTopic("deriv_power", 4, QuestionType.FreeResponse);
-            AddTopic("limits_direct", 4, QuestionType.MultipleChoice);
+            var firstTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
+            if (firstTopic != null)
+            {
+                AddTopic(firstTopic.TopicId, 4, QuestionType.FreeResponse);
+            }
+            if (SubjectRegistry.CurrentSubject.AllTopics.Count > 1)
+            {
+                var secondTopic = SubjectRegistry.CurrentSubject.AllTopics[1];
+                AddTopic(secondTopic.TopicId, 4, QuestionType.MultipleChoice);
+            }
         }
 
         private void CreateNewAssignment()
         {
             string msg = LocalizationService.CurrentLanguage switch
             {
-                AppLanguage.Spanish => "¿Desea crear un nuevo examen de cálculo?",
-                AppLanguage.Portuguese => "Deseja criar um novo teste de cálculo?",
-                _ => "Create a new calculus assignment?"
+                AppLanguage.Spanish => $"¿Desea crear una nueva {LocalizationService.Get("ws_assignment").ToLower()} de {SubjectRegistry.CurrentSubject.Name}?",
+                AppLanguage.Portuguese => $"Deseja criar uma nova lista de {SubjectRegistry.CurrentSubject.Name}?",
+                _ => $"Create a new {SubjectRegistry.CurrentSubject.Name} assignment?"
             };
             string caption = LocalizationService.CurrentLanguage switch
             {
@@ -415,6 +467,7 @@ namespace CalculusApp.ViewModels
             {
                 _assignment = new Assignment();
                 _assignment.Heading.Title = LocalizationService.Get("ws_assignment");
+                _assignment.Heading.Subtitle = SubjectRegistry.CurrentSubject.Subtitle;
                 QuestionSets.Clear();
                 UpdateStatus();
                 RequestRender?.Invoke();
@@ -542,7 +595,7 @@ namespace CalculusApp.ViewModels
         {
             foreach (var set in _assignment.QuestionSets)
             {
-                var topic = TopicRegistry.GetById(set.TopicId);
+                var topic = SubjectRegistry.GetTopicById(set.TopicId);
                 if (topic != null)
                 {
                     set.Questions = topic.GenerateQuestions(set.QuestionCount, set.DefaultType, set.Parameters, _rng);
@@ -554,7 +607,7 @@ namespace CalculusApp.ViewModels
         public void RegenerateSelectedSet()
         {
             if (SelectedQuestionSet == null) return;
-            var topic = TopicRegistry.GetById(SelectedQuestionSet.TopicId);
+            var topic = SubjectRegistry.GetTopicById(SelectedQuestionSet.TopicId);
             if (topic != null)
             {
                 if (!string.IsNullOrWhiteSpace(SelectedQuestionSet.Parameters.CustomDirections))
@@ -598,7 +651,7 @@ namespace CalculusApp.ViewModels
             foreach (var set in _assignment.QuestionSets)
             {
                 set.DefaultType = type;
-                var topic = TopicRegistry.GetById(set.TopicId);
+                var topic = SubjectRegistry.GetTopicById(set.TopicId);
                 if (topic != null)
                 {
                     set.Questions = topic.GenerateQuestions(set.QuestionCount, type, set.Parameters, _rng);
@@ -613,7 +666,7 @@ namespace CalculusApp.ViewModels
             {
                 int newCount = Math.Max(1, Math.Min(20, SelectedQuestionSet.QuestionCount + delta));
                 SelectedQuestionSet.QuestionCount = newCount;
-                var topic = TopicRegistry.GetById(SelectedQuestionSet.TopicId);
+                var topic = SubjectRegistry.GetTopicById(SelectedQuestionSet.TopicId);
                 if (topic != null)
                 {
                     SelectedQuestionSet.Questions = topic.GenerateQuestions(newCount, SelectedQuestionSet.DefaultType, SelectedQuestionSet.Parameters, _rng);
@@ -625,7 +678,7 @@ namespace CalculusApp.ViewModels
                 {
                     int newCount = Math.Max(1, Math.Min(20, set.QuestionCount + delta));
                     set.QuestionCount = newCount;
-                    var topic = TopicRegistry.GetById(set.TopicId);
+                    var topic = SubjectRegistry.GetTopicById(set.TopicId);
                     if (topic != null)
                     {
                         set.Questions = topic.GenerateQuestions(newCount, set.DefaultType, set.Parameters, _rng);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -129,12 +130,50 @@ namespace CalculusApp.Controls
                 return panel;
             }
 
+            var vmatrixMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"(?:\\begin\{vmatrix\}|\\left\|\s*\\begin\{matrix\})(.*?)(?:\\end\{vmatrix\}|\\end\{matrix\}\s*\\right\|)", System.Text.RegularExpressions.RegexOptions.Singleline);
+            if (vmatrixMatch.Success)
+            {
+                int start = vmatrixMatch.Index;
+                int len = vmatrixMatch.Length;
+                string prefix = trimmed.Substring(0, start).TrimEnd();
+                string matrixBody = vmatrixMatch.Groups[1].Value;
+                string suffix = trimmed.Substring(start + len).TrimStart();
+
+                var panel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                if (!string.IsNullOrWhiteSpace(prefix))
+                {
+                    var prefixMath = RenderMath(prefix, scale, foreground, isBold);
+                    prefixMath.VerticalAlignment = VerticalAlignment.Center;
+                    prefixMath.Margin = new Thickness(0, 0, 4, 0);
+                    panel.Children.Add(prefixMath);
+                }
+
+                var detControl = CreateMatrixControl(matrixBody, delimiter: '|', scale: scale, foreground: foreground);
+                detControl.VerticalAlignment = VerticalAlignment.Center;
+                panel.Children.Add(detControl);
+
+                if (!string.IsNullOrWhiteSpace(suffix))
+                {
+                    var suffixMath = RenderMath(suffix, scale, foreground, isBold);
+                    suffixMath.VerticalAlignment = VerticalAlignment.Center;
+                    suffixMath.Margin = new Thickness(4, 0, 0, 0);
+                    panel.Children.Add(suffixMath);
+                }
+
+                return panel;
+            }
+
             // Sanitize LaTeX artifacts before WpfMath parser
             trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\infty(?:ty)+", @"\infty");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\left\s*)+(\[|\(|\{|\.\|)", @"\left$1");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\right\s*)+(\]|\)|\}|\.\|)", @"\right$1");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\left(?![\[\(\{\.\|])", "");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\right(?![\]\)\}\.\|])", "");
+            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\left\s*)+([\[\(\{\|.]|\\\{|\\\})", @"\left$1");
+            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\right\s*)+([\]\)\}\|.]|\\\{|\\\})", @"\right$1");
+            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\left(?![\[\(\{\|.]|\\\{|\\\})", "");
+            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\right(?![\]\)\}\|.]|\\\{|\\\})", "");
 
             try
             {
@@ -154,7 +193,10 @@ namespace CalculusApp.Controls
                 }
                 else
                 {
-                    try { System.IO.File.AppendAllText("formula_errors.txt", $"[HasError] '{trimmed}'\n"); } catch { }
+                    try {
+                        var errMsgs = formula.Errors != null ? string.Join("; ", System.Linq.Enumerable.Select(formula.Errors, e => e.Message)) : "none";
+                        System.IO.File.AppendAllText("formula_errors.txt", $"[HasError] '{trimmed}' -> {errMsgs}\n");
+                    } catch { }
                 }
             }
             catch (Exception ex)
@@ -262,6 +304,82 @@ namespace CalculusApp.Controls
             }
 
             outerBorder.Child = grid;
+            return outerBorder;
+        }
+
+        private static FrameworkElement CreateMatrixControl(string body, char delimiter, double scale, Brush? foreground)
+        {
+            foreground ??= Brushes.Black;
+
+            var rawRows = body.Split(new[] { @"\\" }, StringSplitOptions.RemoveEmptyEntries);
+            var rowsData = new List<List<string>>();
+
+            foreach (var r in rawRows)
+            {
+                string cleanRow = r.Trim();
+                if (string.IsNullOrWhiteSpace(cleanRow)) continue;
+
+                var cells = cleanRow.Split('&');
+                var cellList = new List<string>();
+                foreach (var c in cells)
+                {
+                    cellList.Add(c.Trim());
+                }
+                if (cellList.Count > 0)
+                {
+                    rowsData.Add(cellList);
+                }
+            }
+
+            if (rowsData.Count == 0)
+            {
+                return new TextBlock { Text = body };
+            }
+
+            int numRows = rowsData.Count;
+            int numCols = rowsData.Max(r => r.Count);
+
+            var grid = new Grid
+            {
+                Margin = new Thickness(4, 1, 4, 1)
+            };
+
+            for (int c = 0; c < numCols; c++)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            }
+            for (int r = 0; r < numRows; r++)
+            {
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            }
+
+            for (int r = 0; r < numRows; r++)
+            {
+                for (int c = 0; c < rowsData[r].Count; c++)
+                {
+                    string cellVal = rowsData[r][c];
+                    var cellElem = RenderMath(cellVal, scale: scale * 0.95, foreground: foreground);
+                    cellElem.Margin = new Thickness(6, 2, 6, 2);
+                    cellElem.HorizontalAlignment = HorizontalAlignment.Center;
+                    cellElem.VerticalAlignment = VerticalAlignment.Center;
+
+                    Grid.SetRow(cellElem, r);
+                    Grid.SetColumn(cellElem, c);
+                    grid.Children.Add(cellElem);
+                }
+            }
+
+            var outerBorder = new Border
+            {
+                BorderBrush = foreground,
+                BorderThickness = (delimiter == '|') 
+                    ? new Thickness(1.4, 0, 1.4, 0)
+                    : new Thickness(1.5, 0, 1.5, 0),
+                Padding = new Thickness(4, 0, 4, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = grid
+            };
+
             return outerBorder;
         }
 
