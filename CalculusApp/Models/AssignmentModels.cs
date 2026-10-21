@@ -93,6 +93,30 @@ namespace CalculusApp.Models
             get => _directions;
             set { _directions = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Directions))); }
         }
+        private bool _isHidden = false;
+        public bool IsHidden
+        {
+            get => _isHidden;
+            set
+            {
+                if (_isHidden != value)
+                {
+                    _isHidden = value;
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsHidden)));
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsVisible)));
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(VisibilityIcon)));
+                }
+            }
+        }
+
+        public bool IsVisible
+        {
+            get => !_isHidden;
+            set => IsHidden = !value;
+        }
+
+        public string VisibilityIcon => _isHidden ? "🚫" : "👁";
+
         public int QuestionCount { get; set; } = 4;
         public QuestionType DefaultType { get; set; } = QuestionType.FreeResponse;
         public TopicGeneratorParameters Parameters { get; set; } = new();
@@ -184,7 +208,10 @@ namespace CalculusApp.Models
             get
             {
                 int count = 0;
-                foreach (var qs in QuestionSets) count += qs.Questions.Count;
+                foreach (var qs in QuestionSets)
+                {
+                    if (!qs.IsHidden) count += qs.Questions.Count;
+                }
                 return count;
             }
         }

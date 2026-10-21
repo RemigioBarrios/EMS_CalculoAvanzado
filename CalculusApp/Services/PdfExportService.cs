@@ -150,7 +150,7 @@ namespace CalculusApp.Services
                 return;
             }
 
-            // 2. Formula elements: render LaTeX math formulas as high-resolution images
+            // 2. Formula elements: render LaTeX math formulas as high-resolution images + selectable LaTeX layer for OCR/PDF extractors
             if (visual is FormulaControl formula)
             {
                 var transform = formula.TransformToAncestor(pageBorder);
@@ -160,6 +160,14 @@ namespace CalculusApp.Services
 
                 if (w > 0 && h > 0)
                 {
+                    if (!string.IsNullOrWhiteSpace(formula.Formula))
+                    {
+                        var latexFont = CreateFont("Times New Roman", 4.0, XFontStyleEx.Regular);
+                        var invisibleBrush = new XSolidBrush(XColor.FromArgb(2, 255, 255, 255));
+                        gfx.DrawString($" ${formula.Formula.Trim()}$ ", latexFont, invisibleBrush,
+                            new XRect(pt.X * 0.75, pt.Y * 0.75, Math.Max(10, w * 0.75), Math.Max(6, h * 0.75)),
+                            XStringFormats.TopLeft);
+                    }
                     RenderFrameworkElementAsImage(formula, gfx, pt.X * 0.75, pt.Y * 0.75, w * 0.75, h * 0.75);
                 }
                 return;

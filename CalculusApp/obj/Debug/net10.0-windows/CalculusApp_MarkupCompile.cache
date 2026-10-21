@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\NEOSERV\FUENTES2\CALCULO\CalculusApp\App.xaml
-5-205084259
-
-27478199229
-2202101636337
-Controls\WorksheetView.xaml;Dialogs\HeadingDialog.xaml;Dialogs\PdfPreviewDialog.xaml;Dialogs\TopicOptionsDialog.xaml;MainWindow.xaml;
+12-531433171
+86-1557820411
+22-155313849
+233-1481076487
+Controls\AiAssistantControl.xaml;Controls\PageThumbnailsControl.xaml;Controls\WorksheetView.xaml;Dialogs\HeadingDialog.xaml;Dialogs\InstituteAdminDialog.xaml;Dialogs\PdfPreviewDialog.xaml;Dialogs\QuestionEditDialog.xaml;Dialogs\StudentToolsDialog.xaml;Dialogs\TeacherPdfExtractorDialog.xaml;Dialogs\TeacherRosterDialog.xaml;Dialogs\TopicOptionsDialog.xaml;MainWindow.xaml;
 
 False
 

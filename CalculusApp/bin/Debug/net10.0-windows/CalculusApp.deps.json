@@ -8,8 +8,15 @@
     ".NETCoreApp,Version=v10.0": {
       "CalculusApp/1.0.0": {
         "dependencies": {
+          "CalculusApp.Core": "1.0.0",
+          "CalculusApp.Teacher": "1.0.0",
+          "Microsoft.Web.WebView2": "1.0.4258.31",
           "PDFsharp": "6.5.0",
-          "WpfMath": "2.1.0"
+          "System.Speech": "10.0.13",
+          "WpfMath": "2.1.0",
+          "Microsoft.Web.WebView2.Core": "1.0.4258.31",
+          "Microsoft.Web.WebView2.WinForms": "1.0.4258.31",
+          "Microsoft.Web.WebView2.Wpf": "1.0.4258.31"
         },
         "runtime": {
           "CalculusApp.dll": {}
@@ -31,6 +38,57 @@
           "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
             "assemblyVersion": "8.0.0.0",
             "fileVersion": "8.0.1325.6609"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2/1.0.4258.31": {
+        "runtimeTargets": {
+          "runtimes/win-arm64/native/WebView2Loader.dll": {
+            "rid": "win-arm64",
+            "assetType": "native",
+            "fileVersion": "1.0.4258.31"
+          },
+          "runtimes/win-x64/native/WebView2Loader.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "1.0.4258.31"
+          },
+          "runtimes/win-x86/native/WebView2Loader.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "1.0.4258.31"
+          }
+        }
+      },
+      "PdfPig/0.1.16": {
+        "runtime": {
+          "lib/net9.0/UglyToad.PdfPig.Core.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.Fonts.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.Package.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.Tokenization.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.Tokens.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
+          },
+          "lib/net9.0/UglyToad.PdfPig.dll": {
+            "assemblyVersion": "0.1.16.0",
+            "fileVersion": "0.1.16.0"
           }
         }
       },
@@ -81,6 +139,22 @@
           }
         }
       },
+      "System.Speech/10.0.13": {
+        "runtime": {
+          "lib/net10.0/System.Speech.dll": {
+            "assemblyVersion": "10.0.0.13",
+            "fileVersion": "10.0.1326.50504"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net10.0/System.Speech.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.13",
+            "fileVersion": "10.0.1326.50504"
+          }
+        }
+      },
       "WpfMath/2.1.0": {
         "dependencies": {
           "XamlMath.Shared": "2.1.0"
@@ -97,6 +171,54 @@
           "lib/net6.0/XamlMath.Shared.dll": {
             "assemblyVersion": "2.1.0.0",
             "fileVersion": "2.1.0.0"
+          }
+        }
+      },
+      "CalculusApp.Core/1.0.0": {
+        "dependencies": {
+          "PDFsharp": "6.5.0",
+          "WpfMath": "2.1.0"
+        },
+        "runtime": {
+          "CalculusApp.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "CalculusApp.Teacher/1.0.0": {
+        "dependencies": {
+          "CalculusApp.Core": "1.0.0",
+          "PdfPig": "0.1.16"
+        },
+        "runtime": {
+          "CalculusApp.Teacher.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Core/1.0.4258.31": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Core.dll": {
+            "assemblyVersion": "1.0.4258.31",
+            "fileVersion": "1.0.4258.31"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.WinForms/1.0.4258.31": {
+        "runtime": {
+          "Microsoft.Web.WebView2.WinForms.dll": {
+            "assemblyVersion": "1.0.4258.31",
+            "fileVersion": "1.0.4258.31"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Wpf/1.0.4258.31": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Wpf.dll": {
+            "assemblyVersion": "1.0.4258.31",
+            "fileVersion": "1.0.4258.31"
           }
         }
       }
@@ -122,12 +244,33 @@
       "path": "microsoft.extensions.logging.abstractions/8.0.3",
       "hashPath": "microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512"
     },
+    "Microsoft.Web.WebView2/1.0.4258.31": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sHVZ2MQrHT1J3q5/6csn0fIP27rzpTO/RRC+wPQDrZheB7T4t2n+vVbY6SdCKr4WRV9s/gmBM3PPMWWJtoDzMg==",
+      "path": "microsoft.web.webview2/1.0.4258.31",
+      "hashPath": "microsoft.web.webview2.1.0.4258.31.nupkg.sha512"
+    },
+    "PdfPig/0.1.16": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qQcbsNMYVY+K5ELptax2S8thNMk0+rSQq3H/KdYj3LLcko8yTCz8y5KIvsKxIyAuTN0ZYNnfsZkM+0EvxTwHVA==",
+      "path": "pdfpig/0.1.16",
+      "hashPath": "pdfpig.0.1.16.nupkg.sha512"
+    },
     "PDFsharp/6.5.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-H9PYxFBvbevuYT5Q/d64MX7YxzEUuhl887fFTwN4By9vAKy9m54yBk5/Pm989KmBbtB2i6cUNa3Gve8loPSYkg==",
       "path": "pdfsharp/6.5.0",
       "hashPath": "pdfsharp.6.5.0.nupkg.sha512"
+    },
+    "System.Speech/10.0.13": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XxZ8CqmEYRvud8jyJcFKvIVIqNseAy6NdTbEJwSUzDX1FXYCf2gGuCmFST/cOFIOAMIKJ7hHiynhRl+oyIQHvw==",
+      "path": "system.speech/10.0.13",
+      "hashPath": "system.speech.10.0.13.nupkg.sha512"
     },
     "WpfMath/2.1.0": {
       "type": "package",
@@ -142,6 +285,31 @@
       "sha512": "sha512-p7W78KZc2EWuVqAd704m4yGWg0HtxahjNYRVxDWhw7npf8oMD8C7EUc1pjkjZIcmk5PxXJ+t5FE2Fs3gBYjv1A==",
       "path": "xamlmath.shared/2.1.0",
       "hashPath": "xamlmath.shared.2.1.0.nupkg.sha512"
+    },
+    "CalculusApp.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "CalculusApp.Teacher/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Core/1.0.4258.31": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.WinForms/1.0.4258.31": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Wpf/1.0.4258.31": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

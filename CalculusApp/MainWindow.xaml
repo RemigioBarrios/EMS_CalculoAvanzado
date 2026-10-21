@@ -3,25 +3,463 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CalculusApp"
         xmlns:controls="clr-namespace:CalculusApp.Controls"
         xmlns:vm="clr-namespace:CalculusApp.ViewModels"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" 
-        Height="870" Width="1380"
-        MinHeight="600" MinWidth="900"
+        Title="{Binding WindowTitle}"
+        Height="880" Width="1380"
+        MinHeight="650" MinWidth="980"
         WindowStartupLocation="CenterScreen"
-        Icon="app_icon.png"
-        Background="{DynamicResource ThemeWindowBackground}"
-        Foreground="{DynamicResource ThemeTextPrimary}"
-        FontFamily="Segoe UI">
+        FontSize="13.8"
+        Background="{DynamicResource ThemeWindowBackground}">
 
     <Window.DataContext>
-        <vm:MainViewModel x:Name="ViewModel"/>
+        <vm:MainViewModel/>
     </Window.DataContext>
 
     <DockPanel LastChildFill="True">
-        <!-- 1. Top MenuBar -->
-        <Menu DockPanel.Dock="Top" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1" Padding="4,2,4,2">
+
+        <!-- ================= 1. WINDOW TOP BAR (ELIDA MATH STUDIO 2025 + SALIR) ================= -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="10,4,10,4">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <TextBlock Text="📐 " FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="ELIDA MATH STUDIO 2025" FontWeight="Bold" FontSize="13.2" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Text="  —  " Foreground="{DynamicResource ThemeTextMuted}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding WindowTitle}" FontSize="12.5" Foreground="{DynamicResource ThemeTextSecondary}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <!-- Ribbon / Menu Mode Switcher Toggle Button -->
+                    <Button Style="{StaticResource ToolBtn}" Command="{Binding ToggleRibbonModeCommand}" ToolTip="Alternar Modo con Ribbon / Modo sin Ribbon (Menú clásico)" Margin="2,0" Padding="8,2">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🎛️ " FontSize="12"/>
+                            <TextBlock Text="{Binding RibbonModeButtonText}" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Quick Theme Toggle -->
+                    <Button Style="{StaticResource ToolBtn}" Command="{Binding ToggleThemeCommand}" ToolTip="Cambiar Tema (Claro / Oscuro)" Margin="2,0" Padding="8,2">
+                        <TextBlock Text="{Binding ThemeStatusText}" FontSize="12"/>
+                    </Button>
+
+                    <!-- Salir Button with Power Icon (matching user screenshot) -->
+                    <Button Style="{StaticResource ToolBtn}" Click="OnMenuExitClick" ToolTip="Cerrar la Aplicación" Margin="6,0,0,0" Padding="8,2">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⏻ " FontSize="13.5" Foreground="#EF4444" FontWeight="Bold"/>
+                            <TextBlock Text="Salir" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= 2. RIBBON (MODO CON RIBBON) ================= -->
+        <Border DockPanel.Dock="Top" Visibility="{Binding RibbonVisibility}" Background="{DynamicResource ThemeRibbonBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- Ribbon Tab Headers -->
+                    <RowDefinition Height="Auto"/>  <!-- Ribbon Active Tab Content -->
+                </Grid.RowDefinitions>
+
+                <!-- 2a. Ribbon Tab Headers -->
+                <Border Grid.Row="0" Background="{DynamicResource ThemeRibbonTabBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1" Padding="4,2,4,0">
+                    <DockPanel LastChildFill="True">
+                        <!-- Edition Switcher / Badge on the right -->
+                        <Border DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,8,2"
+                                Background="{DynamicResource ThemeCardBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="EDICIÓN:" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding AvailableEditions}" SelectedItem="{Binding ActiveEdition}" DisplayMemberPath="DisplayName"
+                                          MinWidth="130" Height="22" FontSize="11" FontWeight="SemiBold"
+                                          Background="Transparent" BorderThickness="0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="PANEL DE CONTROL" IsChecked="{Binding IsPanelControlTabActive, Mode=TwoWay}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="DISEÑO DE EVALUACIONES" IsChecked="{Binding IsDisenoTabActive, Mode=TwoWay}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="MATEMÁTICA AVANZADA" IsChecked="{Binding IsMatematicaTabActive, Mode=TwoWay}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="🎓 ESTUDIANTE" IsChecked="{Binding IsEstudianteTabActive, Mode=TwoWay}" Visibility="{Binding StudentTabVisibility}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="👨‍🏫 PROFESOR" IsChecked="{Binding IsProfesorTabActive, Mode=TwoWay}" Visibility="{Binding TeacherTabVisibility}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="🏛️ INSTITUTO" IsChecked="{Binding IsInstitutoTabActive, Mode=TwoWay}" Visibility="{Binding InstituteTabVisibility}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="HERRAMIENTAS" IsChecked="{Binding IsHerramientasTabActive, Mode=TwoWay}"/>
+                        <RadioButton Style="{StaticResource RibbonTabRadioBtn}" GroupName="RibbonTabs" Content="AYUDA" IsChecked="{Binding IsAyudaTabActive, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- 2b. Ribbon Body Content (Active Tab) -->
+                <Border Grid.Row="1" Padding="8,4,8,4" MinHeight="66">
+                    <Grid>
+                        <!-- Tab Content 1: MATEMÁTICA AVANZADA (Default active, matches user screenshot exactly) -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMatematicaTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <!-- Group 1: Asignaturas / Materias -->
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <!-- Dynamic Grid of Installed Subject Modules -->
+                                <ItemsControl ItemsSource="{Binding AvailableSubjects}" Margin="0,0,8,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Rows="2"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource RibbonSubjectBtn}"
+                                                    Command="{Binding DataContext.SelectSubjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding Id}"
+                                                    MinWidth="105" Margin="1" Padding="6,2">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Icon}" FontSize="11" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Vertical Separator -->
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,8,0"/>
+
+                                <!-- Group 2: Acciones Principales -->
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding NewCommand}" ToolTip="Nuevo Documento (Ctrl+N)" Width="50">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📄" FontSize="16" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Nuevo" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding OpenCommand}" ToolTip="Abrir Documento (Ctrl+O)" Width="50">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📂" FontSize="16" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Abrir" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding SaveCommand}" ToolTip="Guardar Documento (Ctrl+S)" Width="52">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="💾" FontSize="16" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Guardar" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ExportPdfCommand}" ToolTip="Exportar a PDF (Ctrl+E)" Width="50">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <Border Background="#E11D48" CornerRadius="3" Padding="4,1" HorizontalAlignment="Center">
+                                            <TextBlock Text="PDF" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                        <TextBlock Text="PDF" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ExportIniCommand}" ToolTip="Exportar Banco de Ejercicios en Formato Plano (.ini / .txt)" Width="55">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📄" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="INI / TXT" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding PreviewPdfCommand}" ToolTip="Vista Previa de Impresión" Width="52">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🌐" FontSize="16" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Publicar" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Vertical Separator -->
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="8,0,8,0"/>
+
+                                <!-- Cargar Temario INI / Externo Button -->
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding LoadSyllabusFileCommand}" ToolTip="Cargar Temario Externo (.ini / .txt)" Width="75">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="⚙️" FontSize="16" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Temario .ini" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content 2: PANEL DE CONTROL -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPanelControlTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding LoadSyllabusFileCommand}" ToolTip="Cargar Archivo de Temario (.ini / .txt)" Width="80">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📂" FontSize="16" Foreground="#007ACC" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Cargar .ini" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding RegenerateAllCommand}" ToolTip="Regenerar Todos los Ejercicios (F5)" Width="80">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🔄" FontSize="16" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Regenerar" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ToggleAnswersCommand}" ToolTip="Mostrar u Ocultar Respuestas" Width="85">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="👁️" FontSize="16" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Respuestas" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content 3: DISEÑO DE EVALUACIONES -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDisenoTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ChangeAllToMultipleChoiceCommand}" ToolTip="Convertir Todo a Opción Múltiple" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🔘" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Opción Múltiple" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ChangeAllToFreeResponseCommand}" ToolTip="Convertir Todo a Respuesta Libre" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="✍️" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Respuesta Libre" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ScrambleQuestionsCommand}" ToolTip="Mezclar Preguntas" Width="80">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🔀" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Mezclar Preg." HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ScrambleChoicesCommand}" ToolTip="Mezclar Opciones A, B, C, D" Width="80">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🎲" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Mezclar Opc." HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding RespaceWithinPageCommand}" ToolTip="Distribuir Espacio Uniforme" Width="85">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="↔️" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Espaciar Pág." HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content: ESTUDIANTE -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEstudianteTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding StudentSelfTestCommand}" ToolTip="Generar Auto-Prueba de Diagnóstico" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📝" FontSize="16" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Auto-Prueba" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding StudentSummaryCommand}" ToolTip="Resumen Teórico del Tema Seleccionado" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📖" FontSize="16" Foreground="#38BDF8" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Resumen Tema" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding StudentScheduleCommand}" ToolTip="Control de Horario de Estudio Personal" Width="90">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="⏱️" FontSize="16" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Mi Horario" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding StudentStudyRouteCommand}" ToolTip="Ruta Personalizada para Compensar Fallas" Width="105">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🎯" FontSize="16" Foreground="#EC4899" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Ruta Compensación" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content: PROFESOR -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsProfesorTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding TeacherRosterCommand}" ToolTip="Administrar Nóminas de Estudiantes y Secciones" Width="100">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📋" FontSize="16" Foreground="#38BDF8" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Nómina Alumnos" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding TeacherWebExamCommand}" ToolTip="Generar Examen Web Asociado a Nómina Docente" Width="110">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🌐" FontSize="16" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Examen Web Nómina" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding TeacherScheduleCommand}" ToolTip="Calendario de Clases y Fechas de Entrega" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📅" FontSize="16" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Horario Docente" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding TeacherPdfExtractorCommand}" ToolTip="Extractor Automatizado de Ejercicios desde PDFs (Etapa 2)" Width="105">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📑" FontSize="16" Foreground="#EC4899" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Extractor PDFs" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content: INSTITUTO -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsInstitutoTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding InstituteFacultyCommand}" ToolTip="Gestión Multi-Docente y Departamentos" Width="105">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🏛️" FontSize="16" Foreground="#4F46E5" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Claustro Docente" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding InstituteMultiSubjectCommand}" ToolTip="Gestión Curricular Multi-Materia" Width="100">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📚" FontSize="16" Foreground="#0284C7" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Multi-Materias" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding InstituteCentralWebExamsCommand}" ToolTip="Generación de Exámenes Web Centralizados Institucionales" Width="120">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🌐" FontSize="16" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Exámenes Centralizados" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content 4: HERRAMIENTAS -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsHerramientasTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ToggleThemeCommand}" ToolTip="Alternar Tema Claro / Oscuro" Width="90">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🌓" FontSize="16" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Cambiar Tema" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding ToggleRibbonModeCommand}" ToolTip="Ocultar Ribbon y Pasar a Menú Clásico" Width="95">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🎛️" FontSize="16" Foreground="#38BDF8" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Modo sin Ribbon" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Separator Style="{StaticResource ToolSep}" Height="50" Margin="4,0,4,0"/>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding SetZoomCommand}" CommandParameter="100" ToolTip="Restablecer Zoom 100%" Width="75">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🔍" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Zoom 100%" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding SetZoomCommand}" CommandParameter="125" ToolTip="Aumentar Zoom 125%" Width="75">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🔍+" FontSize="15" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Zoom 125%" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Tab Content 5: AYUDA -->
+                        <DockPanel LastChildFill="False">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAyudaTabActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <Button Style="{StaticResource RibbonActionBtn}" Click="OnMenuAboutClick" ToolTip="Acerca de Elida Math Studio" Width="90">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="ℹ️" FontSize="16" Foreground="#38BDF8" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Acerca de" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ================= 3. SLEEK TOP MENUBAR (MODO SIN RIBBON / MENÚ CLÁSICO) ================= -->
+        <Menu DockPanel.Dock="Top" Visibility="{Binding MenuVisibility}" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="4,2,4,2">
             <MenuItem Header="{Binding [menu_file]}">
                 <MenuItem Header="{Binding [menu_new]}" Command="{Binding NewCommand}" InputGestureText="Ctrl+N"/>
                 <MenuItem Header="{Binding [menu_open]}" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O"/>
@@ -31,8 +469,34 @@
                 <MenuItem Header="{Binding [menu_preview_pdf]}" Command="{Binding PreviewPdfCommand}" InputGestureText="Ctrl+Shift+P"/>
                 <MenuItem Header="{Binding [menu_export_pdf]}" Command="{Binding ExportPdfCommand}" InputGestureText="Ctrl+E"/>
                 <Separator/>
+                <MenuItem Header="Exportar a INI / TXT (Formato Plano)..." Command="{Binding ExportIniCommand}"/>
+                <MenuItem Header="Importar desde INI / TXT..." Command="{Binding ImportIniCommand}"/>
+                <Separator/>
+                <MenuItem Header="Validar Integridad de Fórmulas..." Command="{Binding ValidateFormulasCommand}"/>
+                <Separator/>
                 <MenuItem Header="{Binding [menu_exit]}" Click="OnMenuExitClick"/>
             </MenuItem>
+            <!-- 3 Versiones / Ediciones (Estudiante, Profesor, Instituto) -->
+            <MenuItem Header="🎓 Edición">
+                <MenuItem Header="🎓 Edición Estudiante" Command="{Binding SwitchEditionCommand}" CommandParameter="student" Visibility="{Binding StudentTabVisibility}"/>
+                <MenuItem Header="👨‍🏫 Edición Profesor" Command="{Binding SwitchEditionCommand}" CommandParameter="teacher" Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="🏛️ Edición Instituto" Command="{Binding SwitchEditionCommand}" CommandParameter="institute" Visibility="{Binding InstituteTabVisibility}"/>
+                <Separator/>
+                <MenuItem Header="📝 Auto-Prueba de Diagnóstico..." Command="{Binding StudentSelfTestCommand}" Visibility="{Binding StudentTabVisibility}"/>
+                <MenuItem Header="📖 Resumen Teórico de Tema..." Command="{Binding StudentSummaryCommand}" Visibility="{Binding StudentTabVisibility}"/>
+                <MenuItem Header="⏱️ Mi Horario de Estudio..." Command="{Binding StudentScheduleCommand}" Visibility="{Binding StudentTabVisibility}"/>
+                <MenuItem Header="🎯 Ruta de Compensación de Fallas..." Command="{Binding StudentStudyRouteCommand}" Visibility="{Binding StudentTabVisibility}"/>
+                <Separator Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="📋 Gestión de Nómina de Alumnos..." Command="{Binding TeacherRosterCommand}" Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="🌐 Generar Examen Web para Nómina..." Command="{Binding TeacherWebExamCommand}" Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="📅 Horario Docente y Entregas..." Command="{Binding TeacherScheduleCommand}" Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="📑 Extractor de Ejercicios desde PDFs..." Command="{Binding TeacherPdfExtractorCommand}" Visibility="{Binding TeacherTabVisibility}"/>
+                <Separator Visibility="{Binding InstituteTabVisibility}"/>
+                <MenuItem Header="🏛️ Claustro Docente y Departamentos..." Command="{Binding InstituteFacultyCommand}" Visibility="{Binding InstituteTabVisibility}"/>
+                <MenuItem Header="📚 Coordinación Multi-Materia..." Command="{Binding InstituteMultiSubjectCommand}" Visibility="{Binding InstituteTabVisibility}"/>
+                <MenuItem Header="🌐 Examen Institucional Centralizado..." Command="{Binding InstituteCentralWebExamsCommand}" Visibility="{Binding InstituteTabVisibility}"/>
+            </MenuItem>
+
             <MenuItem Header="{Binding [menu_edit]}">
                 <MenuItem Header="{Binding [menu_undo]}" InputGestureText="Ctrl+Z"/>
                 <MenuItem Header="{Binding [menu_redo]}" InputGestureText="Ctrl+Y"/>
@@ -45,9 +509,11 @@
                 <MenuItem Header="{Binding [menu_show_answers]}" Command="{Binding ToggleAnswersCommand}" IsCheckable="True" IsChecked="{Binding ShowAnswers}"/>
                 <MenuItem Header="{Binding [menu_punch_holes]}" IsCheckable="True" IsChecked="{Binding ShowPunchHoles}"/>
                 <Separator/>
+                <MenuItem Header="Modo Ribbon (Barra Superior)" Command="{Binding ToggleRibbonModeCommand}" IsCheckable="True" IsChecked="{Binding IsRibbonMode}"/>
+                <Separator/>
                 <MenuItem Header="{Binding [menu_theme]}">
-                    <MenuItem Header="{Binding [menu_theme_light]}" Command="{Binding SetThemeCommand}" CommandParameter="light"/>
                     <MenuItem Header="{Binding [menu_theme_dark]}" Command="{Binding SetThemeCommand}" CommandParameter="dark"/>
+                    <MenuItem Header="{Binding [menu_theme_light]}" Command="{Binding SetThemeCommand}" CommandParameter="light"/>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Zoom 75%" Command="{Binding SetZoomCommand}" CommandParameter="75"/>
@@ -63,337 +529,482 @@
                 <MenuItem Header="{Binding [menu_lengthen]}" Command="{Binding OnePageLongerCommand}"/>
                 <MenuItem Header="{Binding [menu_distribute_space]}" Command="{Binding RespaceWithinPageCommand}"/>
             </MenuItem>
-            <!-- Materia / Subject Selector Menu -->
             <MenuItem Header="{Binding [menu_subject]}">
-                <MenuItem Header="∫ Cálculo (Infinite Calculus)" Command="{Binding SelectSubjectCommand}" CommandParameter="calculus"/>
+                <MenuItem Header="📐 EMS Cálculo Básico (Pre-Cálculo)" Command="{Binding SelectSubjectCommand}" CommandParameter="basic_calculus"/>
+                <MenuItem Header="📐 Algebra II (Temario .ini)" Command="{Binding SelectSubjectCommand}" CommandParameter="algebra_ii"/>
+                <MenuItem Header="∫ Cálculo Infinito (Infinite Calculus)" Command="{Binding SelectSubjectCommand}" CommandParameter="calculus"/>
                 <MenuItem Header="📐 Geometría (Infinite Geometry)" Command="{Binding SelectSubjectCommand}" CommandParameter="geometry"/>
                 <MenuItem Header="🔤 Álgebra (Infinite Algebra)" Command="{Binding SelectSubjectCommand}" CommandParameter="algebra"/>
                 <MenuItem Header="▦ Sistemas Lineales y Matrices" Command="{Binding SelectSubjectCommand}" CommandParameter="linear_systems"/>
                 <Separator/>
-                <MenuItem Header="📂 Cargar Materia desde Archivo..." Command="{Binding LoadSyllabusFileCommand}"/>
+                <MenuItem Header="📂 Cargar Temario (.ini / .txt)..." Command="{Binding LoadSyllabusFileCommand}"/>
             </MenuItem>
             <MenuItem Header="{Binding [menu_language]}">
                 <MenuItem Header="🇺🇸 English (US)" Command="{Binding SetLanguageCommand}" CommandParameter="en"/>
                 <MenuItem Header="🇪🇸 Español" Command="{Binding SetLanguageCommand}" CommandParameter="es"/>
                 <MenuItem Header="🇧🇷 Português" Command="{Binding SetLanguageCommand}" CommandParameter="pt"/>
             </MenuItem>
-            <MenuItem Header="{Binding [menu_utilities]}">
-                <MenuItem Header="Calculus Formula Sheet"/>
-                <MenuItem Header="Function Grapher &amp; Curve Sketcher"/>
-            </MenuItem>
             <MenuItem Header="{Binding [menu_help]}">
                 <MenuItem Header="{Binding [menu_about]}" Click="OnMenuAboutClick"/>
             </MenuItem>
         </Menu>
 
-        <!-- 2. Main ToolBar -->
-        <ToolBarTray DockPanel.Dock="Top" Background="{DynamicResource ThemePanelBackground}">
-            <ToolBar Background="{DynamicResource ThemePanelBackground}" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding NewCommand}" ToolTip="New (Ctrl+N)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📄" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_new]}"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding OpenCommand}" ToolTip="Open (Ctrl+O)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📂" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_open]}"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding SaveCommand}" ToolTip="Save (Ctrl+S)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💾" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_save]}"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding PrintCommand}" ToolTip="Print (Ctrl+P)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🖨️" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_print]}"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding PreviewPdfCommand}" ToolTip="PDF Preview (Ctrl+Shift+P)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔍" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_preview_pdf]}"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding ExportPdfCommand}" ToolTip="Export to PDF (Ctrl+E)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📑" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_export_pdf]}"/>
-                    </StackPanel>
-                </Button>
-
-                <Separator Style="{StaticResource ToolSep}"/>
-
-                <Button Style="{StaticResource ToolBtn}" Click="OnEditHeadingClick" ToolTip="Modify Heading">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📝" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_heading]}"/>
-                    </StackPanel>
-                </Button>
-
-                <Separator Style="{StaticResource ToolSep}"/>
-
-                <!-- Show/Hide Answers -->
-                <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowAnswers}" ToolTip="Show/Hide Answers">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="👁️" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_show_answers]}" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </ToggleButton>
-
-                <!-- Scramble Questions -->
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding ScrambleQuestionsCommand}" ToolTip="Scramble Questions">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔀" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding [tb_scramble]}"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Regenerate Questions -->
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateAllCommand}" ToolTip="Regenerate All Questions">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔄" Margin="0,0,3,0" Foreground="{DynamicResource ThemeAccent}"/>
-                        <TextBlock Text="{Binding [tb_regenerate_all]}" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Change to MC -->
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding ChangeAllToMultipleChoiceCommand}" ToolTip="Convert All to Multiple Choice">
-                    <TextBlock Text="{Binding [tb_all_mc]}" FontWeight="SemiBold"/>
-                </Button>
-
-                <!-- Change to Free Response -->
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding ChangeAllToFreeResponseCommand}" ToolTip="Convert All to Free Response">
-                    <TextBlock Text="{Binding [tb_all_fr]}" FontWeight="SemiBold"/>
-                </Button>
-
-                <!-- Punch holes -->
-                <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowPunchHoles}" ToolTip="Show/Hide 3-Hole Punch Guides">
-                    <TextBlock Text="{Binding [tb_punch_holes]}"/>
-                </ToggleButton>
-
-                <Separator Style="{StaticResource ToolSep}"/>
-
-                <!-- Subject / Materia Selector -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="{Binding CurrentSubject.Icon}" VerticalAlignment="Center" FontSize="13" Margin="0,0,4,0"/>
-                    <ComboBox Width="135" Height="24"
-                              ItemsSource="{Binding AvailableSubjects}"
-                              SelectedItem="{Binding CurrentSubject, Mode=TwoWay}"
-                              DisplayMemberPath="Name"
-                              ToolTip="Seleccionar Materia (Subject)"/>
+        <!-- ================= 4. BOTTOM STATUS BAR (CRIMSON BAR MATCHING SCREENSHOT) ================= -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource ThemeStatusBackground}" Height="26" Padding="12,0,12,0">
+            <DockPanel LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding DocumentStatusText}" Foreground="{DynamicResource ThemeStatusForeground}" VerticalAlignment="Center" FontSize="12.5" FontWeight="SemiBold"/>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AiEngineStatusText}" Foreground="{DynamicResource ThemeStatusForeground}" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,18,0"/>
+                    <TextBlock Text="{Binding SystemResourcesStatusText}" Foreground="{DynamicResource ThemeStatusForeground}" FontSize="12" FontWeight="Normal"/>
                 </StackPanel>
+            </DockPanel>
+        </Border>
 
-                <Separator Style="{StaticResource ToolSep}"/>
+        <!-- ================= 5. THREE-COLUMN MAIN WORKSPACE ================= -->
+        <Grid Background="{DynamicResource ThemeWindowBackground}">
+            <Grid.ColumnDefinitions>
+                <!-- Column 0: Left Sidebar (Topics Explorer) -->
+                <ColumnDefinition Width="285" MinWidth="220" MaxWidth="480"/>
+                <!-- Column 1: Splitter -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Column 2: Center (Worksheet Canvas) -->
+                <ColumnDefinition Width="*" MinWidth="450"/>
+                <!-- Column 3: Splitter with Dots Grip -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Column 4: Right (Miniatura / Asistente IA) -->
+                <ColumnDefinition Width="385" MinWidth="260" MaxWidth="650"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- Language Selector -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="🌐 " VerticalAlignment="Center" FontSize="11"/>
-                    <ComboBox x:Name="LanguageCombo" Width="105" Height="24" SelectionChanged="OnLanguageComboChanged">
-                        <ComboBoxItem Tag="en" Content="🇺🇸 English"/>
-                        <ComboBoxItem Tag="es" Content="🇪🇸 Español" IsSelected="True"/>
-                        <ComboBoxItem Tag="pt" Content="🇧🇷 Português"/>
-                    </ComboBox>
-                </StackPanel>
+            <!-- ================= COLUMN 0: TOPICS EXPLORER ================= -->
+            <Border Grid.Column="0" Background="{DynamicResource ThemePanelBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>                                <!-- 0: Header: TEMAS -->
+                        <RowDefinition Height="Auto"/>                                <!-- 1: Action Toolbar -->
+                        <RowDefinition Height="3.8*" MinHeight="140"/>                <!-- 2: Topics TreeView -->
+                        <RowDefinition Height="Auto"/>                                <!-- 3: Horizontal Splitter -->
+                        <RowDefinition Height="1.8*" MinHeight="150"/>                <!-- 4: Question Sets Panel (>=20% height, open) -->
+                    </Grid.RowDefinitions>
 
-                <Separator Style="{StaticResource ToolSep}"/>
+                    <!-- Row 0: Header with Dots Handle -->
+                    <Border Grid.Row="0" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="10,6,8,6">
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Right" Text="⋮⋮⋮" Foreground="{DynamicResource ThemeTextMuted}" VerticalAlignment="Center" FontSize="12.5" Margin="4,0,2,0"/>
+                            <TextBlock Text="{Binding LeftSidebarHeader}" 
+                                       FontWeight="Bold" 
+                                       FontSize="13.2" 
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
 
-                <!-- Theme Toggle Button (Antigravity IDE Light/Dark) -->
-                <Button Style="{StaticResource ToolBtn}" Command="{Binding ToggleThemeCommand}" ToolTip="{Binding [tb_theme_toggle]}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🌓" Margin="0,0,3,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding ThemeStatusText}" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Button>
+                    <!-- Row 1: Action Toolbar (12↓, =, +, Buscar [  ] 🔍 📁▼) -->
+                    <Border Grid.Row="1" Background="{DynamicResource ThemeControlBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1" Padding="4,3,4,3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                <Separator Style="{StaticResource ToolSep}"/>
+                            <!-- Sort 12↓ -->
+                            <Button Grid.Column="0" Style="{StaticResource ToolBtn}" Command="{Binding ToggleSortTopicsCommand}" ToolTip="Ordenar Alfabético / Natural" Width="26" Height="24" Padding="0">
+                                <TextBlock Text="12↓" FontSize="11" FontWeight="SemiBold"/>
+                            </Button>
+                            <!-- Filter / Equal = -->
+                            <Button Grid.Column="1" Style="{StaticResource ToolBtn}" ToolTip="Filtrar" Width="24" Height="24" Padding="0">
+                                <TextBlock Text="=" FontSize="12.5" FontWeight="Bold"/>
+                            </Button>
+                            <!-- Expand / Collapse + -->
+                            <Button Grid.Column="2" Style="{StaticResource ToolBtn}" ToolTip="Expandir / Colapsar Todo" Width="24" Height="24" Padding="0" Click="OnToggleExpandAllClick">
+                                <TextBlock Text="+" FontSize="13.5" FontWeight="Bold"/>
+                            </Button>
 
-                <!-- Zoom Selector -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="{Binding [tb_zoom]}" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,2,0"/>
-                    <ComboBox Width="72" Height="24" SelectedIndex="2" SelectionChanged="OnZoomSelectionChanged">
-                        <ComboBoxItem Content="50%"/>
-                        <ComboBoxItem Content="75%"/>
-                        <ComboBoxItem Content="100%"/>
-                        <ComboBoxItem Content="125%"/>
-                        <ComboBoxItem Content="150%"/>
-                    </ComboBox>
-                </StackPanel>
+                            <!-- Label Buscar -->
+                            <TextBlock Grid.Column="3" Text="Buscar" VerticalAlignment="Center" Foreground="{DynamicResource ThemeTextSecondary}" FontSize="12.5" Margin="4,0,4,0"/>
 
-                <Separator Style="{StaticResource ToolSep}"/>
+                            <!-- Search Input Box -->
+                            <Grid Grid.Column="4">
+                                <TextBox x:Name="SearchBox" 
+                                         Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}" 
+                                         Height="24" 
+                                         VerticalContentAlignment="Center" 
+                                         Background="{DynamicResource ThemePanelBackground}" 
+                                         Foreground="{DynamicResource ThemeTextPrimary}" 
+                                         CaretBrush="{DynamicResource ThemeAccent}" 
+                                         BorderBrush="{DynamicResource ThemeBorder}" 
+                                         BorderThickness="1" 
+                                         Padding="4,0,4,0" 
+                                         FontSize="12.5"/>
+                            </Grid>
 
-                <!-- Columns Selector -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                    <TextBlock Text="{Binding [tb_cols]}" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,2,0"/>
-                    <ComboBox Width="56" Height="24" SelectedIndex="1" SelectionChanged="OnColumnsSelectionChanged">
-                        <ComboBoxItem Content="1"/>
-                        <ComboBoxItem Content="2"/>
-                    </ComboBox>
-                </StackPanel>
-            </ToolBar>
-        </ToolBarTray>
+                            <!-- Magnifying Glass Icon Button 🔍 -->
+                            <Button Grid.Column="5" Style="{StaticResource ToolBtn}" ToolTip="Buscar" Width="24" Height="24" Padding="0" Margin="2,0,0,0">
+                                <TextBlock Text="🔍" FontSize="11"/>
+                            </Button>
 
-        <!-- 3. Left Sidebar (DockWidget style) -->
-        <Border DockPanel.Dock="Left" Width="305" Background="{DynamicResource ThemeSidebarBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0">
-            <Grid>
+                            <!-- Folder Dropdown 📁▼ -->
+                            <Button Grid.Column="6" Style="{StaticResource ToolBtn}" ToolTip="Cambiar Materia / Cargar Temario" Width="28" Height="24" Padding="0" Margin="1,0,0,0" Click="OnFolderDropdownClick">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📁" FontSize="12"/>
+                                    <TextBlock Text="▾" FontSize="9" Margin="1,2,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Row 2: Topics TreeView -->
+                    <TreeView Grid.Row="2" 
+                              x:Name="TopicsTree"
+                              ItemsSource="{Binding TopicCategories}" 
+                              BorderThickness="0" 
+                              Background="Transparent"
+                              Padding="2,4,2,4"
+                              SelectedItemChanged="OnTopicTreeSelectedItemChanged"
+                              MouseDoubleClick="OnTopicTreeDoubleClick">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True"/>
+                                <Setter Property="Padding" Value="2,2,2,2"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ThemeAccentLight}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Margin="1,1,1,1" VerticalAlignment="Center">
+                                    <!-- Checkbox icon on categories -->
+                                    <Border Width="12" Height="12" 
+                                            BorderBrush="{DynamicResource ThemeBorder}" 
+                                            BorderThickness="1" 
+                                            Background="{DynamicResource ThemeControlBackground}" 
+                                            CornerRadius="1" 
+                                            Margin="0,0,5,0" 
+                                            VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCategory}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+
+                                    <!-- Dotted prefix on subtopics -->
+                                    <TextBlock Text="┄ " Foreground="{DynamicResource ThemeTextMuted}" FontSize="10" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCategory}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Item Title -->
+                                    <TextBlock Text="{Binding Title}" FontSize="12.5" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCategory}" Value="True">
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsCategory}" Value="False">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ThemeTextSecondary}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <!-- Row 3: Horizontal Splitter between Topics and Question Sets -->
+                    <GridSplitter Grid.Row="3" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+                                  Background="{DynamicResource ThemeBorder}" Cursor="SizeNS" ResizeDirection="Rows"/>
+
+                    <!-- Row 4: Active Question Sets Panel (Permanently open, >=20% height, full action toolbar) -->
+                    <Border Grid.Row="4" Background="{DynamicResource ThemePanelBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/> <!-- Header + Action Buttons -->
+                                <RowDefinition Height="*"/>    <!-- Scrollable QuestionSets List -->
+                            </Grid.RowDefinitions>
+
+                            <!-- Question Sets Header & Toolbar -->
+                            <Border Grid.Row="0" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1" Padding="6,4,6,4">
+                                <DockPanel LastChildFill="True">
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Subir / Move Up -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveUpCommand}" ToolTip="Mover serie arriba (▲)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="▲" FontSize="10" Foreground="{DynamicResource ThemeAccent}"/>
+                                        </Button>
+                                        <!-- Bajar / Move Down -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveDownCommand}" ToolTip="Mover serie abajo (▼)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="▼" FontSize="10" Foreground="{DynamicResource ThemeAccent}"/>
+                                        </Button>
+                                        <!-- Ocultar / Mostrar Toggle -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding ToggleHideSetCommand}" ToolTip="Ocultar / Mostrar serie en hoja (👁)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="👁" FontSize="11" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                        </Button>
+                                        <!-- Editar Opciones de la Serie -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding EditQuestionSetCommand}" ToolTip="Editar opciones de serie (Parámetros, cantidad, tipo) (⚙)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="⚙" FontSize="11" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                        </Button>
+                                        <!-- Editar Preguntas Directamente -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding EditQuestionsDirectlyCommand}" ToolTip="Editar preguntas y soluciones directamente (✏)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="✏" FontSize="11" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                        </Button>
+                                        <!-- Regenerar Serie -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateSetCommand}" ToolTip="Regenerar serie de preguntas (🔄)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="🔄" FontSize="10" Foreground="#10B981"/>
+                                        </Button>
+                                        <!-- Eliminar Serie -->
+                                        <Button Style="{StaticResource ToolBtn}" Command="{Binding RemoveQuestionSetCommand}" ToolTip="Eliminar serie de la evaluación (✕)" Width="24" Height="22" Padding="0" Margin="1,0">
+                                            <TextBlock Text="✕" FontSize="11" FontWeight="Bold" Foreground="#E11D48"/>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!-- Left Title + Badge -->
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="📋 " FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="SERIES ACTIVAS" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding QuestionSetsSummary}" FontSize="10.5" Foreground="{DynamicResource ThemeTextMuted}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- QuestionSets ListBox with double-click edit and rich item template -->
+                            <ListBox Grid.Row="1" 
+                                     ItemsSource="{Binding QuestionSets}" 
+                                     SelectedItem="{Binding SelectedQuestionSet}"
+                                     Background="Transparent" 
+                                     Foreground="{DynamicResource ThemeTextPrimary}" 
+                                     BorderThickness="0"
+                                     Padding="2"
+                                     MouseDoubleClick="OnQuestionSetDoubleClick"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="4,3,4,3"/>
+                                        <Setter Property="Margin" Value="1,1,1,1"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource ThemeAccentLight}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccent}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="3" Padding="4,2,4,2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                                            <Setter Property="Opacity" Value="0.45"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <DockPanel LastChildFill="True">
+                                                <!-- Eye visibility toggle button per item -->
+                                                <Button DockPanel.Dock="Left" 
+                                                        Style="{StaticResource ToolBtn}" 
+                                                        Command="{Binding DataContext.ToggleHideItemCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Width="20" Height="20" Padding="0" Margin="0,0,4,0"
+                                                        ToolTip="Ocultar / Mostrar esta serie en la hoja">
+                                                    <TextBlock Text="{Binding VisibilityIcon}" FontSize="10"/>
+                                                </Button>
+
+                                                <!-- Count badge on right -->
+                                                <Border DockPanel.Dock="Right" Background="{DynamicResource ThemeControlBackground}" 
+                                                        BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="1" 
+                                                        CornerRadius="8" Padding="5,1,5,1" Margin="4,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Questions.Count, StringFormat='{}{0} preg'}" 
+                                                               FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                                </Border>
+
+                                                <!-- Title -->
+                                                <TextBlock Text="{Binding TopicTitle}" FontWeight="SemiBold" FontSize="12" 
+                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Editar opciones del tema (Parámetros)..." Command="{Binding EditQuestionSetCommand}"/>
+                                        <MenuItem Header="Editar preguntas directamente (LaTeX / Texto)..." Command="{Binding EditQuestionsDirectlyCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Ocultar / Mostrar serie" Command="{Binding ToggleHideSetCommand}"/>
+                                        <MenuItem Header="Mover arriba" Command="{Binding MoveUpCommand}"/>
+                                        <MenuItem Header="Mover abajo" Command="{Binding MoveDownCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Regenerar serie aleatoria" Command="{Binding RegenerateSetCommand}"/>
+                                        <MenuItem Header="Eliminar serie de la evaluación" Command="{Binding RemoveQuestionSetCommand}"/>
+                                    </ContextMenu>
+                                </ListBox.ContextMenu>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Column 1: Splitter -->
+            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="{DynamicResource ThemeBorder}" Cursor="SizeWE"/>
+
+            <!-- ================= COLUMN 2: CENTER WORKSHEET CANVAS ================= -->
+            <Grid Grid.Column="2" Background="{DynamicResource ThemeCanvasBackground}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>   <!-- Filter & Order -->
-                    <RowDefinition Height="2*"/>     <!-- Topics List -->
-                    <RowDefinition Height="Auto"/>   <!-- Splitter -->
-                    <RowDefinition Height="Auto"/>   <!-- Page/Questions stats box -->
-                    <RowDefinition Height="1.2*"/>   <!-- Active Question Sets -->
+                    <RowDefinition Height="Auto"/>   <!-- Center Mini-Toolbar: Save, Print, Zoom+, Zoom-, <>, labelItem1 -->
+                    <RowDefinition Height="*"/>      <!-- Worksheet Canvas -->
                 </Grid.RowDefinitions>
 
-                <!-- Row 0: Search Filter -->
-                <Border Grid.Row="0" Padding="8,8,8,6" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <TextBox x:Name="SearchBox" 
-                                 Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}" 
-                                 Height="26" VerticalContentAlignment="Center" 
-                                 Padding="6,0,20,0"/>
-                        <TextBlock Text="{Binding [filter_topics_placeholder]}" 
-                                   Foreground="{DynamicResource ThemeTextMuted}" 
-                                   VerticalAlignment="Center" 
-                                   Margin="8,0,0,0" 
-                                   IsHitTestVisible="False">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </Border>
-
-                <!-- Row 1: Topics TreeView -->
-                <TreeView Grid.Row="1" 
-                          ItemsSource="{Binding TopicCategories}" 
-                          BorderThickness="0" 
-                          Background="Transparent"
-                          Padding="4"
-                          MouseDoubleClick="OnTopicTreeDoubleClick">
-                    <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="True"/>
-                            <Setter Property="Padding" Value="2"/>
-                            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                    <TreeView.ItemTemplate>
-                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Margin="2,1,2,1">
-                                <TextBlock Text="{Binding Title}" FontSize="12">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsCategory}" Value="True">
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsCategory}" Value="False">
-                                                    <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-                        </HierarchicalDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
-
-                <!-- Row 2: Splitter -->
-                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Background="{DynamicResource ThemeSplitter}" Cursor="SizeNS"/>
-
-                <!-- Row 3: Page & Questions statistics box -->
-                <Border Grid.Row="3" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="0,1,0,1" Padding="8,6,8,6">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StatusPagesText}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StatusQuestionsText}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-
-                        <!-- Length buttons -->
-                        <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding OnePageShorterCommand}" ToolTip="Shorten Assignment" Width="26">
-                                <TextBlock Text="➖" FontSize="10"/>
+                <!-- Center Mini-Toolbar -->
+                <Border Grid.Row="0" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="6,3,6,3">
+                    <DockPanel LastChildFill="False">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <!-- 💾 Save -->
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding SaveCommand}" ToolTip="Guardar (Ctrl+S)" Width="30" Height="26" Margin="1,0">
+                                <TextBlock Text="💾" FontSize="13"/>
                             </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding OnePageLongerCommand}" ToolTip="Lengthen Assignment" Width="26">
-                                <TextBlock Text="➕" FontSize="10"/>
+                            <!-- 🖨️ Print -->
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding PrintCommand}" ToolTip="Imprimir (Ctrl+P)" Width="30" Height="26" Margin="1,0">
+                                <TextBlock Text="🖨️" FontSize="13"/>
                             </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RespaceWithinPageCommand}" ToolTip="Distribute Space at Bottom of Each Page" Width="26">
-                                <TextBlock Text="↕️" FontSize="10"/>
+                            <!-- 🔍+ Zoom In -->
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding ZoomInCommand}" ToolTip="Acercar (Zoom In)" Width="30" Height="26" Margin="1,0">
+                                <TextBlock Text="🔍+" FontSize="11.5"/>
                             </Button>
+                            <!-- 🔍- Zoom Out -->
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding ZoomOutCommand}" ToolTip="Alejar (Zoom Out)" Width="30" Height="26" Margin="1,0">
+                                <TextBlock Text="🔍-" FontSize="11.5"/>
+                            </Button>
+                            <!-- <> Fit / Reset -->
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding ResetZoomCommand}" ToolTip="Ajustar Tamaño Original (&lt;&gt;)" Width="30" Height="26" Margin="1,0">
+                                <TextBlock Text="&lt;&gt;" FontSize="11.5" FontWeight="Bold"/>
+                            </Button>
+
+                            <!-- Document Mode Switcher (Modo Examen | Modo PDF) identical to right lateral -->
+                            <Border Background="{DynamicResource ThemeControlBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="8,0,4,0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="Modo Examen" 
+                                                 IsChecked="{Binding IsExamMode}"
+                                                 ToolTip="Vista continua interactiva tipo examen impreso (Papel nítido, márgenes reales)"/>
+                                    <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="Modo PDF" 
+                                                 IsChecked="{Binding IsPdfMode}"
+                                                 ToolTip="Vista paginada estándar formato carta / A4"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Column Switcher (1 Col | 2 Col) -->
+                            <Border Background="{DynamicResource ThemeControlBackground}" BorderBrush="{DynamicResource ThemeBorderSubtle}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="4,0,8,0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="1 Col" 
+                                                 IsChecked="{Binding IsSingleColumn}"
+                                                 ToolTip="Organizar ejercicios en 1 columna continua"/>
+                                    <RadioButton Style="{StaticResource SegmentedRadioBtn}" Content="2 Col" 
+                                                 IsChecked="{Binding IsTwoColumns}"
+                                                 ToolTip="Organizar ejercicios en 2 columnas paralelas"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- labelItem1 (Status label matching screenshot) -->
+                            <TextBlock Text="{Binding CenterStatusLabel}" 
+                                       VerticalAlignment="Center" 
+                                       Foreground="{DynamicResource ThemeTextSecondary}" 
+                                       FontSize="12.5" 
+                                       Margin="6,0,0,0"/>
                         </StackPanel>
-                    </Grid>
-                </Border>
 
-                <!-- Row 4: Active Question Sets -->
-                <DockPanel Grid.Row="4" Margin="6,6,6,6">
-                    <DockPanel DockPanel.Dock="Top" Margin="2,0,2,4">
-                        <TextBlock Text="{Binding [current_question_sets]}" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" DockPanel.Dock="Left"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource ToolBtn}" Click="OnEditSelectedQuestionSetClick" ToolTip="Options for Selected Set" Width="22" Height="22">
-                                <TextBlock Text="⚙️" FontSize="9"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveUpCommand}" ToolTip="Move Selected Up" Width="22" Height="22">
-                                <TextBlock Text="▲" FontSize="9"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding MoveDownCommand}" ToolTip="Move Selected Down" Width="22" Height="22">
-                                <TextBlock Text="▼" FontSize="9"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateSetCommand}" ToolTip="Regenerate Selected Set" Width="22" Height="22">
-                                <TextBlock Text="🔄" FontSize="9"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RemoveQuestionSetCommand}" ToolTip="Delete Selected Set" Width="22" Height="22">
-                                <TextBlock Text="❌" FontSize="9" Foreground="#E11D48"/>
+                        <!-- Right Actions: Show Answers & Regenerate -->
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <ToggleButton Style="{StaticResource ToggleToolBtn}" IsChecked="{Binding ShowAnswers}" ToolTip="Mostrar u Ocultar Respuestas" Height="26" Margin="2,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👁️ " FontSize="11"/>
+                                    <TextBlock Text="Respuestas" FontSize="12"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <Button Style="{StaticResource ToolBtn}" Command="{Binding RegenerateAllCommand}" ToolTip="Regenerar Todos los Ejercicios (F5)" Height="26" Margin="2,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔄 " FontSize="11" Foreground="#007ACC"/>
+                                    <TextBlock Text="Regenerar" FontSize="12"/>
+                                </StackPanel>
                             </Button>
                         </StackPanel>
                     </DockPanel>
+                </Border>
 
-                    <ListBox ItemsSource="{Binding QuestionSets}" 
-                             SelectedItem="{Binding SelectedQuestionSet}"
-                             MouseDoubleClick="OnQuestionSetDoubleClick"
-                             Background="{DynamicResource ThemeControlBackground}" 
-                             BorderBrush="{DynamicResource ThemeControlBorder}"
-                             BorderThickness="1"
-                             FontSize="11"
-                             Padding="2">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel Margin="2">
-                                    <TextBlock Text="• " Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding TopicTitle}" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                    <TextBlock Text=" (" Foreground="{DynamicResource ThemeTextMuted}"/>
-                                    <TextBlock Text="{Binding Questions.Count}" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                                    <TextBlock Text=" q)" Foreground="{DynamicResource ThemeTextMuted}"/>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </DockPanel>
+                <!-- Central Worksheet Canvas -->
+                <Border Grid.Row="1" Background="{DynamicResource ThemeCanvasBackground}">
+                    <controls:WorksheetView x:Name="WorksheetCanvas"/>
+                </Border>
             </Grid>
-        </Border>
 
-        <!-- 4. Central Canvas / Worksheet -->
-        <Border Background="{DynamicResource ThemeCanvasBackground}">
-            <controls:WorksheetView x:Name="WorksheetCanvas"/>
-        </Border>
+            <!-- Column 3: Splitter with Dots Grip Handle (as seen in screenshots) -->
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="{DynamicResource ThemeBorder}" Cursor="SizeWE">
+                <GridSplitter.Template>
+                    <ControlTemplate>
+                        <Border Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1,0,1,0">
+                            <TextBlock Text="⋮" Foreground="{DynamicResource ThemeTextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                        </Border>
+                    </ControlTemplate>
+                </GridSplitter.Template>
+            </GridSplitter>
+
+            <!-- ================= COLUMN 4: RIGHT PANE (MINIATURA / ASISTENTE IA) ================= -->
+            <Grid Grid.Column="4" Background="{DynamicResource ThemePanelBackground}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>      <!-- Content: AiAssistantPane or ThumbnailsPane -->
+                    <RowDefinition Height="Auto"/>   <!-- Bottom Navigation Tabs: Miniatura | Asistente -->
+                </Grid.RowDefinitions>
+
+                <!-- Row 0: Content Viewers -->
+                <Grid Grid.Row="0">
+                    <!-- Mode 1: AI Assistant & Documentation (Image 1) -->
+                    <controls:AiAssistantControl x:Name="AiAssistantPane" Visibility="Visible"/>
+
+                    <!-- Mode 2: Page Thumbnails (Image 2) -->
+                    <controls:PageThumbnailsControl x:Name="ThumbnailsPane" Visibility="Collapsed"/>
+                </Grid>
+
+                <!-- Row 1: Bottom Mode Switcher Tabs (Miniatura / Asistente) -->
+                <Border Grid.Row="1" Background="{DynamicResource ThemeHeaderBackground}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0" Padding="8,4,8,4">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="TabMiniatura" Content="Miniatura" GroupName="RightTabs" 
+                                     Foreground="{DynamicResource ThemeTextSecondary}" FontSize="12.5" Margin="0,0,16,0" Cursor="Hand"
+                                     Checked="OnRightTabChanged"/>
+                        <RadioButton x:Name="TabAsistente" Content="Asistente" GroupName="RightTabs" IsChecked="True" 
+                                     Foreground="{DynamicResource ThemeTextSecondary}" FontSize="12.5" Cursor="Hand"
+                                     Checked="OnRightTabChanged"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
     </DockPanel>
 </Window>

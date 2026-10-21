@@ -5,16 +5,31 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="1200" d:DesignWidth="900"
-             Background="{DynamicResource ThemeCanvasBackground}">
+             Background="{DynamicResource ThemeCanvasBackground}"
+             SizeChanged="OnWorksheetSizeChanged">
     <ScrollViewer x:Name="MainScrollViewer" 
                   HorizontalScrollBarVisibility="Auto" 
                   VerticalScrollBarVisibility="Auto"
                   PanningMode="Both">
-        <StackPanel x:Name="PagesContainer" 
-                    HorizontalAlignment="Center" 
-                    VerticalAlignment="Top" 
-                    Margin="24">
-            <!-- Pages will be added dynamically here -->
-        </StackPanel>
+        <Grid x:Name="RootLayoutGrid">
+            <!-- 1. PDF Mode: Paged A4/Letter view with ScaleTransform -->
+            <StackPanel x:Name="PagesContainer" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Top" 
+                        Margin="24"
+                        Visibility="Visible">
+                <!-- Pages will be added dynamically here -->
+            </StackPanel>
+
+            <!-- 2. Exam Mode: Continuous fluid interactive exam canvas -->
+            <StackPanel x:Name="ExamFlowContainer"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Margin="24"
+                        MaxWidth="1150"
+                        Visibility="Collapsed">
+                <!-- Fluid exam layout added dynamically here -->
+            </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

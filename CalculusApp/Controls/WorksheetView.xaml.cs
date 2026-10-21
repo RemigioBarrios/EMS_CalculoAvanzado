@@ -12,14 +12,74 @@ using WpfMath.Controls;
 
 namespace CalculusApp.Controls
 {
+    public enum DocumentViewMode
+    {
+        PdfMode,
+        ExamMode
+    }
+
     public partial class WorksheetView : UserControl
     {
         private Assignment? _assignment;
         private double _currentZoom = 1.0;
+        private DocumentViewMode _viewMode = DocumentViewMode.PdfMode;
 
         public const double PageWidth = 816.0;  // 8.5 inches at 96 DPI
         public const double PageHeight = 1056.0; // 11.0 inches at 96 DPI
         public const double PageMargin = 45.0;
+
+        public DocumentViewMode ViewMode
+        {
+            get => _viewMode;
+            set
+            {
+                if (_viewMode != value)
+                {
+                    _viewMode = value;
+                    UpdateViewModeVisibility();
+                    if (_assignment != null)
+                    {
+                        RenderAssignment(_assignment);
+                    }
+                }
+            }
+        }
+
+        public bool IsAutoFitWidth { get; set; } = true;
+
+        private void UpdateViewModeVisibility()
+        {
+            if (PagesContainer == null || ExamFlowContainer == null) return;
+            if (_viewMode == DocumentViewMode.PdfMode)
+            {
+                PagesContainer.Visibility = Visibility.Visible;
+                ExamFlowContainer.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                PagesContainer.Visibility = Visibility.Collapsed;
+                ExamFlowContainer.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void OnWorksheetSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (IsAutoFitWidth)
+            {
+                ApplyAutoFitWidth();
+            }
+        }
+
+        public void ApplyAutoFitWidth()
+        {
+            if (ActualWidth <= 120) return;
+            double available = ActualWidth - 56;
+            if (available > 200)
+            {
+                double fitZoom = Math.Max(0.35, Math.Min(2.0, available / PageWidth));
+                SetZoom(fitZoom);
+            }
+        }
 
         public WorksheetView()
         {
@@ -41,6 +101,15 @@ namespace CalculusApp.Controls
             return list;
         }
 
+        public void ScrollToPage(int pageIndex)
+        {
+            var borders = GetPageBorders();
+            if (pageIndex >= 0 && pageIndex < borders.Count)
+            {
+                borders[pageIndex].BringIntoView();
+            }
+        }
+
         public static FrameworkElement RenderMath(string mathOrText, double scale = 14.0, Brush? foreground = null, bool isBold = false)
         {
             foreground ??= Brushes.Black;
@@ -57,8 +126,8 @@ namespace CalculusApp.Controls
                 return RenderMixedTextAndMath(trimmed, scale: scale, foreground: foreground, isBold: isBold);
             }
 
-            // 2. If it contains known labels like "Máximo...", "Mínimo...", "Relative max...", "Critical...", "Sin solución", "No solution":
-            if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"(máximo|mínimo|puntos?|extremos?|relative\s*m|absolute\s*m|critical\s*p|sin solución|no solution)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            // 2. If it is legacy plain text and contains known labels like "Máximo...", "Mínimo...":
+            if (!trimmed.Contains('\\') && System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"(máximo|mínimo|puntos?|extremos?|relative\s*m|absolute\s*m|critical\s*p|sin solución|no solution)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
             {
                 // Normalize legacy math portions into $ delimiters
                 string normalized = System.Text.RegularExpressions.Regex.Replace(trimmed, @"([A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+[:;,]\s*)([^\$;\n]+)", m => $"{m.Groups[1].Value}${m.Groups[2].Value.Trim()}$");
@@ -130,6 +199,43 @@ namespace CalculusApp.Controls
                 return panel;
             }
 
+            // Piecewise function environment \begin{cases} ... \end{cases}
+            var casesMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"^(.*?)(?:\\left\\{\s*)?\\begin\{cases\}(.*?)\\end\{cases\}(?:\s*\\right\.)?(.*)$", System.Text.RegularExpressions.RegexOptions.Singleline);
+            if (casesMatch.Success)
+            {
+                string prefix = casesMatch.Groups[1].Value.TrimEnd(';', ' ', ',');
+                string casesBody = casesMatch.Groups[2].Value.Trim();
+                string suffix = casesMatch.Groups[3].Value.Trim();
+
+                var panel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                if (!string.IsNullOrWhiteSpace(prefix))
+                {
+                    var prefixElem = RenderMath(prefix, scale, foreground, isBold);
+                    prefixElem.VerticalAlignment = VerticalAlignment.Center;
+                    prefixElem.Margin = new Thickness(0, 0, 4, 0);
+                    panel.Children.Add(prefixElem);
+                }
+
+                var casesControl = CreateCasesControl(casesBody, scale, foreground);
+                casesControl.VerticalAlignment = VerticalAlignment.Center;
+                panel.Children.Add(casesControl);
+
+                if (!string.IsNullOrWhiteSpace(suffix))
+                {
+                    var suffixElem = RenderMath(suffix, scale, foreground, isBold);
+                    suffixElem.VerticalAlignment = VerticalAlignment.Center;
+                    suffixElem.Margin = new Thickness(6, 0, 0, 0);
+                    panel.Children.Add(suffixElem);
+                }
+
+                return panel;
+            }
+
             var vmatrixMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"(?:\\begin\{vmatrix\}|\\left\|\s*\\begin\{matrix\})(.*?)(?:\\end\{vmatrix\}|\\end\{matrix\}\s*\\right\|)", System.Text.RegularExpressions.RegexOptions.Singleline);
             if (vmatrixMatch.Success)
             {
@@ -168,12 +274,8 @@ namespace CalculusApp.Controls
                 return panel;
             }
 
-            // Sanitize LaTeX artifacts before WpfMath parser
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\infty(?:ty)+", @"\infty");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\left\s*)+([\[\(\{\|.]|\\\{|\\\})", @"\left$1");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"(?:\\right\s*)+([\]\)\}\|.]|\\\{|\\\})", @"\right$1");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\left(?![\[\(\{\|.]|\\\{|\\\})", "");
-            trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\\right(?![\]\)\}\|.]|\\\{|\\\})", "");
+            // Universal sanitization for WpfMath safety
+            trimmed = Services.MathFormulaSanitizer.SanitizeForWpfMath(trimmed);
 
             try
             {
@@ -383,6 +485,111 @@ namespace CalculusApp.Controls
             return outerBorder;
         }
 
+        private static FrameworkElement CreateCasesControl(string body, double scale, Brush? foreground)
+        {
+            foreground ??= Brushes.Black;
+
+            var rawRows = body.Split(new[] { @"\\" }, StringSplitOptions.RemoveEmptyEntries);
+            var rowsData = new List<Tuple<string, string>>();
+
+            foreach (var r in rawRows)
+            {
+                string cleanRow = r.Trim();
+                if (string.IsNullOrWhiteSpace(cleanRow)) continue;
+
+                int ampIdx = cleanRow.IndexOf('&');
+                if (ampIdx >= 0)
+                {
+                    string expr = cleanRow.Substring(0, ampIdx).Trim();
+                    string cond = cleanRow.Substring(ampIdx + 1).Trim();
+                    rowsData.Add(Tuple.Create(expr, cond));
+                }
+                else
+                {
+                    rowsData.Add(Tuple.Create(cleanRow, string.Empty));
+                }
+            }
+
+            if (rowsData.Count == 0)
+            {
+                return new TextBlock { Text = body };
+            }
+
+            var rowsGrid = new Grid
+            {
+                Margin = new Thickness(4, 1, 4, 1),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            rowsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            rowsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(14) });
+            rowsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            for (int r = 0; r < rowsData.Count; r++)
+            {
+                rowsGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                var exprElem = RenderMath(rowsData[r].Item1, scale: scale * 0.95, foreground: foreground);
+                exprElem.HorizontalAlignment = HorizontalAlignment.Left;
+                exprElem.VerticalAlignment = VerticalAlignment.Center;
+                exprElem.Margin = new Thickness(0, 2, 0, 2);
+                Grid.SetRow(exprElem, r);
+                Grid.SetColumn(exprElem, 0);
+                rowsGrid.Children.Add(exprElem);
+
+                if (!string.IsNullOrWhiteSpace(rowsData[r].Item2))
+                {
+                    var condElem = RenderMath(rowsData[r].Item2, scale: scale * 0.92, foreground: foreground);
+                    condElem.HorizontalAlignment = HorizontalAlignment.Left;
+                    condElem.VerticalAlignment = VerticalAlignment.Center;
+                    condElem.Margin = new Thickness(0, 2, 0, 2);
+                    Grid.SetRow(condElem, r);
+                    Grid.SetColumn(condElem, 2);
+                    rowsGrid.Children.Add(condElem);
+                }
+            }
+
+            rowsGrid.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double h = Math.Max(rowsGrid.DesiredSize.Height, 32.0);
+            double w = 12.0;
+
+            var braceGeom = new StreamGeometry();
+            using (var ctx = braceGeom.Open())
+            {
+                double midY = h / 2.0;
+                double r = Math.Min(6.0, midY * 0.35);
+
+                ctx.BeginFigure(new Point(w, 1), isFilled: false, isClosed: false);
+                ctx.BezierTo(new Point(w * 0.4, 1), new Point(w * 0.35, r), new Point(w * 0.35, midY - r), isStroked: true, isSmoothJoin: true);
+                ctx.BezierTo(new Point(w * 0.35, midY - 1), new Point(0, midY - 0.5), new Point(0, midY), isStroked: true, isSmoothJoin: true);
+                ctx.BezierTo(new Point(0, midY + 0.5), new Point(w * 0.35, midY + 1), new Point(w * 0.35, midY + r), isStroked: true, isSmoothJoin: true);
+                ctx.BezierTo(new Point(w * 0.35, h - r), new Point(w * 0.4, h - 1), new Point(w, h - 1), isStroked: true, isSmoothJoin: true);
+            }
+            braceGeom.Freeze();
+
+            var bracePath = new System.Windows.Shapes.Path
+            {
+                Data = braceGeom,
+                Stroke = foreground,
+                StrokeThickness = 1.3,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = w + 2,
+                Height = h,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 3, 0)
+            };
+
+            var mainPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            mainPanel.Children.Add(bracePath);
+            mainPanel.Children.Add(rowsGrid);
+
+            return mainPanel;
+        }
+
         public static FrameworkElement RenderMixedTextAndMath(string content, double scale = 11.5, Brush? foreground = null, bool isBold = false)
         {
             foreground ??= new SolidColorBrush(Color.FromRgb(80, 20, 20));
@@ -463,15 +670,41 @@ namespace CalculusApp.Controls
                     };
                     linePanel.Children.Add(tb);
 
-                    string formattedMath = LatexFormatter.ToLatex(math);
-                    var mathElem = RenderMath(formattedMath, scale: scale * 1.05, foreground: foreground, isBold: isBold);
-                    mathElem.VerticalAlignment = VerticalAlignment.Center;
-                    linePanel.Children.Add(mathElem);
+                    string formatted = LatexFormatter.FormatSolutionSteps(math);
+                    if (formatted.Contains('$'))
+                    {
+                        var mixedElem = RenderMixedTextAndMath(formatted, scale: scale, foreground: foreground, isBold: isBold);
+                        linePanel.Children.Add(mixedElem);
+                    }
+                    else if (System.Text.RegularExpressions.Regex.IsMatch(math, @"[áéíóúÁÉÍÓÚñÑüÜ]") || (math.Contains(' ') && !math.Contains('\\') && !math.Contains('=')))
+                    {
+                        var mathTb = new TextBlock
+                        {
+                            Text = math,
+                            FontFamily = new FontFamily("Times New Roman, Cambria"),
+                            FontSize = scale,
+                            Foreground = foreground,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(0, 0, 3, 0),
+                            TextWrapping = TextWrapping.Wrap
+                        };
+                        linePanel.Children.Add(mathTb);
+                    }
+                    else
+                    {
+                        string formattedMath = LatexFormatter.ToLatex(math);
+                        var mathElem = RenderMath(formattedMath, scale: scale * 1.05, foreground: foreground, isBold: isBold);
+                        mathElem.VerticalAlignment = VerticalAlignment.Center;
+                        linePanel.Children.Add(mathElem);
+                    }
                 }
                 else
                 {
                     // Single math expression or plain text
-                    bool hasMath = line.Contains('=') || line.Contains('^') || line.Contains('\\') || line.Contains('/') || line.Contains('+');
+                    int wordCount = System.Text.RegularExpressions.Regex.Matches(line, @"\b[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]{3,}\b").Count;
+                    bool isNaturalSentence = (wordCount >= 2 && line.Contains(' ') && !line.StartsWith(@"\")) ||
+                                             (line.Contains(' ') && !line.StartsWith(@"\") && System.Text.RegularExpressions.Regex.IsMatch(line, @"[áéíóúÁÉÍÓÚñÑüÜ]"));
+                    bool hasMath = !isNaturalSentence && (line.Contains('=') || line.Contains('^') || line.Contains('\\') || line.Contains('/') || line.Contains('+'));
                     if (hasMath)
                     {
                         string formattedMath = LatexFormatter.ToLatex(line);
@@ -511,14 +744,28 @@ namespace CalculusApp.Controls
         {
             _currentZoom = zoom;
             PagesContainer.LayoutTransform = new ScaleTransform(_currentZoom, _currentZoom);
+            ExamFlowContainer.LayoutTransform = new ScaleTransform(_currentZoom, _currentZoom);
         }
 
         public void RenderAssignment(Assignment assignment)
         {
             _assignment = assignment;
-            PagesContainer.Children.Clear();
+            UpdateViewModeVisibility();
 
             if (assignment == null) return;
+
+            if (IsAutoFitWidth)
+            {
+                ApplyAutoFitWidth();
+            }
+
+            if (_viewMode == DocumentViewMode.ExamMode)
+            {
+                RenderExamMode(assignment);
+                return;
+            }
+
+            PagesContainer.Children.Clear();
 
             // Renumber all questions sequentially and collect them
             int currentNum = assignment.StartingQuestionNumber;
@@ -529,6 +776,8 @@ namespace CalculusApp.Controls
 
             foreach (var set in assignment.QuestionSets)
             {
+                if (set.IsHidden) continue;
+
                 var setQuestions = new List<Question>();
                 foreach (var q in set.Questions)
                 {
@@ -643,6 +892,166 @@ namespace CalculusApp.Controls
                 var answerKeyPage = CreateAnswerKeyPage(assignment, allFlatQuestions, pageNumber + 1);
                 PagesContainer.Children.Add(answerKeyPage);
             }
+            try { System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "RenderAssignment: finished successfully!\n"); } catch {}
+        }
+
+        private void RenderExamMode(Assignment assignment)
+        {
+            ExamFlowContainer.Children.Clear();
+
+            int colCount = Math.Max(1, Math.Min(3, assignment.Columns));
+
+            // Create Exam Paper Canvas (consistent with PDF page: clean white paper sheet, typography, and columns)
+            var paperSheet = new Border
+            {
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(210, 215, 220)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(2),
+                Padding = new Thickness(48, 36, 48, 48),
+                Width = PageWidth,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 8, 0, 32),
+                Effect = (System.Windows.Media.Effects.Effect)FindResource("PageShadow")
+            };
+
+            var paperContent = new StackPanel();
+
+            // 1. Exam Header (Title, Subtitle, Name, Date, Period, Teacher, identical to PDF)
+            paperContent.Children.Add(CreateHeader(assignment.Heading));
+
+            // 2. Sections and Questions arranged by columns (1 or 2 columns)
+            int currentNum = assignment.StartingQuestionNumber;
+            var allFlatQuestions = new List<Question>();
+
+            foreach (var set in assignment.QuestionSets)
+            {
+                if (set.IsHidden) continue; // Respect hidden blocks!
+
+                var setQuestions = new List<Question>();
+                foreach (var q in set.Questions)
+                {
+                    q.Number = currentNum++;
+                    allFlatQuestions.Add(q);
+                    setQuestions.Add(q);
+                }
+
+                if (setQuestions.Count == 0) continue;
+
+                // Section Directions (full width across columns, italic serif font)
+                if (!string.IsNullOrWhiteSpace(set.Directions))
+                {
+                    var dirBlock = new TextBlock
+                    {
+                        Text = set.Directions,
+                        FontFamily = new FontFamily("Times New Roman, Cambria, Georgia"),
+                        FontStyle = FontStyles.Italic,
+                        FontSize = 13.5,
+                        FontWeight = FontWeights.SemiBold,
+                        Foreground = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                        Margin = new Thickness(0, 16, 0, 10),
+                        TextWrapping = TextWrapping.Wrap
+                    };
+                    paperContent.Children.Add(dirBlock);
+                }
+
+                // Chunk questions into rows by colCount (1 or 2 columns)
+                var rows = new List<List<Question>>();
+                for (int i = 0; i < setQuestions.Count; i += colCount)
+                {
+                    rows.Add(setQuestions.GetRange(i, Math.Min(colCount, setQuestions.Count - i)));
+                }
+
+                foreach (var row in rows)
+                {
+                    var rowGrid = new Grid
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        Margin = new Thickness(0, 6, 0, 18)
+                    };
+
+                    for (int c = 0; c < colCount; c++)
+                    {
+                        rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                        if (c < colCount - 1)
+                        {
+                            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28, GridUnitType.Pixel) });
+                        }
+                    }
+
+                    for (int c = 0; c < row.Count && c < colCount; c++)
+                    {
+                        var q = row[c];
+                        var qView = CreateQuestionElement(q, assignment.ShowAnswers);
+                        qView.VerticalAlignment = VerticalAlignment.Top;
+                        qView.HorizontalAlignment = HorizontalAlignment.Stretch;
+                        Grid.SetColumn(qView, c * 2);
+                        rowGrid.Children.Add(qView);
+                    }
+
+                    paperContent.Children.Add(rowGrid);
+                }
+            }
+
+            // 3. Answer Key if ShowAnswers is toggled
+            if (assignment.ShowAnswers && allFlatQuestions.Count > 0)
+            {
+                var keySeparator = new Separator { Margin = new Thickness(0, 24, 0, 16), Background = Brushes.LightGray };
+                paperContent.Children.Add(keySeparator);
+
+                var keyTitle = new TextBlock
+                {
+                    Text = LocalizationService.Get("ws_answers_to", assignment.Heading.Title),
+                    FontFamily = new FontFamily("Times New Roman, Cambria"),
+                    FontSize = 18,
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 8, 0, 16)
+                };
+                paperContent.Children.Add(keyTitle);
+
+                var keyGrid = new Grid();
+                keyGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                keyGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                int count = allFlatQuestions.Count;
+                int half = (count + 1) / 2;
+
+                var col1 = new StackPanel();
+                var col2 = new StackPanel { Margin = new Thickness(24, 0, 0, 0) };
+                Grid.SetColumn(col1, 0);
+                Grid.SetColumn(col2, 1);
+                keyGrid.Children.Add(col1);
+                keyGrid.Children.Add(col2);
+
+                for (int i = 0; i < count; i++)
+                {
+                    var q = allFlatQuestions[i];
+                    string ansDisplay = (q.Type == QuestionType.MultipleChoice)
+                        ? $"{q.Choices.FirstOrDefault(c => c.IsCorrect)?.Letter})  {q.AnswerText}"
+                        : q.AnswerText;
+
+                    var ansRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 3, 0, 3) };
+                    var numBlock = new TextBlock
+                    {
+                        Text = $"{q.Number})  ",
+                        FontFamily = new FontFamily("Times New Roman, Cambria"),
+                        FontSize = 13,
+                        FontWeight = FontWeights.Bold,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    ansRow.Children.Add(numBlock);
+                    ansRow.Children.Add(RenderMath(ansDisplay, scale: 13.0));
+
+                    if (i < half) col1.Children.Add(ansRow);
+                    else col2.Children.Add(ansRow);
+                }
+
+                paperContent.Children.Add(keyGrid);
+            }
+
+            paperSheet.Child = paperContent;
+            ExamFlowContainer.Children.Add(paperSheet);
         }
 
         private double EstimateQuestionHeight(Question q)
@@ -707,10 +1116,10 @@ namespace CalculusApp.Controls
                 Height = PageHeight,
                 Background = Brushes.White,
                 Margin = new Thickness(0, 0, 0, 24),
-                BorderBrush = (Brush)FindResource("ThemePaperBorder"),
                 BorderThickness = new Thickness(1),
                 Effect = (System.Windows.Media.Effects.DropShadowEffect)FindResource("PageShadow")
             };
+            pageBorder.SetResourceReference(Border.BorderBrushProperty, "ThemePaperBorder");
             System.Windows.Documents.TextElement.SetForeground(pageBorder, Brushes.Black);
 
             var grid = new Grid();
@@ -860,10 +1269,10 @@ namespace CalculusApp.Controls
                 {
                     IsBlank = q.ProvideBlankGraph && !q.ProvideFunctionGraph,
                     FunctionExpr = !string.IsNullOrWhiteSpace(q.GraphFormula) ? q.GraphFormula : MathExpressionEvaluator.ExtractFormula(q.FormulaText),
-                    XMin = -6.0,
-                    XMax = 6.0,
-                    YMin = -6.0,
-                    YMax = 6.0,
+                    XMin = (q.GraphXMin != 0 || q.GraphXMax != 0) ? q.GraphXMin : -6.0,
+                    XMax = (q.GraphXMin != 0 || q.GraphXMax != 0) ? q.GraphXMax : 6.0,
+                    YMin = (q.GraphYMin != 0 || q.GraphYMax != 0) ? q.GraphYMin : -6.0,
+                    YMax = (q.GraphYMin != 0 || q.GraphYMax != 0) ? q.GraphYMax : 6.0,
                     Holes = q.GraphHoles,
                     Points = q.GraphPoints,
                     Width = 210,

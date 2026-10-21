@@ -17,8 +17,35 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\KaTeX\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Syllabi\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="PDFsharp" Version="6.5.0" />
+    <PackageReference Include="System.Speech" Version="10.0.13" />
     <PackageReference Include="WpfMath" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CalculusApp.Core\CalculusApp.Core.csproj" />
+    <ProjectReference Include="..\CalculusApp.Teacher\CalculusApp.Teacher.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Core\**" />
+    <Compile Remove="Models\**" />
+    <Compile Remove="Modules\**" />
+    <Compile Remove="Generators\**" />
+    <Compile Remove="Services\AppSettingsService.cs" />
+    <Compile Remove="Services\ExerciseIniService.cs" />
+    <Compile Remove="Services\LocalizationService.cs" />
+    <Compile Remove="Services\MathFormulaSanitizer.cs" />
   </ItemGroup>
 
 </Project>

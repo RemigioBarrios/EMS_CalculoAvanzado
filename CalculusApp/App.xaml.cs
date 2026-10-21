@@ -10,8 +10,24 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        try
+        {
+            Services.AppSettingsService.Load();
+            if (Services.AppSettingsService.Current.Theme == "light")
+            {
+                Services.ThemeService.SetTheme(Services.AppTheme.Light);
+            }
+            else
+            {
+                Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+            }
+        }
+        catch { }
         Services.ThemeService.Initialize();
-        string[] args = Environment.GetCommandLineArgs();
+        var allArgs = new System.Collections.Generic.List<string>();
+        allArgs.AddRange(Environment.GetCommandLineArgs());
+        if (e.Args != null) allArgs.AddRange(e.Args);
+        string[] args = allArgs.ToArray();
         try
         {
             string logPath = Path.Combine(AppContext.BaseDirectory, "args.txt");
@@ -21,6 +37,25 @@ public partial class App : Application
 
         for (int i = 0; i < args.Length; i++)
         {
+            if (args[i] == "--validate-formulas")
+            {
+                try
+                {
+                    var result = Services.FormulaIntegrityValidator.RunValidation();
+                    string report = result.ToString();
+                    File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "formula_validation_report.txt"), report);
+                    File.WriteAllText("formula_validation_report.txt", report);
+                    Shutdown(result.FailedCount == 0 ? 0 : 1);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    File.WriteAllText("formula_validation_report.txt", "VALIDATION ERROR: " + ex);
+                    Shutdown(2);
+                    return;
+                }
+            }
+
             if (args[i] == "--screenshot" && i + 1 < args.Length)
             {
                 string targetPath = args[i + 1];
@@ -44,17 +79,22 @@ public partial class App : Application
                         encoder.Save(fs);
                     }
 
-                    // 1. Spanish Light (Antigravity IDE Light)
-                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
-                    Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
-                    SaveSnapshot(targetPath);
-                    string lightPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_light.png");
-                    SaveSnapshot(lightPath);
-
-                    // 1b. Spanish Dark (Antigravity IDE Dark)
+                    // 1. Spanish Dark Theme (matching User Image 1: Main window + AI Documentation Assistant)
                     Services.ThemeService.SetTheme(Services.AppTheme.Dark);
-                    string darkPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_dark.png");
-                    SaveSnapshot(darkPath);
+                    Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
+                    win.TabAsistente.IsChecked = true;
+                    SaveSnapshot(targetPath);
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_dark.png"));
+
+                    // Snapshot of Modo Examen (Digital / Continuo)
+                    win.ViewModel.IsExamMode = true;
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_exam_mode_dark.png"));
+                    win.ViewModel.IsPdfMode = true;
+
+                    // 2. Thumbnails View (matching User Image 2: Main window + Page Thumbnails)
+                    win.TabMiniatura.IsChecked = true;
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "calculus_app_thumbnails.png"));
+
 
                     // Revert to Light default
                     Services.ThemeService.SetTheme(Services.AppTheme.Light);
@@ -99,6 +139,15 @@ public partial class App : Application
                     win.ViewModel.AddTopic("lin_det_2x2", 4, Models.QuestionType.MultipleChoice);
                     SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_linear_systems.png"));
 
+                    // 4e. Algebra II Subject Snapshot (Parsed from Algebra_II.ini)
+                    Core.SubjectRegistry.SetCurrentSubject("algebra_ii");
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_algebra_ii.png"));
+
+                    // 4f. Classic Menu Mode (Modo sin Ribbon)
+                    win.ViewModel.IsRibbonMode = false;
+                    SaveSnapshot(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_classic_menu.png"));
+                    win.ViewModel.IsRibbonMode = true;
+
                     // Revert to Calculus
                     Core.SubjectRegistry.SetCurrentSubject("calculus");
                     win.ViewModel.CurrentAssignment.QuestionSets.Clear();
@@ -108,7 +157,7 @@ public partial class App : Application
 
                     // 5. Topic Options Dialog Snapshot (English - Absolute Extrema 1:1 match to reference screenshot)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.English);
-                    var topicExtrema = Generators.TopicRegistry.GetById("app_abs_extrema") ?? Generators.TopicRegistry.AllTopics[0];
+                    var topicExtrema = Core.SubjectRegistry.GetTopicById("app_abs_extrema") ?? Core.SubjectRegistry.CurrentSubject.AllTopics[0];
                     var dlg = new Dialogs.TopicOptionsDialog(topicExtrema, 4, Models.QuestionType.FreeResponse);
                     dlg.Width = 920;
                     dlg.Height = 705;
@@ -153,7 +202,7 @@ public partial class App : Application
 
                     // 6. Topic Options Dialog Snapshot (Spanish - Limits Direct with Polynomial + Trig, exactly reproducing user's screenshot)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
-                    var topicLimits = Generators.TopicRegistry.GetById("limits_direct") ?? Generators.TopicRegistry.AllTopics[0];
+                    var topicLimits = Core.SubjectRegistry.GetTopicById("limits_direct") ?? Core.SubjectRegistry.CurrentSubject.AllTopics[0];
                     var limitsParams = new Models.TopicGeneratorParameters
                     {
                         QuestionCount = 4,
@@ -257,7 +306,7 @@ public partial class App : Application
 
                     // 11. Topic Options Dialog Snapshot for "Tasa de cambio promedio" (deriv_avg_rates)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
-                    var topicAvgRates = Generators.TopicRegistry.GetById("deriv_avg_rates")!;
+                    var topicAvgRates = Core.SubjectRegistry.GetTopicById("deriv_avg_rates")!;
                     var avgRatesParams = new Models.TopicGeneratorParameters
                     {
                         QuestionCount = 4,
@@ -293,7 +342,7 @@ public partial class App : Application
 
                     // 13. Riemann Sum Tables Dialog Snapshot (Spanish - Left Endpoint LRAM reproducing user's exact screenshot)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
-                    var topicRiemann = Generators.TopicRegistry.GetById("def_riemann_tables")!;
+                    var topicRiemann = Core.SubjectRegistry.GetTopicById("def_riemann_tables")!;
                     var riemannParams = new Models.TopicGeneratorParameters
                     {
                         QuestionCount = 4,
@@ -331,7 +380,7 @@ public partial class App : Application
 
                     // 15. Absolute Extrema test (Spanish, Quadratic, Closed Interval)
                     Services.LocalizationService.SetLanguage(Services.AppLanguage.Spanish);
-                    var topicAbsExtrema = Generators.TopicRegistry.GetById("app_abs_extrema") ?? Generators.TopicRegistry.AllTopics[0];
+                    var topicAbsExtrema = Core.SubjectRegistry.GetTopicById("app_abs_extrema") ?? Core.SubjectRegistry.CurrentSubject.AllTopics[0];
                     var absParams = new Models.TopicGeneratorParameters
                     {
                         QuestionCount = 4,
@@ -361,7 +410,7 @@ public partial class App : Application
                     dlgAbs.Close();
 
                     // 15b. Definite Integration - Limits of Sums (matching user's screenshot exactly)
-                    var topicLimitsSums = Generators.TopicRegistry.GetById("def_limits_sums") ?? Generators.TopicRegistry.AllTopics[0];
+                    var topicLimitsSums = Core.SubjectRegistry.GetTopicById("def_limits_sums") ?? Core.SubjectRegistry.CurrentSubject.AllTopics[0];
                     var limitsSumsParams = new Models.TopicGeneratorParameters
                     {
                         QuestionCount = 4,
@@ -420,10 +469,133 @@ public partial class App : Application
                         encPreview.Save(fs);
                     }
                     previewDlg.Close();
+
+                    // 17. Teacher PDF Extractor Dialog Snapshot (Light & Dark)
+                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
+                    var extractorDlg = new Dialogs.TeacherPdfExtractorDialog(win.ViewModel);
+                    extractorDlg.PdfPathTextBox.Text = multiPdfPath;
+                    extractorDlg.Width = 1120;
+                    extractorDlg.Height = 780;
+                    extractorDlg.Show();
+                    try
+                    {
+                        var frame = new System.Windows.Threading.DispatcherFrame();
+                        var scanTask = extractorDlg.StartScanAsync();
+                        _ = scanTask.ContinueWith(_ => frame.Continue = false);
+                        System.Windows.Threading.Dispatcher.PushFrame(frame);
+                    }
+                    catch { }
+                    extractorDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    extractorDlg.UpdateLayout();
+                    var rtbExt = new RenderTargetBitmap(1120, 780, 96, 96, PixelFormats.Pbgra32);
+                    rtbExt.Render(extractorDlg);
+                    string extSnapPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "app_teacher_pdf_extractor.png");
+                    var encExt = new PngBitmapEncoder();
+                    encExt.Frames.Add(BitmapFrame.Create(rtbExt));
+                    using (var fs = File.Create(extSnapPath))
+                    {
+                        encExt.Save(fs);
+                    }
+
+                    Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+                    extractorDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    extractorDlg.UpdateLayout();
+                    var rtbExtDark = new RenderTargetBitmap(1120, 780, 96, 96, PixelFormats.Pbgra32);
+                    rtbExtDark.Render(extractorDlg);
+                    string extDarkSnapPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "app_teacher_pdf_extractor_dark.png");
+                    var encExtDark = new PngBitmapEncoder();
+                    encExtDark.Frames.Add(BitmapFrame.Create(rtbExtDark));
+                    using (var fs = File.Create(extDarkSnapPath))
+                    {
+                        encExtDark.Save(fs);
+                    }
+
+                    // Also capture the Telemetry Report tab explicitly
+                    extractorDlg.TelemetryReportTab.IsSelected = true;
+                    extractorDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    extractorDlg.UpdateLayout();
+                    var rtbExtReport = new RenderTargetBitmap(1120, 780, 96, 96, PixelFormats.Pbgra32);
+                    rtbExtReport.Render(extractorDlg);
+                    string extReportSnapPath = Path.Combine(Path.GetDirectoryName(targetPath)!, "app_teacher_pdf_extractor_report.png");
+                    var encExtReport = new PngBitmapEncoder();
+                    encExtReport.Frames.Add(BitmapFrame.Create(rtbExtReport));
+                    using (var fs = File.Create(extReportSnapPath))
+                    {
+                        encExtReport.Save(fs);
+                    }
+                    extractorDlg.Close();
+
+                    // 18. Student Tools Dialog Snapshot (Light & Dark)
+                    Services.ThemeService.SetTheme(Services.AppTheme.Light);
+                    var studentDlg = new Dialogs.StudentToolsDialog(
+                        "Ruta de Estudio Personalizada",
+                        "Diagnóstico de Competencias y Compensación de Fallas",
+                        "• Unidad 1: Límites y Continuidad — Dominio 92% (Completado)\n• Unidad 2: Regla de la Cadena y Derivación Implícita — Dominio 68% (Refuerzo sugerido)\n• Unidad 3: Aplicaciones de la Derivada y Optimización — Práctica programada: Jueves 16:00",
+                        "🚀 Iniciar Práctica Guiada",
+                        () => { });
+                    studentDlg.Width = 740;
+                    studentDlg.Height = 520;
+                    studentDlg.Show();
+                    studentDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    studentDlg.UpdateLayout();
+                    var rtbStudLight = new RenderTargetBitmap(740, 520, 96, 96, PixelFormats.Pbgra32);
+                    rtbStudLight.Render(studentDlg);
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_student_tools_light.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbStudLight));
+                        enc.Save(fs);
+                    }
+                    Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+                    studentDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    studentDlg.UpdateLayout();
+                    var rtbStudDark = new RenderTargetBitmap(740, 520, 96, 96, PixelFormats.Pbgra32);
+                    rtbStudDark.Render(studentDlg);
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_student_tools_dark.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbStudDark));
+                        enc.Save(fs);
+                    }
+                    studentDlg.Close();
+
+                    // 19. Institute Admin & Teacher Roster Dialog Snapshots (Light & Dark)
+                    Services.ThemeService.SetTheme(Services.AppTheme.Dark);
+                    var instDlg = new Dialogs.InstituteAdminDialog();
+                    instDlg.Width = 860;
+                    instDlg.Height = 560;
+                    instDlg.Show();
+                    instDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    instDlg.UpdateLayout();
+                    var rtbInstDark = new RenderTargetBitmap(860, 560, 96, 96, PixelFormats.Pbgra32);
+                    rtbInstDark.Render(instDlg);
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_institute_admin_dark.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbInstDark));
+                        enc.Save(fs);
+                    }
+                    instDlg.Close();
+
+                    var rosterDlg = new Dialogs.TeacherRosterDialog();
+                    rosterDlg.Width = 860;
+                    rosterDlg.Height = 560;
+                    rosterDlg.Show();
+                    rosterDlg.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    rosterDlg.UpdateLayout();
+                    var rtbRosterDark = new RenderTargetBitmap(860, 560, 96, 96, PixelFormats.Pbgra32);
+                    rtbRosterDark.Render(rosterDlg);
+                    using (var fs = File.Create(Path.Combine(Path.GetDirectoryName(targetPath)!, "app_teacher_roster_dark.png")))
+                    {
+                        var enc = new PngBitmapEncoder();
+                        enc.Frames.Add(BitmapFrame.Create(rtbRosterDark));
+                        enc.Save(fs);
+                    }
+                    rosterDlg.Close();
                 }
                 catch (Exception ex)
                 {
-                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(targetPath)!, "screenshot_error.txt"), ex.ToString());
+                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(targetPath)!, "screenshot_error_latest.txt"), ex.ToString());
                 }
 
                 Shutdown(0);
@@ -431,7 +603,48 @@ public partial class App : Application
             }
         }
 
-        new MainWindow().Show();
+        AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
+        {
+            try { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "crash.txt"), ev.ExceptionObject.ToString()); } catch { }
+        };
+        DispatcherUnhandledException += (s, ev) =>
+        {
+            try { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "dispatcher_crash.txt"), ev.Exception.ToString()); } catch { }
+        };
+
+        try
+        {
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "Creating MainWindow...\n");
+            var mainWindow = new MainWindow();
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "MainWindow constructed.\n");
+            MainWindow = mainWindow;
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "MainWindow assigned.\n");
+            mainWindow.Closed += (s, ev) =>
+            {
+                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "MainWindow.Closed event fired!\n");
+            };
+            try
+            {
+                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "Calling mainWindow.Show()...\n");
+                mainWindow.Show();
+                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "mainWindow.Show() returned.\n");
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "show_error.txt"), ex.ToString());
+            }
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "MainWindow shown successfully.\n");
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "startup_error.txt"), ex.ToString());
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), $"App.OnExit called with code: {e.ApplicationExitCode}\n");
+        base.OnExit(e);
     }
 }
 

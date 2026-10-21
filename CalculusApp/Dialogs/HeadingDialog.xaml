@@ -7,7 +7,8 @@
         ResizeMode="NoResize"
         Background="{DynamicResource ThemeDialogBackground}"
         Foreground="{DynamicResource ThemeTextPrimary}"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI"
+        FontSize="13.5">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

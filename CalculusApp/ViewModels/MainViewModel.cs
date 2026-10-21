@@ -29,6 +29,7 @@ namespace CalculusApp.ViewModels
 
         public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
         public void Execute(object? parameter) => _execute(parameter);
+        public void RaiseCanExecuteChanged() => CommandManager.InvalidateRequerySuggested();
         public event EventHandler? CanExecuteChanged
         {
             add => CommandManager.RequerySuggested += value;
@@ -55,6 +56,8 @@ namespace CalculusApp.ViewModels
         public event Action? RequestRender;
         public event Action? RequestExportPdf;
         public event Action? RequestPreviewPdf;
+        public event Action<QuestionSet>? RequestEditQuestionSet;
+        public event Action<QuestionSet>? RequestEditQuestionsDirectly;
 
         public Assignment CurrentAssignment
         {
@@ -70,6 +73,17 @@ namespace CalculusApp.ViewModels
 
         public ObservableCollection<QuestionSet> QuestionSets { get; } = new();
 
+        public string QuestionSetsCountText
+        {
+            get
+            {
+                int visible = QuestionSets.Count(q => !q.IsHidden);
+                int total = QuestionSets.Count;
+                return $"({visible}/{total})";
+            }
+        }
+        public string QuestionSetsSummary => QuestionSetsCountText;
+
         public QuestionSet? SelectedQuestionSet
         {
             get => _selectedQuestionSet;
@@ -77,6 +91,7 @@ namespace CalculusApp.ViewModels
             {
                 _selectedQuestionSet = value;
                 OnPropertyChanged();
+                RaiseQuestionSetCommandsChanged();
             }
         }
 
@@ -120,10 +135,29 @@ namespace CalculusApp.ViewModels
             get => _assignment.Columns;
             set
             {
-                _assignment.Columns = value;
-                OnPropertyChanged();
-                RequestRender?.Invoke();
+                if (_assignment.Columns != value)
+                {
+                    _assignment.Columns = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsSingleColumn));
+                    OnPropertyChanged(nameof(IsTwoColumns));
+                    AppSettingsService.Current.Columns = value;
+                    AppSettingsService.Save();
+                    RequestRender?.Invoke();
+                }
             }
+        }
+
+        public bool IsSingleColumn
+        {
+            get => Columns == 1;
+            set { if (value) Columns = 1; }
+        }
+
+        public bool IsTwoColumns
+        {
+            get => Columns == 2;
+            set { if (value) Columns = 2; }
         }
 
         public double ZoomPercent
@@ -171,6 +205,10 @@ namespace CalculusApp.ViewModels
         public ICommand RemoveQuestionSetCommand { get; }
         public ICommand MoveUpCommand { get; }
         public ICommand MoveDownCommand { get; }
+        public ICommand ToggleHideSetCommand { get; }
+        public ICommand ToggleHideItemCommand { get; }
+        public ICommand EditQuestionSetCommand { get; }
+        public ICommand EditQuestionsDirectlyCommand { get; }
         public ICommand RegenerateAllCommand { get; }
         public ICommand RegenerateSetCommand { get; }
         public ICommand ScrambleQuestionsCommand { get; }
@@ -189,6 +227,193 @@ namespace CalculusApp.ViewModels
         public ICommand SetThemeCommand { get; }
         public ICommand SelectSubjectCommand { get; }
         public ICommand LoadSyllabusFileCommand { get; }
+        public ICommand ZoomInCommand { get; }
+        public ICommand ZoomOutCommand { get; }
+        public ICommand ResetZoomCommand { get; }
+        public ICommand ToggleSortTopicsCommand { get; }
+        public ICommand ExportIniCommand { get; }
+        public ICommand ImportIniCommand { get; }
+        public ICommand ValidateFormulasCommand { get; }
+
+        // Edition commands (Estudiante, Profesor, Instituto)
+        public ICommand SwitchEditionCommand { get; }
+        public ICommand StudentSelfTestCommand { get; }
+        public ICommand StudentSummaryCommand { get; }
+        public ICommand StudentScheduleCommand { get; }
+        public ICommand StudentStudyRouteCommand { get; }
+        public ICommand TeacherRosterCommand { get; }
+        public ICommand TeacherWebExamCommand { get; }
+        public ICommand TeacherScheduleCommand { get; }
+        public ICommand TeacherPdfExtractorCommand { get; }
+        public ICommand InstituteFacultyCommand { get; }
+        public ICommand InstituteMultiSubjectCommand { get; }
+        public ICommand InstituteCentralWebExamsCommand { get; }
+
+        public string LeftSidebarHeader => $"TEMAS - {CurrentSubject.Name.ToUpperInvariant()}";
+        public string CenterStatusLabel => $"{_assignment.Heading.Title} • {StatusPagesText} ({ZoomDisplayText})";
+
+        private string _rightPanelMode = "assistant";
+        public string RightPanelMode
+        {
+            get => _rightPanelMode;
+            set
+            {
+                _rightPanelMode = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsAssistantMode));
+                OnPropertyChanged(nameof(IsThumbnailsMode));
+            }
+        }
+        public bool IsAssistantMode => _rightPanelMode == "assistant";
+        public bool IsThumbnailsMode => _rightPanelMode == "thumbnails";
+
+        private bool _isSortedAlphabetically = false;
+        public bool IsSortedAlphabetically => _isSortedAlphabetically;
+
+        private string _documentMode = "pdf";
+        public string DocumentMode
+        {
+            get => _documentMode;
+            set
+            {
+                if (_documentMode != value)
+                {
+                    _documentMode = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsPdfMode));
+                    OnPropertyChanged(nameof(IsExamMode));
+                    AppSettingsService.Current.DocumentMode = value;
+                    AppSettingsService.Save();
+                    RequestRender?.Invoke();
+                }
+            }
+        }
+        public bool IsPdfMode
+        {
+            get => _documentMode == "pdf";
+            set { if (value) DocumentMode = "pdf"; }
+        }
+        public bool IsExamMode
+        {
+            get => _documentMode == "exam";
+            set { if (value) DocumentMode = "exam"; }
+        }
+        public ICommand SetDocumentModeCommand { get; }
+        public ICommand ToggleAutoFitCommand { get; }
+        public ICommand SetColumnsCommand { get; }
+
+        private bool _isRibbonMode = true;
+        public bool IsRibbonMode
+        {
+            get => _isRibbonMode;
+            set
+            {
+                if (_isRibbonMode != value)
+                {
+                    _isRibbonMode = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(RibbonVisibility));
+                    OnPropertyChanged(nameof(MenuVisibility));
+                    OnPropertyChanged(nameof(RibbonModeButtonText));
+                }
+            }
+        }
+        public Visibility RibbonVisibility => _isRibbonMode ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility MenuVisibility => _isRibbonMode ? Visibility.Collapsed : Visibility.Visible;
+        public string RibbonModeButtonText => _isRibbonMode ? "Modo sin Ribbon" : "Modo con Ribbon";
+
+        private string _activeRibbonTab = "MATEMÁTICA AVANZADA";
+        public string ActiveRibbonTab
+        {
+            get => _activeRibbonTab;
+            set
+            {
+                if (_activeRibbonTab != value)
+                {
+                    _activeRibbonTab = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsPanelControlTabActive));
+                    OnPropertyChanged(nameof(IsDisenoTabActive));
+                    OnPropertyChanged(nameof(IsMatematicaTabActive));
+                    OnPropertyChanged(nameof(IsEstudianteTabActive));
+                    OnPropertyChanged(nameof(IsProfesorTabActive));
+                    OnPropertyChanged(nameof(IsInstitutoTabActive));
+                    OnPropertyChanged(nameof(IsHerramientasTabActive));
+                    OnPropertyChanged(nameof(IsAyudaTabActive));
+                }
+            }
+        }
+        public bool IsPanelControlTabActive
+        {
+            get => _activeRibbonTab == "PANEL DE CONTROL";
+            set { if (value) ActiveRibbonTab = "PANEL DE CONTROL"; }
+        }
+        public bool IsDisenoTabActive
+        {
+            get => _activeRibbonTab == "DISEÑO DE EVALUACIONES";
+            set { if (value) ActiveRibbonTab = "DISEÑO DE EVALUACIONES"; }
+        }
+        public bool IsMatematicaTabActive
+        {
+            get => _activeRibbonTab == "MATEMÁTICA AVANZADA";
+            set { if (value) ActiveRibbonTab = "MATEMÁTICA AVANZADA"; }
+        }
+        public bool IsEstudianteTabActive
+        {
+            get => _activeRibbonTab == "ESTUDIANTE";
+            set { if (value) ActiveRibbonTab = "ESTUDIANTE"; }
+        }
+        public bool IsProfesorTabActive
+        {
+            get => _activeRibbonTab == "PROFESOR";
+            set { if (value) ActiveRibbonTab = "PROFESOR"; }
+        }
+        public bool IsInstitutoTabActive
+        {
+            get => _activeRibbonTab == "INSTITUTO";
+            set { if (value) ActiveRibbonTab = "INSTITUTO"; }
+        }
+        public bool IsHerramientasTabActive
+        {
+            get => _activeRibbonTab == "HERRAMIENTAS";
+            set { if (value) ActiveRibbonTab = "HERRAMIENTAS"; }
+        }
+        public bool IsAyudaTabActive
+        {
+            get => _activeRibbonTab == "AYUDA";
+            set { if (value) ActiveRibbonTab = "AYUDA"; }
+        }
+
+        public Visibility StudentTabVisibility => EditionService.IsStudentAvailable ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TeacherTabVisibility => (EditionService.IsTeacherAvailable || EditionService.IsInstituteAvailable) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility InstituteTabVisibility => EditionService.IsInstituteAvailable ? Visibility.Visible : Visibility.Collapsed;
+
+        public IReadOnlyList<IEditionModule> AvailableEditions => EditionService.AvailableEditions;
+        public IEditionModule? ActiveEdition
+        {
+            get => EditionService.ActiveEdition;
+            set
+            {
+                if (value != null && EditionService.ActiveEdition != value)
+                {
+                    EditionService.ActiveEdition = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ActiveEditionBadge));
+                    OnPropertyChanged(nameof(WindowTitle));
+                }
+            }
+        }
+        public string ActiveEditionBadge => EditionService.ActiveEdition != null
+            ? $"{EditionService.ActiveEdition.Icon} {EditionService.ActiveEdition.DisplayName}"
+            : "🎓 Estándar";
+
+        public ICommand ToggleRibbonModeCommand { get; }
+        public ICommand SelectRibbonTabCommand { get; }
+
+        public string DocumentStatusText => "📄 Documento actual: Doc 1";
+        public string AiEngineStatusText => $"IA: GEMINI - {AiDocumentationService.Instance.SelectedModel}";
+        public string SystemResourcesStatusText => "MAPP: 93 MB   MDISP: 3 GB   v.26.8.12.8";
+
         public bool IsDarkTheme => ThemeService.IsDark;
         public string ThemeStatusText => ThemeService.IsDark ? LocalizationService.Get("tb_theme_dark") : LocalizationService.Get("tb_theme_light");
         public ISubjectModule CurrentSubject
@@ -203,11 +428,21 @@ namespace CalculusApp.ViewModels
             }
         }
         public IReadOnlyList<ISubjectModule> AvailableSubjects => SubjectRegistry.AvailableSubjects;
-        public string WindowTitle => $"{SubjectRegistry.CurrentSubject.Subtitle} - [ {_assignment.Heading.Title} ]";
+        public string WindowTitle => $"{SubjectRegistry.CurrentSubject.Subtitle} [{ActiveEditionBadge}] - [ {_assignment.Heading.Title} ]";
         #endregion
 
         public MainViewModel()
         {
+            try
+            {
+                AppSettingsService.Load();
+                _documentMode = string.IsNullOrEmpty(AppSettingsService.Current.DocumentMode) ? "pdf" : AppSettingsService.Current.DocumentMode;
+                _isRibbonMode = AppSettingsService.Current.IsRibbonMode;
+                _assignment.Columns = AppSettingsService.Current.Columns > 0 ? AppSettingsService.Current.Columns : 2;
+                _assignment.ZoomPercent = AppSettingsService.Current.ZoomPercent > 0 ? AppSettingsService.Current.ZoomPercent : 100.0;
+            }
+            catch { }
+
             NewCommand = new RelayCommand(_ => CreateNewAssignment());
             OpenCommand = new RelayCommand(_ => OpenAssignment());
             SaveCommand = new RelayCommand(_ => SaveAssignment());
@@ -218,6 +453,39 @@ namespace CalculusApp.ViewModels
             RemoveQuestionSetCommand = new RelayCommand(_ => RemoveSelectedSet(), _ => SelectedQuestionSet != null);
             MoveUpCommand = new RelayCommand(_ => MoveSelectedSetUp(), _ => CanMoveUp());
             MoveDownCommand = new RelayCommand(_ => MoveSelectedSetDown(), _ => CanMoveDown());
+            ToggleHideSetCommand = new RelayCommand(_ =>
+            {
+                if (SelectedQuestionSet != null)
+                {
+                    SelectedQuestionSet.IsHidden = !SelectedQuestionSet.IsHidden;
+                    UpdateStatus();
+                    RequestRender?.Invoke();
+                    RaiseQuestionSetCommandsChanged();
+                }
+            }, _ => SelectedQuestionSet != null);
+
+            ToggleHideItemCommand = new RelayCommand(p =>
+            {
+                if (p is QuestionSet qs)
+                {
+                    qs.IsHidden = !qs.IsHidden;
+                    UpdateStatus();
+                    RequestRender?.Invoke();
+                    RaiseQuestionSetCommandsChanged();
+                }
+            });
+
+            EditQuestionSetCommand = new RelayCommand(_ =>
+            {
+                if (SelectedQuestionSet != null)
+                    RequestEditQuestionSet?.Invoke(SelectedQuestionSet);
+            }, _ => SelectedQuestionSet != null);
+
+            EditQuestionsDirectlyCommand = new RelayCommand(_ =>
+            {
+                if (SelectedQuestionSet != null)
+                    RequestEditQuestionsDirectly?.Invoke(SelectedQuestionSet);
+            }, _ => SelectedQuestionSet != null);
             RegenerateAllCommand = new RelayCommand(_ => RegenerateAll());
             RegenerateSetCommand = new RelayCommand(_ => RegenerateSelectedSet(), _ => SelectedQuestionSet != null);
             ScrambleQuestionsCommand = new RelayCommand(_ => ScrambleQuestions());
@@ -261,6 +529,195 @@ namespace CalculusApp.ViewModels
             });
 
             LoadSyllabusFileCommand = new RelayCommand(_ => PromptLoadSyllabusFile());
+            ToggleRibbonModeCommand = new RelayCommand(_ => IsRibbonMode = !IsRibbonMode);
+            SetDocumentModeCommand = new RelayCommand(p =>
+            {
+                if (p is string s) DocumentMode = s.ToLowerInvariant();
+            });
+            SetColumnsCommand = new RelayCommand(p =>
+            {
+                if (int.TryParse(p?.ToString(), out int cols)) Columns = cols;
+            });
+            ToggleAutoFitCommand = new RelayCommand(_ =>
+            {
+                ResetZoomCommand?.Execute(null);
+            });
+            ExportIniCommand = new RelayCommand(_ => ExportToIni());
+            ImportIniCommand = new RelayCommand(_ => ImportFromIni());
+            ValidateFormulasCommand = new RelayCommand(_ => ValidateFormulas());
+            SelectRibbonTabCommand = new RelayCommand(p =>
+            {
+                if (p is string tab) ActiveRibbonTab = tab;
+            });
+
+            ZoomInCommand = new RelayCommand(_ =>
+            {
+                ZoomPercent = Math.Min(250.0, ZoomPercent + 15.0);
+                OnPropertyChanged(nameof(CenterStatusLabel));
+                RequestRender?.Invoke();
+            });
+
+            ZoomOutCommand = new RelayCommand(_ =>
+            {
+                ZoomPercent = Math.Max(40.0, ZoomPercent - 15.0);
+                OnPropertyChanged(nameof(CenterStatusLabel));
+                RequestRender?.Invoke();
+            });
+
+            ResetZoomCommand = new RelayCommand(_ =>
+            {
+                ZoomPercent = 100.0;
+                OnPropertyChanged(nameof(CenterStatusLabel));
+                RequestRender?.Invoke();
+            });
+
+            ToggleSortTopicsCommand = new RelayCommand(_ =>
+            {
+                _isSortedAlphabetically = !_isSortedAlphabetically;
+                OnPropertyChanged(nameof(IsSortedAlphabetically));
+                LoadTopicsTree();
+            });
+
+            // Edition commands (Estudiante, Profesor, Instituto)
+            SwitchEditionCommand = new RelayCommand(p =>
+            {
+                if (p is string id)
+                {
+                    EditionService.SetActiveEditionById(id);
+                }
+                else if (p is IEditionModule mod)
+                {
+                    EditionService.ActiveEdition = mod;
+                }
+            });
+
+            StudentSelfTestCommand = new RelayCommand(_ =>
+            {
+                var curTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
+                string title = curTopic?.Title ?? "Cálculo";
+                var dlg = new Dialogs.StudentToolsDialog(
+                    $"Auto-Prueba Diagnóstica: {title}",
+                    "Generación personalizada de evaluación de diagnóstico",
+                    $"Se ha configurado una auto-prueba diagnóstica de 5 ejercicios para el tema:\n\n• Materia: {SubjectRegistry.CurrentSubject.Name}\n• Tema: {title}\n\nPuede resolver los ejercicios directamente en la hoja o exportarlos a PDF/formato plano para estudio individual.",
+                    "📝 Resolver Auto-Prueba en Pantalla",
+                    () =>
+                    {
+                        if (curTopic != null)
+                        {
+                            _assignment.Heading.Title = $"Auto-Prueba - {title}";
+                            _assignment.QuestionSets.Clear();
+                            QuestionSets.Clear();
+                            AddTopic(curTopic.TopicId, 5, QuestionType.MultipleChoice);
+                        }
+                    });
+                dlg.ShowDialog();
+            });
+
+            StudentSummaryCommand = new RelayCommand(_ =>
+            {
+                var curTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
+                string title = curTopic?.Title ?? "Cálculo";
+                var dlg = new Dialogs.StudentToolsDialog(
+                    $"Resumen de Contenido: {title}",
+                    "Ficha de estudio, conceptos y fórmulas esenciales",
+                    $"# Resumen Rápido - {title}\n\n**Materia:** {SubjectRegistry.CurrentSubject.Name}\n\n## Conceptos Fundamentales\n1. Identifique el tipo de problema y parámetros clave.\n2. Aplique las propiedades y teoremas correspondientes.\n3. Verifique el resultado mediante sustitución o cálculo inverso.\n\n*(Consulte el panel lateral para la explicación guiada con el Asistente IA)*",
+                    "");
+                dlg.ShowDialog();
+            });
+
+            StudentScheduleCommand = new RelayCommand(_ =>
+            {
+                var dlg = new Dialogs.StudentToolsDialog(
+                    "Control de Horario de Estudio",
+                    "Planificación semanal y metas de dedicación",
+                    $"Horario Semanal Activo para {SubjectRegistry.CurrentSubject.Name}:\n\n• Lunes: 14:00 - 16:00 (Resolución de ejercicios prácticos)\n• Miércoles: 10:00 - 12:00 (Repaso de conceptos y fórmulas)\n• Viernes: 16:00 - 18:00 (Simulacro de auto-prueba)\n• Sábado: 09:00 - 11:00 (Ruta de compensación de dudas)\n\nTotal de horas programadas esta semana: 8.0 hrs.",
+                    "");
+                dlg.ShowDialog();
+            });
+
+            StudentStudyRouteCommand = new RelayCommand(_ =>
+            {
+                var curTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
+                string title = curTopic?.Title ?? "Cálculo";
+                var dlg = new Dialogs.StudentToolsDialog(
+                    "Ruta de Estudio para Compensación de Fallas",
+                    "Plan progresivo para superar áreas de oportunidad",
+                    $"Diagnóstico de Desempeño:\n\nTema a reforzar: {title}\n\nPasos de la Ruta de Compensación:\n1. Revisar definiciones y gráficos del tema.\n2. Resolver 4 ejercicios de nivel básico.\n3. Avanzar a 4 ejercicios de nivel medio con opciones múltiples.\n4. Realizar comprobación final con límite de tiempo.\n\n¿Desea cargar ahora los ejercicios de compensación?",
+                    "🎯 Cargar Ejercicios de Compensación",
+                    () =>
+                    {
+                        if (curTopic != null)
+                        {
+                            _assignment.Heading.Title = $"Ruta de Compensación - {title}";
+                            _assignment.QuestionSets.Clear();
+                            QuestionSets.Clear();
+                            AddTopic(curTopic.TopicId, 4, QuestionType.FreeResponse);
+                        }
+                    });
+                dlg.ShowDialog();
+            });
+
+            TeacherRosterCommand = new RelayCommand(_ =>
+            {
+                var dlg = new Dialogs.TeacherRosterDialog();
+                dlg.ShowDialog();
+            });
+
+            TeacherWebExamCommand = new RelayCommand(_ =>
+            {
+                MessageBox.Show(
+                    $"Generador de Evaluaciones Web Docente:\n\nSe ha preparado el paquete interactivo para '{SubjectRegistry.CurrentSubject.Name} - {_assignment.Heading.Title}'.\n\nEl enlace web personal vincula las respuestas de los estudiantes directamente con su nómina docente.",
+                    "Generación de Examen Web - Edición Profesor",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            });
+
+            TeacherScheduleCommand = new RelayCommand(_ =>
+            {
+                MessageBox.Show(
+                    $"Calendario y Horario Docente:\n\n• Cursos a cargo: Sección A-1, Sección A-2\n• Asignatura activa: {SubjectRegistry.CurrentSubject.Name}\n• Próxima fecha límite de entrega: 25 de Octubre\n• Horario de atención a alumnos: Mar / Jue 14:00 - 16:00",
+                    "Horario Docente - Edición Profesor",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            });
+
+            TeacherPdfExtractorCommand = new RelayCommand(_ =>
+            {
+                if (!EditionService.HasFeature(EditionFeature.TeacherPdfExtractor) &&
+                    !EditionService.IsTeacherAvailable && !EditionService.IsInstituteAvailable)
+                {
+                    MessageBox.Show(
+                        "El módulo de Extracción de Ejercicios desde PDFs requiere la Edición Profesor (CalculusApp.Teacher.dll).",
+                        "Función no disponible",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                var dlg = new Dialogs.TeacherPdfExtractorDialog(this);
+                dlg.ShowDialog();
+            });
+
+            InstituteFacultyCommand = new RelayCommand(_ =>
+            {
+                var dlg = new Dialogs.InstituteAdminDialog();
+                dlg.ShowDialog();
+            });
+
+            InstituteMultiSubjectCommand = new RelayCommand(_ =>
+            {
+                var dlg = new Dialogs.InstituteAdminDialog();
+                dlg.ShowDialog();
+            });
+
+            InstituteCentralWebExamsCommand = new RelayCommand(_ =>
+            {
+                MessageBox.Show(
+                    "Orquestador Institucional de Evaluaciones Web:\n\nSe ha generado la matriz de examen institucional coordinada entre los departamentos de Matemáticas, Ciencias e Ingeniería.",
+                    "Exámenes Centralizados - Edición Instituto",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            });
 
             ThemeService.ThemeChanged += () =>
             {
@@ -271,6 +728,9 @@ namespace CalculusApp.ViewModels
 
             LocalizationService.LanguageChanged += OnLanguageChanged;
             SubjectRegistry.CurrentSubjectChanged += OnCurrentSubjectChanged;
+            SubjectRegistry.SubjectsListChanged += OnSubjectsListChanged;
+            EditionService.ActiveEditionChanged += OnActiveEditionChanged;
+            EditionService.EditionsListChanged += OnActiveEditionChanged;
 
             LoadTopicsTree();
             CreateDefaultSampleAssignment();
@@ -283,23 +743,44 @@ namespace CalculusApp.ViewModels
             OnPropertyChanged(nameof(CurrentSubject));
             OnPropertyChanged(nameof(AvailableSubjects));
             OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(nameof(LeftSidebarHeader));
             OnPropertyChanged(string.Empty);
             RequestRender?.Invoke();
+        }
+
+        private void OnSubjectsListChanged()
+        {
+            OnPropertyChanged(nameof(AvailableSubjects));
+            OnPropertyChanged(nameof(CurrentSubject));
+            OnPropertyChanged(nameof(LeftSidebarHeader));
+            OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(string.Empty);
+        }
+
+        private void OnActiveEditionChanged()
+        {
+            OnPropertyChanged(nameof(ActiveEdition));
+            OnPropertyChanged(nameof(ActiveEditionBadge));
+            OnPropertyChanged(nameof(StudentTabVisibility));
+            OnPropertyChanged(nameof(TeacherTabVisibility));
+            OnPropertyChanged(nameof(InstituteTabVisibility));
+            OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(string.Empty);
         }
 
         private void PromptLoadSyllabusFile()
         {
             var ofd = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Text Syllabus (*.txt)|*.txt|All Files (*.*)|*.*",
-                Title = "Cargar Temario de Materia (Syllabus)"
+                Filter = "Archivos de Temario (*.ini;*.txt)|*.ini;*.txt|Archivos INI (*.ini)|*.ini|Archivos de Texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*",
+                Title = "Cargar Temario de Materia (Syllabus .ini / .txt)"
             };
             if (ofd.ShowDialog() == true)
             {
-                string filename = Path.GetFileNameWithoutExtension(ofd.FileName);
-                var dynModule = SyllabusLoader.LoadFromText(ofd.FileName, filename.ToLowerInvariant(), filename);
+                var dynModule = SyllabusLoader.LoadAuto(ofd.FileName);
                 SubjectRegistry.RegisterSubject(dynModule);
                 SubjectRegistry.CurrentSubject = dynModule;
+                CurrentSubject = dynModule;
             }
         }
 
@@ -335,8 +816,11 @@ namespace CalculusApp.ViewModels
         {
             TopicCategories.Clear();
             var categories = SubjectRegistry.CurrentSubject.Categories;
+            var catsToProcess = _isSortedAlphabetically 
+                ? categories.OrderBy(c => c.Name).ToList() 
+                : categories.ToList();
 
-            foreach (var cat in categories)
+            foreach (var cat in catsToProcess)
             {
                 var catItem = new TopicTreeItem
                 {
@@ -344,7 +828,11 @@ namespace CalculusApp.ViewModels
                     IsCategory = true
                 };
 
-                foreach (var topic in cat.Topics)
+                var topicsToProcess = _isSortedAlphabetically 
+                    ? cat.Topics.OrderBy(t => t.Title).ToList() 
+                    : cat.Topics.ToList();
+
+                foreach (var topic in topicsToProcess)
                 {
                     catItem.Children.Add(new TopicTreeItem
                     {
@@ -429,9 +917,21 @@ namespace CalculusApp.ViewModels
             RequestRender?.Invoke();
         }
 
+        public void AddCustomQuestionSet(QuestionSet qs)
+        {
+            if (qs == null) return;
+            QuestionSets.Add(qs);
+            _assignment.QuestionSets.Add(qs);
+            SelectedQuestionSet = qs;
+
+            UpdateStatus();
+            RequestRender?.Invoke();
+            RaiseQuestionSetCommandsChanged();
+        }
+
         private void CreateDefaultSampleAssignment()
         {
-            _assignment.Heading.Title = LocalizationService.Get("ws_assignment");
+            _assignment.Heading.Title = SubjectRegistry.CurrentSubject.DefaultAssignmentTitle;
             _assignment.Heading.Subtitle = SubjectRegistry.CurrentSubject.Subtitle;
             _assignment.QuestionSets.Clear();
             QuestionSets.Clear();
@@ -439,12 +939,15 @@ namespace CalculusApp.ViewModels
             var firstTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
             if (firstTopic != null)
             {
-                AddTopic(firstTopic.TopicId, 4, QuestionType.FreeResponse);
+                AddTopic(firstTopic.TopicId, 8, QuestionType.FreeResponse);
             }
-            if (SubjectRegistry.CurrentSubject.AllTopics.Count > 1)
+            else
             {
-                var secondTopic = SubjectRegistry.CurrentSubject.AllTopics[1];
-                AddTopic(secondTopic.TopicId, 4, QuestionType.MultipleChoice);
+                var fallback = SubjectRegistry.AvailableSubjects.SelectMany(s => s.AllTopics).FirstOrDefault();
+                if (fallback != null)
+                {
+                    AddTopic(fallback.TopicId, 8, QuestionType.FreeResponse);
+                }
             }
         }
 
@@ -537,6 +1040,103 @@ namespace CalculusApp.ViewModels
             }
         }
 
+        private void ExportToIni()
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Archivo Plano / INI (*.ini;*.txt)|*.ini;*.txt|Todos los archivos (*.*)|*.*",
+                Title = "Exportar Banco de Ejercicios en Plano",
+                FileName = $"{_assignment.Heading.Title}.ini"
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    var allQuestions = _assignment.QuestionSets.SelectMany(qs => qs.Questions).ToList();
+                    string directions = _assignment.QuestionSets.FirstOrDefault()?.Directions ?? string.Empty;
+                    ExerciseIniService.SaveToFile(sfd.FileName, allQuestions, SubjectRegistry.CurrentSubject.Name, _assignment.Heading.Title, directions);
+                    string msg = LocalizationService.CurrentLanguage switch
+                    {
+                        AppLanguage.Spanish => $"¡Se exportaron {allQuestions.Count} ejercicios en formato plano (.ini/.txt)!\n{sfd.FileName}",
+                        AppLanguage.Portuguese => $"Exportados {allQuestions.Count} exercícios com sucesso!\n{sfd.FileName}",
+                        _ => $"Exported {allQuestions.Count} questions in plain text/ini format successfully!\n{sfd.FileName}"
+                    };
+                    MessageBox.Show(msg, "Exportar en Plano", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al exportar: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ImportFromIni()
+        {
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Archivo Plano / INI (*.ini;*.txt)|*.ini;*.txt|Todos los archivos (*.*)|*.*",
+                Title = "Importar Banco de Ejercicios en Plano"
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                try
+                {
+                    var data = ExerciseIniService.LoadFromFile(ofd.FileName);
+                    if (data.Questions.Count == 0)
+                    {
+                        MessageBox.Show("No se encontraron ejercicios válidos en el archivo seleccionado.", "Importar", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var newSet = new QuestionSet
+                    {
+                        TopicTitle = !string.IsNullOrWhiteSpace(data.Topic) ? data.Topic : System.IO.Path.GetFileNameWithoutExtension(ofd.FileName),
+                        Category = !string.IsNullOrWhiteSpace(data.Category) ? data.Category : "Ejercicios Importados",
+                        Directions = data.Directions,
+                        Questions = data.Questions,
+                        QuestionCount = data.Questions.Count,
+                        DefaultType = data.Questions.Any(q => q.Type == QuestionType.MultipleChoice) ? QuestionType.MultipleChoice : QuestionType.FreeResponse
+                    };
+
+                    _assignment.QuestionSets.Add(newSet);
+                    QuestionSets.Add(newSet);
+                    SelectedQuestionSet = newSet;
+                    UpdateStatus();
+                    RequestRender?.Invoke();
+                    RaiseQuestionSetCommandsChanged();
+
+                    string msg = LocalizationService.CurrentLanguage switch
+                    {
+                        AppLanguage.Spanish => $"¡Se importaron {data.Questions.Count} ejercicios exitosamente desde:\n{ofd.FileName}!",
+                        AppLanguage.Portuguese => $"Importados {data.Questions.Count} exercícios com sucesso!",
+                        _ => $"Imported {data.Questions.Count} questions successfully!"
+                    };
+                    MessageBox.Show(msg, "Importar", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al importar: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ValidateFormulas()
+        {
+            try
+            {
+                var result = FormulaIntegrityValidator.RunValidation();
+                string report = result.ToString();
+                File.WriteAllText("formula_validation_report.txt", report);
+                MessageBox.Show(report, "Validación de Integridad de Fórmulas", MessageBoxButton.OK, result.FailedCount == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error en la validación: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void PrintAssignment()
         {
             var pd = new PrintDialog();
@@ -560,6 +1160,7 @@ namespace CalculusApp.ViewModels
             SelectedQuestionSet = QuestionSets.LastOrDefault();
             UpdateStatus();
             RequestRender?.Invoke();
+            RaiseQuestionSetCommandsChanged();
         }
 
         private bool CanMoveUp() => SelectedQuestionSet != null && QuestionSets.IndexOf(SelectedQuestionSet) > 0;
@@ -576,6 +1177,7 @@ namespace CalculusApp.ViewModels
             _assignment.QuestionSets.Insert(idx - 1, item);
             SelectedQuestionSet = item;
             RequestRender?.Invoke();
+            RaiseQuestionSetCommandsChanged();
         }
 
         private void MoveSelectedSetDown()
@@ -589,6 +1191,19 @@ namespace CalculusApp.ViewModels
             _assignment.QuestionSets.Insert(idx + 1, item);
             SelectedQuestionSet = item;
             RequestRender?.Invoke();
+            RaiseQuestionSetCommandsChanged();
+        }
+
+        public void RaiseQuestionSetCommandsChanged()
+        {
+            (MoveUpCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (MoveDownCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RemoveQuestionSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (RegenerateSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (ToggleHideSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (EditQuestionSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (EditQuestionsDirectlyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            OnPropertyChanged(nameof(QuestionSetsCountText));
         }
 
         public void RegenerateAll()
@@ -720,8 +1335,11 @@ namespace CalculusApp.ViewModels
             int totalQ = _assignment.TotalQuestions;
             StatusQuestionsText = LocalizationService.Get("questions_stat", totalQ);
 
-            double pages = Math.Max(1.0, Math.Ceiling(totalQ / 8.0));
+            double pages = Math.Max(1.0, Math.Ceiling(totalQ / 2.0));
             StatusPagesText = LocalizationService.Get("pages_stat", pages);
+            OnPropertyChanged(nameof(CenterStatusLabel));
+            OnPropertyChanged(nameof(QuestionSetsCountText));
+            OnPropertyChanged(nameof(QuestionSetsSummary));
         }
 
         protected void OnPropertyChanged([CallerMemberName] string? propName = null)

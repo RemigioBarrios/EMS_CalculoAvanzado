@@ -249,7 +249,7 @@ namespace CalculusApp.Generators
             s = Regex.Replace(s, @"(?<!\\)sqrt\[(\d+)\]\(([^)]+)\)", m => $@"\sqrt[{m.Groups[1].Value}]{{{m.Groups[2].Value}}}");
 
             // 7. Trig and standard math functions (ensure Spanish word 'sin' isn't converted)
-            s = Regex.Replace(s, @"(?<!\\)\b(sin|cos|tan|sec|csc|cot|ln|log|arcsin|arccos|arctan)\b(?=\s*[\(\dxyzabth\^])", m => "\\" + m.Value);
+            s = Regex.Replace(s, @"(?<!\\)\b(cos|tan|sec|csc|cot|ln|log|arcsin|arccos|arctan)\b(?=\s*[\(\dxyzabth\^])|(?<!\\)\bsin\b(?=\s*[\(\dxyzt\^])", m => "\\" + m.Value);
 
             // 8. Math symbols: pi, inf, *, !=, <=, >=
             s = Regex.Replace(s, @"(?<!\\)\bpi\b", @"\pi");
@@ -300,8 +300,8 @@ namespace CalculusApp.Generators
             s = Regex.Replace(s, @"\^\(([^)]+)\)", @"^{$1}");
 
             // Clean single powers ONLY on algebraic variables or closing parens: x^1 -> x, (x+1)^1 -> (x+1)
-            // NEVER on integrals, sum, or evaluation bars!
-            s = Regex.Replace(s, @"(?<=[a-zA-Z\)])\^\{?1\}?(?![0-9a-zA-Z])", "");
+            // NEVER on integrals, sum, or evaluation bars! Do not strip exponents with expressions like e^{1 - 1}
+            s = Regex.Replace(s, @"(?<=[a-zA-Z\)])(?:\^1(?![0-9a-zA-Z])|\^\{1\})", "");
 
             // 10. Clean duplicate slashes
             s = s.Replace(@"\\frac", @"\frac");

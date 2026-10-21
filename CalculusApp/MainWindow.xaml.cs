@@ -1,82 +1,134 @@
 using System;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
+using CalculusApp.Core;
+using CalculusApp.Generators;
 using CalculusApp.Models;
 using CalculusApp.Services;
 using CalculusApp.ViewModels;
-using CalculusApp.Generators;
 
 namespace CalculusApp
 {
     public partial class MainWindow : Window
     {
+        public MainViewModel ViewModel => (MainViewModel)DataContext;
+        private bool _allExpanded = true;
+
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
         public MainWindow()
         {
             InitializeComponent();
 
+            SourceInitialized += (s, e) => UpdateDwmTitleBarTheme();
+            ThemeService.ThemeChanged += () => Dispatcher.Invoke(UpdateDwmTitleBarTheme);
+
             ViewModel.RequestRender += OnRequestRender;
             ViewModel.RequestExportPdf += OnRequestExportPdf;
             ViewModel.RequestPreviewPdf += OnRequestPreviewPdf;
-            LocalizationService.LanguageChanged += SyncLanguageCombo;
+            LocalizationService.LanguageChanged += OnLanguageChanged;
             Loaded += MainWindow_Loaded;
-        }
 
-        private void OnRequestPreviewPdf()
-        {
-            var dlg = new Dialogs.PdfPreviewDialog(ViewModel.CurrentAssignment);
-            dlg.Owner = this;
-            dlg.ShowDialog();
-        }
-
-        private void OnRequestExportPdf()
-        {
-            var sfd = new Microsoft.Win32.SaveFileDialog
+            ThumbnailsPane.PageClicked += (pageIdx) =>
             {
-                Filter = "PDF Files (*.pdf)|*.pdf",
-                Title = "Export to PDF",
-                FileName = (ViewModel.CurrentAssignment?.Heading?.Title ?? "Calculus") + ".pdf"
+                WorksheetCanvas.ScrollToPage(pageIdx);
             };
 
-            if (sfd.ShowDialog() == true)
+            Closing += (s, e) =>
             {
                 try
                 {
-                    string path = PdfExportService.ExportToPdf(WorksheetCanvas, sfd.FileName);
-                    string msg = LocalizationService.Get("pdf_export_success", path);
-                    MessageBox.Show(msg, "PDF Export", MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppSettingsService.Current.LastSubjectId = SubjectRegistry.CurrentSubject.Id;
+                    AppSettingsService.Current.Theme = ThemeService.IsDark ? "dark" : "light";
+                    AppSettingsService.Current.IsRibbonMode = ViewModel.IsRibbonMode;
+                    AppSettingsService.Current.DocumentMode = ViewModel.DocumentMode;
+                    AppSettingsService.Current.Columns = ViewModel.Columns;
+                    AppSettingsService.Current.ZoomPercent = ViewModel.ZoomPercent;
+                    AppSettingsService.Save();
                 }
-                catch (Exception ex)
+                catch { }
+            };
+
+            ViewModel.RequestEditQuestionSet += (qs) => EditQuestionSet(qs);
+            ViewModel.RequestEditQuestionsDirectly += (qs) => EditQuestionsDirectly(qs);
+        }
+
+        private void UpdateDwmTitleBarTheme()
+        {
+            try
+            {
+                var handle = new WindowInteropHelper(this).Handle;
+                if (handle != IntPtr.Zero)
                 {
-                    MessageBox.Show("Failed to export PDF: " + ex.Message, "PDF Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    int darkMode = ThemeService.IsDark ? 1 : 0;
+                    int hr = DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+                    if (hr != 0)
+                    {
+                        DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref darkMode, sizeof(int));
+                    }
                 }
             }
+            catch { }
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            SyncLanguageCombo();
-            WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
+            try
+            {
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: start\n");
+                WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: RenderAssignment done\n");
+                ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: RefreshThumbnails done\n");
+
+                // Initialize AI Assistant with the selected topic (Continuidad by default)
+                var firstTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
+                if (firstTopic != null)
+                {
+                    AiAssistantPane.SetTopic(firstTopic.TopicId, firstTopic.Category, firstTopic.Title);
+                }
+                else
+                {
+                    AiAssistantPane.SetTopic("basic_continuity", "Funciones", "Continuidad");
+                }
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: done\n");
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.WriteAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "loaded_error.txt"), ex.ToString());
+            }
         }
 
         private void OnRequestRender()
         {
+            WorksheetCanvas.ViewMode = ViewModel.IsPdfMode ? Controls.DocumentViewMode.PdfMode : Controls.DocumentViewMode.ExamMode;
             WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
+            if (ThumbnailsPane.Visibility == Visibility.Visible)
+            {
+                ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+            }
         }
 
-        private void ToolBar_Loaded(object sender, RoutedEventArgs e)
+        private void OnLanguageChanged()
         {
-            if (sender is ToolBar toolBar)
+            WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
+            ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+        }
+
+        private void OnTopicTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is TopicTreeItem item && !item.IsCategory)
             {
-                var overflowGrid = toolBar.Template.FindName("OverflowGrid", toolBar) as FrameworkElement;
-                if (overflowGrid != null)
-                {
-                    overflowGrid.Visibility = Visibility.Collapsed;
-                }
-                var mainPanelBorder = toolBar.Template.FindName("MainPanelBorder", toolBar) as FrameworkElement;
-                if (mainPanelBorder != null)
-                {
-                    mainPanelBorder.Margin = new Thickness(0);
-                }
+                var topic = SubjectRegistry.GetTopicById(item.TopicId);
+                string catName = topic?.Category ?? "Funciones";
+                AiAssistantPane.SetTopic(item.TopicId, catName, item.Title);
             }
         }
 
@@ -84,7 +136,7 @@ namespace CalculusApp
         {
             if (sender is TreeView tv && tv.SelectedItem is TopicTreeItem item && !item.IsCategory)
             {
-                var topic = TopicRegistry.GetById(item.TopicId);
+                var topic = SubjectRegistry.GetTopicById(item.TopicId);
                 if (topic != null)
                 {
                     var dlg = new Dialogs.TopicOptionsDialog(topic, 4, QuestionType.FreeResponse);
@@ -92,6 +144,7 @@ namespace CalculusApp
                     dlg.QuestionsAdded += (count, type, parameters, acceptedQuestions) =>
                     {
                         ViewModel.AddTopic(item.TopicId, count, type, parameters, acceptedQuestions);
+                        ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
                     };
                     dlg.ShowDialog();
                 }
@@ -100,19 +153,15 @@ namespace CalculusApp
 
         private void OnQuestionSetDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            EditSelectedQuestionSet();
+            EditQuestionSet(ViewModel.SelectedQuestionSet);
         }
 
-        private void OnEditSelectedQuestionSetClick(object sender, RoutedEventArgs e)
+        public void EditQuestionSet(QuestionSet? qs)
         {
-            EditSelectedQuestionSet();
-        }
+            qs ??= ViewModel.SelectedQuestionSet;
+            if (qs == null) return;
 
-        private void EditSelectedQuestionSet()
-        {
-            if (ViewModel?.SelectedQuestionSet == null) return;
-            var qs = ViewModel.SelectedQuestionSet;
-            var topic = TopicRegistry.GetById(qs.TopicId);
+            var topic = SubjectRegistry.GetTopicById(qs.TopicId);
             if (topic != null)
             {
                 var dlg = new Dialogs.TopicOptionsDialog(topic, qs.QuestionCount, qs.DefaultType, qs.Parameters);
@@ -135,84 +184,117 @@ namespace CalculusApp
                     {
                         ViewModel.RegenerateSelectedSet();
                     }
+                    ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
                 };
                 dlg.ShowDialog();
             }
-        }
-
-        private void OnZoomSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is ComboBox cb && cb.SelectedItem is ComboBoxItem cbi)
+            else
             {
-                string text = cbi.Content?.ToString() ?? "100%";
-                text = text.Replace("%", "").Trim();
-                if (double.TryParse(text, out double percent))
-                {
-                    double factor = percent / 100.0;
-                    WorksheetCanvas?.SetZoom(factor);
-                    if (ViewModel != null) ViewModel.ZoomPercent = percent;
-                }
+                EditQuestionsDirectly(qs);
             }
         }
 
-        private void OnColumnsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        public void EditQuestionsDirectly(QuestionSet? qs)
         {
-            if (sender is ComboBox cb && cb.SelectedItem is ComboBoxItem cbi)
-            {
-                string text = cbi.Content?.ToString() ?? "2";
-                if (int.TryParse(text, out int cols) && ViewModel != null)
-                {
-                    ViewModel.Columns = cols;
-                }
-            }
-        }
+            qs ??= ViewModel.SelectedQuestionSet;
+            if (qs == null) return;
 
-        private void OnLanguageComboChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is ComboBox cb && cb.SelectedItem is ComboBoxItem item && item.Tag is string lang)
-            {
-                var targetLang = lang switch
-                {
-                    "en" => AppLanguage.English,
-                    "pt" => AppLanguage.Portuguese,
-                    _ => AppLanguage.Spanish
-                };
-                if (LocalizationService.CurrentLanguage != targetLang)
-                {
-                    LocalizationService.SetLanguage(targetLang);
-                }
-            }
-        }
-
-        private void SyncLanguageCombo()
-        {
-            if (LanguageCombo == null) return;
-            string targetTag = LocalizationService.CurrentLanguage switch
-            {
-                AppLanguage.English => "en",
-                AppLanguage.Portuguese => "pt",
-                _ => "es"
-            };
-            foreach (ComboBoxItem item in LanguageCombo.Items)
-            {
-                if ((item.Tag as string) == targetTag)
-                {
-                    if (!item.IsSelected)
-                    {
-                        LanguageCombo.SelectedItem = item;
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void OnEditHeadingClick(object sender, RoutedEventArgs e)
-        {
-            var dlg = new Dialogs.HeadingDialog(ViewModel.CurrentAssignment.Heading);
+            var dlg = new Dialogs.QuestionEditDialog(qs);
             dlg.Owner = this;
             if (dlg.ShowDialog() == true)
             {
-                WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
+                ViewModel.RefreshView();
+                ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+            }
+        }
+
+        private void OnRightTabChanged(object sender, RoutedEventArgs e)
+        {
+            if (TabMiniatura == null || TabAsistente == null || AiAssistantPane == null || ThumbnailsPane == null) return;
+
+            if (TabMiniatura.IsChecked == true)
+            {
+                AiAssistantPane.Visibility = Visibility.Collapsed;
+                ThumbnailsPane.Visibility = Visibility.Visible;
+                ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+            }
+            else
+            {
+                AiAssistantPane.Visibility = Visibility.Visible;
+                ThumbnailsPane.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void OnToggleExpandAllClick(object sender, RoutedEventArgs e)
+        {
+            _allExpanded = !_allExpanded;
+            SetExpandedRecursive(TopicsTree, _allExpanded);
+        }
+
+        private void SetExpandedRecursive(ItemsControl parent, bool isExpanded)
+        {
+            foreach (var item in parent.Items)
+            {
+                if (parent.ItemContainerGenerator.ContainerFromItem(item) is TreeViewItem tvi)
+                {
+                    tvi.IsExpanded = isExpanded;
+                    SetExpandedRecursive(tvi, isExpanded);
+                }
+            }
+        }
+
+        private void OnFolderDropdownClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+            {
+                var cm = new ContextMenu();
+                foreach (var subj in ViewModel.AvailableSubjects)
+                {
+                    var mi = new MenuItem { Header = $"{subj.Icon} {subj.Name}" };
+                    mi.Click += (s, ev) =>
+                    {
+                        ViewModel.CurrentSubject = subj;
+                        ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
+                    };
+                    cm.Items.Add(mi);
+                }
+                cm.Items.Add(new Separator());
+                var miLoad = new MenuItem { Header = "📂 Cargar Temario desde Archivo..." };
+                miLoad.Click += (s, ev) => ViewModel.LoadSyllabusFileCommand.Execute(null);
+                cm.Items.Add(miLoad);
+                cm.PlacementTarget = fe;
+                cm.IsOpen = true;
+            }
+        }
+
+        private void OnRequestPreviewPdf()
+        {
+            var dlg = new Dialogs.PdfPreviewDialog(ViewModel.CurrentAssignment);
+            dlg.Owner = this;
+            dlg.ShowDialog();
+        }
+
+        private void OnRequestExportPdf()
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "PDF Files (*.pdf)|*.pdf",
+                Title = "Exportar a PDF",
+                FileName = (ViewModel.CurrentAssignment?.Heading?.Title ?? "Calculus") + ".pdf"
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    string path = PdfExportService.ExportToPdf(WorksheetCanvas, sfd.FileName);
+                    string msg = LocalizationService.Get("pdf_export_success", path);
+                    MessageBox.Show(msg, "Exportación a PDF", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al exportar PDF: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -224,12 +306,11 @@ namespace CalculusApp
         private void OnMenuAboutClick(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(
-                "Infinite Calculus - Native C# Edition\n\n" +
-                "Recreated with full reverse engineering and modern .NET.\n" +
-                "Includes complete mathematical generation, multiple choice / free response modes, " +
-                "interactive workspace distribution, and vector printing.\n\n" +
-                "Version 1.0 (Built from Calculus.exe)",
-                "About Infinite Calculus",
+                "EMS Cálculo Básico & Infinite Calculus con Asistente IA\n\n" +
+                "Sistema integral de generación de ejercicios, exámenes y documentación matemática teórica asistida por Inteligencia Artificial.\n" +
+                "Incluye soporte para Google Gemini, renderizado KaTeX/LaTeX, síntesis de voz y visor en tiempo real.\n\n" +
+                "Versión 2.0",
+                "Acerca de EMS Cálculo Básico",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }
