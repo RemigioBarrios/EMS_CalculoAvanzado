@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "gth2HgHrNnU=",
+  "dgSpecHash": "4mNlMqVHxdE=",
   "success": true,
-  "projectFilePath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
+  "projectFilePath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",

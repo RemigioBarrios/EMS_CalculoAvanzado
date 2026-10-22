@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj": {}
+    "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj": {}
   },
   "projects": {
-    "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
+    "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj",
+        "projectUniqueName": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj",
         "projectName": "CalculusApp.Core",
-        "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj",
+        "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj",
         "packagesPath": "C:\\Users\\negro\\.nuget\\packages\\",
-        "outputPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\obj\\",
+        "outputPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -374,14 +374,14 @@
         }
       }
     },
-    "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj": {
+    "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj",
+        "projectUniqueName": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj",
         "projectName": "CalculusApp.Teacher",
-        "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj",
+        "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj",
         "packagesPath": "C:\\Users\\negro\\.nuget\\packages\\",
-        "outputPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\obj\\",
+        "outputPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -403,8 +403,8 @@
             "framework": "net10.0-windows7.0",
             "targetAlias": "net10.0-windows",
             "projectReferences": {
-              "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
-                "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj"
+              "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
+                "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj"
               }
             }
           }
@@ -744,14 +744,14 @@
         }
       }
     },
-    "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj": {
+    "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
+        "projectUniqueName": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
         "projectName": "CalculusApp",
-        "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
+        "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
         "packagesPath": "C:\\Users\\negro\\.nuget\\packages\\",
-        "outputPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\obj\\",
+        "outputPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -773,11 +773,11 @@
             "framework": "net10.0-windows7.0",
             "targetAlias": "net10.0-windows",
             "projectReferences": {
-              "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
-                "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj"
+              "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj": {
+                "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Core\\CalculusApp.Core.csproj"
               },
-              "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj": {
-                "projectPath": "C:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj"
+              "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj": {
+                "projectPath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp.Teacher\\CalculusApp.Teacher.csproj"
               }
             }
           }

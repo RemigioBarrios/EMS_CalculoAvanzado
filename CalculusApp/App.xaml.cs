@@ -626,7 +626,12 @@ public partial class App : Application
             try
             {
                 File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "Calling mainWindow.Show()...\n");
+                mainWindow.WindowState = WindowState.Normal;
                 mainWindow.Show();
+                mainWindow.Activate();
+                mainWindow.Topmost = true;
+                mainWindow.Topmost = false;
+                mainWindow.Focus();
                 File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup.log"), "mainWindow.Show() returned.\n");
             }
             catch (Exception ex)

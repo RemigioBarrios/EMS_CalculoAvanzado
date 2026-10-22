@@ -350,6 +350,12 @@
                                         <TextBlock Text="Extractor PDFs" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Style="{StaticResource RibbonActionBtn}" Command="{Binding TeacherPdfExtractorAdvancedCommand}" ToolTip="PDF Extractor avanzado" Width="135">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="📚" FontSize="16" Foreground="#8B5CF6" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="PDF Extractor avanzado" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </DockPanel>
 
@@ -491,6 +497,7 @@
                 <MenuItem Header="🌐 Generar Examen Web para Nómina..." Command="{Binding TeacherWebExamCommand}" Visibility="{Binding TeacherTabVisibility}"/>
                 <MenuItem Header="📅 Horario Docente y Entregas..." Command="{Binding TeacherScheduleCommand}" Visibility="{Binding TeacherTabVisibility}"/>
                 <MenuItem Header="📑 Extractor de Ejercicios desde PDFs..." Command="{Binding TeacherPdfExtractorCommand}" Visibility="{Binding TeacherTabVisibility}"/>
+                <MenuItem Header="📚 PDF Extractor avanzado..." Command="{Binding TeacherPdfExtractorAdvancedCommand}" Visibility="{Binding TeacherTabVisibility}"/>
                 <Separator Visibility="{Binding InstituteTabVisibility}"/>
                 <MenuItem Header="🏛️ Claustro Docente y Departamentos..." Command="{Binding InstituteFacultyCommand}" Visibility="{Binding InstituteTabVisibility}"/>
                 <MenuItem Header="📚 Coordinación Multi-Materia..." Command="{Binding InstituteMultiSubjectCommand}" Visibility="{Binding InstituteTabVisibility}"/>

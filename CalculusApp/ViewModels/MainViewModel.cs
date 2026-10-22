@@ -245,6 +245,7 @@ namespace CalculusApp.ViewModels
         public ICommand TeacherWebExamCommand { get; }
         public ICommand TeacherScheduleCommand { get; }
         public ICommand TeacherPdfExtractorCommand { get; }
+        public ICommand TeacherPdfExtractorAdvancedCommand { get; }
         public ICommand InstituteFacultyCommand { get; }
         public ICommand InstituteMultiSubjectCommand { get; }
         public ICommand InstituteCentralWebExamsCommand { get; }
@@ -695,6 +696,23 @@ namespace CalculusApp.ViewModels
                 }
 
                 var dlg = new Dialogs.TeacherPdfExtractorDialog(this);
+                dlg.ShowDialog();
+            });
+
+            TeacherPdfExtractorAdvancedCommand = new RelayCommand(_ =>
+            {
+                if (!EditionService.HasFeature(EditionFeature.TeacherPdfExtractor) &&
+                    !EditionService.IsTeacherAvailable && !EditionService.IsInstituteAvailable)
+                {
+                    MessageBox.Show(
+                        "El módulo de PDF Extractor avanzado requiere la Edición Profesor (CalculusApp.Teacher.dll).",
+                        "Función no disponible",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                var dlg = new Dialogs.TeacherPdfExtractorAdvancedDialog(this);
                 dlg.ShowDialog();
             });
 

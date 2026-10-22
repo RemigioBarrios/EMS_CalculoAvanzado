@@ -164,3 +164,5 @@ C:\NEOSERV\FUENTES2\CALCULO\CalculusApp\bin\Debug\net10.0-windows\UglyToad.PdfPi
 C:\NEOSERV\FUENTES2\CALCULO\CalculusApp\bin\Debug\net10.0-windows\UglyToad.PdfPig.Tokens.dll
 C:\NEOSERV\FUENTES2\CALCULO\CalculusApp\bin\Debug\net10.0-windows\UglyToad.PdfPig.dll
 C:\NEOSERV\FUENTES2\CALCULO\CalculusApp\bin\Debug\net10.0-windows\CalculusApp.Teacher.pdb
+c:\NEOSERV\FUENTES2\CALCULO\CalculusApp\obj\Debug\net10.0-windows\Dialogs\TeacherPdfExtractorAdvancedDialog.baml
+c:\NEOSERV\FUENTES2\CALCULO\CalculusApp\obj\Debug\net10.0-windows\Dialogs\TeacherPdfExtractorAdvancedDialog.g.cs
