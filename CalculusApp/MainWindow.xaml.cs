@@ -16,6 +16,8 @@ namespace CalculusApp
     {
         public MainViewModel ViewModel => (MainViewModel)DataContext;
         private bool _allExpanded = true;
+        private double _lastLeftSidebarWidth = 325;
+        private double _lastRightSidebarWidth = 415;
 
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -33,8 +35,13 @@ namespace CalculusApp
             ViewModel.RequestRender += OnRequestRender;
             ViewModel.RequestExportPdf += OnRequestExportPdf;
             ViewModel.RequestPreviewPdf += OnRequestPreviewPdf;
+            ViewModel.SidebarStateChanged += ApplySidebarLayoutState;
+            ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+            SubjectRegistry.CurrentSubjectChanged += OnSubjectChangedForAssistant;
             LocalizationService.LanguageChanged += OnLanguageChanged;
             Loaded += MainWindow_Loaded;
+
+            ApplySidebarLayoutState();
 
             ThumbnailsPane.PageClicked += (pageIdx) =>
             {
@@ -46,6 +53,10 @@ namespace CalculusApp
                 try
                 {
                     AppSettingsService.Current.LastSubjectId = SubjectRegistry.CurrentSubject.Id;
+                    if (ViewModel.ActiveEdition != null)
+                        AppSettingsService.Current.LastEditionId = ViewModel.ActiveEdition.Id;
+                    AppSettingsService.Current.IsLeftSidebarOpen = ViewModel.IsLeftSidebarOpen;
+                    AppSettingsService.Current.IsRightSidebarOpen = ViewModel.IsRightSidebarOpen;
                     AppSettingsService.Current.Theme = ThemeService.IsDark ? "dark" : "light";
                     AppSettingsService.Current.IsRibbonMode = ViewModel.IsRibbonMode;
                     AppSettingsService.Current.DocumentMode = ViewModel.DocumentMode;
@@ -58,6 +69,19 @@ namespace CalculusApp
 
             ViewModel.RequestEditQuestionSet += (qs) => EditQuestionSet(qs);
             ViewModel.RequestEditQuestionsDirectly += (qs) => EditQuestionsDirectly(qs);
+
+            if (CenterMarkdownWorkspace != null)
+            {
+                CenterMarkdownWorkspace.MarkdownApplied += (md) =>
+                {
+                    ViewModel.ApplyMarkdownToCurrentAssignment(md);
+                    ViewModel.IsPdfMode = true;
+                };
+                CenterMarkdownWorkspace.MarkdownFileLoaded += (doc) =>
+                {
+                    ViewModel.ApplyMarkdownToCurrentAssignment(doc.RawContent);
+                };
+            }
         }
 
         private void UpdateDwmTitleBarTheme()
@@ -78,6 +102,74 @@ namespace CalculusApp
             catch { }
         }
 
+        private void ApplySidebarLayoutState()
+        {
+            if (LeftSidebarCol == null || RightSidebarCol == null) return;
+
+            // Left Sidebar (Temas y Series Activas)
+            if (ViewModel.IsLeftSidebarOpen)
+            {
+                LeftSidebarBorder.Visibility = Visibility.Visible;
+                LeftGridSplitter.Visibility = Visibility.Visible;
+                LeftCollapsedStrip.Visibility = Visibility.Collapsed;
+                LeftSidebarCol.MinWidth = 250;
+                LeftSidebarCol.Width = new GridLength(_lastLeftSidebarWidth > 250 ? _lastLeftSidebarWidth : 325);
+                LeftSplitterCol.Width = new GridLength(5);
+            }
+            else
+            {
+                if (LeftSidebarCol.ActualWidth > 250)
+                    _lastLeftSidebarWidth = LeftSidebarCol.ActualWidth;
+                LeftSidebarBorder.Visibility = Visibility.Collapsed;
+                LeftGridSplitter.Visibility = Visibility.Collapsed;
+                LeftCollapsedStrip.Visibility = Visibility.Visible;
+                LeftSidebarCol.MinWidth = 0;
+                LeftSidebarCol.Width = new GridLength(0);
+                LeftSplitterCol.Width = new GridLength(0);
+            }
+
+            // Right Sidebar (Asistente IA y Miniaturas)
+            if (ViewModel.IsRightSidebarOpen)
+            {
+                RightSidebarBorder.Visibility = Visibility.Visible;
+                RightGridSplitter.Visibility = Visibility.Visible;
+                RightCollapsedStrip.Visibility = Visibility.Collapsed;
+                RightSidebarCol.MinWidth = 280;
+                RightSidebarCol.Width = new GridLength(_lastRightSidebarWidth > 280 ? _lastRightSidebarWidth : 415);
+                RightSplitterCol.Width = new GridLength(5);
+            }
+            else
+            {
+                if (RightSidebarCol.ActualWidth > 280)
+                    _lastRightSidebarWidth = RightSidebarCol.ActualWidth;
+                RightSidebarBorder.Visibility = Visibility.Collapsed;
+                RightGridSplitter.Visibility = Visibility.Collapsed;
+                RightCollapsedStrip.Visibility = Visibility.Visible;
+                RightSidebarCol.MinWidth = 0;
+                RightSidebarCol.Width = new GridLength(0);
+                RightSplitterCol.Width = new GridLength(0);
+            }
+
+            // Series Activas sub-panel inside Left Sidebar
+            if (SeriesActivasRow != null && QuestionSetsListBox != null && SeriesGridSplitter != null)
+            {
+                if (ViewModel.IsSeriesPanelOpen)
+                {
+                    QuestionSetsListBox.Visibility = Visibility.Visible;
+                    SeriesGridSplitter.Visibility = Visibility.Visible;
+                    SeriesActivasRow.MinHeight = 165;
+                    SeriesActivasRow.Height = new GridLength(2, GridUnitType.Star);
+                }
+                else
+                {
+                    QuestionSetsListBox.Visibility = Visibility.Collapsed;
+                    SeriesGridSplitter.Visibility = Visibility.Collapsed;
+                    SeriesActivasRow.MinHeight = 0;
+                    SeriesActivasRow.Height = GridLength.Auto;
+                }
+            }
+        }
+
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -88,16 +180,8 @@ namespace CalculusApp
                 ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
                 System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: RefreshThumbnails done\n");
 
-                // Initialize AI Assistant with the selected topic (Continuidad by default)
-                var firstTopic = SubjectRegistry.CurrentSubject.AllTopics.FirstOrDefault();
-                if (firstTopic != null)
-                {
-                    AiAssistantPane.SetTopic(firstTopic.TopicId, firstTopic.Category, firstTopic.Title);
-                }
-                else
-                {
-                    AiAssistantPane.SetTopic("basic_continuity", "Funciones", "Continuidad");
-                }
+                // Initialize AI Assistant with the selected subject, subject title, category (tema) and item
+                SyncAssistantWithCurrentSubjectDefaultTopic();
                 System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log"), "MainWindow_Loaded: done\n");
             }
             catch (Exception ex)
@@ -106,8 +190,52 @@ namespace CalculusApp
             }
         }
 
+        private bool _isSyncingCenterMarkdown = false;
+
         private void OnRequestRender()
         {
+            if (ViewModel.IsMarkdownMode)
+            {
+                if (CenterMarkdownWorkspace != null)
+                {
+                    WorksheetCanvas.Visibility = Visibility.Collapsed;
+                    CenterMarkdownWorkspace.Visibility = Visibility.Visible;
+                    if (!_isSyncingCenterMarkdown)
+                    {
+                        _isSyncingCenterMarkdown = true;
+                        try
+                        {
+                            CenterMarkdownWorkspace.SuggestedFileName = $"{ViewModel.CurrentAssignment.Heading.Title}.md";
+                            string md = AssignmentMarkdownAdapter.Instance.ToMarkdown(ViewModel.CurrentAssignment);
+                            CenterMarkdownWorkspace.SetMarkdownContent(md);
+                        }
+                        finally
+                        {
+                            _isSyncingCenterMarkdown = false;
+                        }
+                    }
+                }
+                return;
+            }
+
+            if (CenterMarkdownWorkspace != null && CenterMarkdownWorkspace.Visibility == Visibility.Visible)
+            {
+                if (CenterMarkdownWorkspace.CurrentDocument.IsDirty && !_isSyncingCenterMarkdown)
+                {
+                    _isSyncingCenterMarkdown = true;
+                    try
+                    {
+                        ViewModel.ApplyMarkdownToCurrentAssignment(CenterMarkdownWorkspace.MarkdownText);
+                    }
+                    finally
+                    {
+                        _isSyncingCenterMarkdown = false;
+                    }
+                }
+                CenterMarkdownWorkspace.Visibility = Visibility.Collapsed;
+                WorksheetCanvas.Visibility = Visibility.Visible;
+            }
+
             WorksheetCanvas.ViewMode = ViewModel.IsPdfMode ? Controls.DocumentViewMode.PdfMode : Controls.DocumentViewMode.ExamMode;
             WorksheetCanvas.RenderAssignment(ViewModel.CurrentAssignment);
             if (ThumbnailsPane.Visibility == Visibility.Visible)
@@ -122,13 +250,102 @@ namespace CalculusApp
             ThumbnailsPane.RefreshThumbnails(WorksheetCanvas.GetPageBorders());
         }
 
+        private void SyncAssistantWithCurrentSubjectDefaultTopic()
+        {
+            if (AiAssistantPane == null) return;
+            var subj = SubjectRegistry.CurrentSubject;
+            var firstTopic = subj?.AllTopics?.FirstOrDefault();
+            if (subj != null && firstTopic != null)
+            {
+                AiAssistantPane.SetTopicContext(
+                    subj.Id,
+                    subj.Name,
+                    subj.Subtitle,
+                    firstTopic.Category,
+                    firstTopic.TopicId,
+                    firstTopic.Title);
+            }
+            else if (subj != null)
+            {
+                AiAssistantPane.SetTopicContext(
+                    subj.Id,
+                    subj.Name,
+                    subj.Subtitle,
+                    "General",
+                    "general",
+                    subj.Name);
+            }
+            else
+            {
+                AiAssistantPane.SetTopicContext(
+                    "basic_calculus",
+                    "Cálculo Básico",
+                    "EMS Cálculo Básico (Pre-Cálculo)",
+                    "Funciones",
+                    "basic_continuity",
+                    "Continuidad");
+            }
+        }
+
+        private void OnSubjectChangedForAssistant()
+        {
+            Dispatcher.Invoke(SyncAssistantWithCurrentSubjectDefaultTopic);
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MainViewModel.SelectedQuestionSet) && ViewModel.SelectedQuestionSet != null && AiAssistantPane != null)
+            {
+                var qs = ViewModel.SelectedQuestionSet;
+                var subj = SubjectRegistry.CurrentSubject;
+                string catName = !string.IsNullOrWhiteSpace(qs.Category)
+                    ? qs.Category
+                    : (SubjectRegistry.GetTopicById(qs.TopicId)?.Category ?? "General");
+                string topicId = !string.IsNullOrWhiteSpace(qs.TopicId) ? qs.TopicId : qs.TopicTitle;
+                AiAssistantPane.SetTopicContext(
+                    subj?.Id ?? "calculus",
+                    subj?.Name ?? "Cálculo",
+                    subj?.Subtitle ?? "Infinite Calculus",
+                    catName,
+                    topicId,
+                    qs.TopicTitle);
+            }
+        }
+
         private void OnTopicTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (e.NewValue is TopicTreeItem item && !item.IsCategory)
+            if (e.NewValue is TopicTreeItem item && AiAssistantPane != null)
             {
-                var topic = SubjectRegistry.GetTopicById(item.TopicId);
-                string catName = topic?.Category ?? "Funciones";
-                AiAssistantPane.SetTopic(item.TopicId, catName, item.Title);
+                var subj = SubjectRegistry.CurrentSubject;
+                if (!item.IsCategory)
+                {
+                    var topic = SubjectRegistry.GetTopicById(item.TopicId);
+                    string catName = !string.IsNullOrWhiteSpace(item.CategoryTitle)
+                        ? item.CategoryTitle
+                        : (topic?.Category ?? "Funciones");
+
+                    AiAssistantPane.SetTopicContext(
+                        subj?.Id ?? "calculus",
+                        subj?.Name ?? "Cálculo",
+                        subj?.Subtitle ?? "Infinite Calculus",
+                        catName,
+                        item.TopicId,
+                        item.Title);
+                }
+                else
+                {
+                    var firstChild = item.Children.FirstOrDefault();
+                    if (firstChild != null)
+                    {
+                        AiAssistantPane.SetTopicContext(
+                            subj?.Id ?? "calculus",
+                            subj?.Name ?? "Cálculo",
+                            subj?.Subtitle ?? "Infinite Calculus",
+                            item.Title,
+                            firstChild.TopicId,
+                            firstChild.Title);
+                    }
+                }
             }
         }
 

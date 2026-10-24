@@ -1,14 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "4mNlMqVHxdE=",
+  "dgSpecHash": "0kggHmGZVBk=",
   "success": true,
   "projectFilePath": "c:\\NEOSERV\\FUENTES2\\CALCULO\\CalculusApp\\CalculusApp.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\negro\\.nuget\\packages\\microsoft.data.sqlite\\10.0.11\\microsoft.data.sqlite.10.0.11.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\microsoft.data.sqlite.core\\10.0.11\\microsoft.data.sqlite.core.10.0.11.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\microsoft.web.webview2\\1.0.4258.31\\microsoft.web.webview2.1.0.4258.31.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\pdfpig\\0.1.16\\pdfpig.0.1.16.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\pdfsharp\\6.5.0\\pdfsharp.6.5.0.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.12\\sqlitepclraw.bundle_e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\sqlitepclraw.core\\2.1.12\\sqlitepclraw.core.2.1.12.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.12\\sqlitepclraw.lib.e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\negro\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.12\\sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\system.speech\\10.0.13\\system.speech.10.0.13.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\wpfmath\\2.1.0\\wpfmath.2.1.0.nupkg.sha512",
     "C:\\Users\\negro\\.nuget\\packages\\xamlmath.shared\\2.1.0\\xamlmath.shared.2.1.0.nupkg.sha512"

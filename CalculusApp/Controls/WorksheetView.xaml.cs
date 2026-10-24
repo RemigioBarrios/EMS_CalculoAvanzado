@@ -236,14 +236,16 @@ namespace CalculusApp.Controls
                 return panel;
             }
 
-            var vmatrixMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"(?:\\begin\{vmatrix\}|\\left\|\s*\\begin\{matrix\})(.*?)(?:\\end\{vmatrix\}|\\end\{matrix\}\s*\\right\|)", System.Text.RegularExpressions.RegexOptions.Singleline);
+            var vmatrixMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"(?:\\begin\{(vmatrix|pmatrix|bmatrix|matrix)\}|\\left\|\s*\\begin\{matrix\})(.*?)(?:\\end\{\1\}|\\end\{matrix\}\s*\\right\|)", System.Text.RegularExpressions.RegexOptions.Singleline);
             if (vmatrixMatch.Success)
             {
                 int start = vmatrixMatch.Index;
                 int len = vmatrixMatch.Length;
                 string prefix = trimmed.Substring(0, start).TrimEnd();
-                string matrixBody = vmatrixMatch.Groups[1].Value;
+                string envName = vmatrixMatch.Groups[1].Value;
+                string matrixBody = vmatrixMatch.Groups[2].Value;
                 string suffix = trimmed.Substring(start + len).TrimStart();
+                char delim = envName == "pmatrix" ? '(' : (envName == "bmatrix" ? '[' : '|');
 
                 var panel = new StackPanel
                 {
@@ -259,7 +261,7 @@ namespace CalculusApp.Controls
                     panel.Children.Add(prefixMath);
                 }
 
-                var detControl = CreateMatrixControl(matrixBody, delimiter: '|', scale: scale, foreground: foreground);
+                var detControl = CreateMatrixControl(matrixBody, delimiter: delim, scale: scale, foreground: foreground);
                 detControl.VerticalAlignment = VerticalAlignment.Center;
                 panel.Children.Add(detControl);
 
@@ -1261,6 +1263,13 @@ namespace CalculusApp.Controls
             qHeader.Children.Add(formulaElem);
 
             sp.Children.Add(qHeader);
+
+            if (!string.IsNullOrWhiteSpace(q.GivenDataLatex) && !q.FormulaText.Contains(q.GivenDataLatex))
+            {
+                var givenElem = RenderMath(q.GivenDataLatex, scale: 14.0);
+                givenElem.Margin = new Thickness(24, 2, 0, 2);
+                sp.Children.Add(givenElem);
+            }
 
             // Optional function graph or blank grid
             if (q.ProvideBlankGraph || q.ProvideFunctionGraph)

@@ -19,6 +19,7 @@ namespace CalculusApp.Dialogs
 
         public TopicGeneratorParameters Parameters { get; } = new();
         private List<Question> _currentPreviewQuestions = new();
+        private bool _isSyncingMarkdown = false;
         public event Action<int, QuestionType, TopicGeneratorParameters, List<Question>>? QuestionsAdded;
 
         public TopicOptionsDialog(TopicDefinition topic, int initialCount = 4, QuestionType initialType = QuestionType.FreeResponse, TopicGeneratorParameters? existingParams = null)
@@ -34,6 +35,21 @@ namespace CalculusApp.Dialogs
             Parameters.QuestionType = initialType;
 
             NumQuestionsBox.Text = initialCount.ToString();
+
+            if (GeneratorMarkdownWorkspace != null)
+            {
+                GeneratorMarkdownWorkspace.SuggestedFileName = $"{_topic.Title}.md";
+                GeneratorMarkdownWorkspace.SetWorkspaceMode(CalculusApp.Markdown.Controls.MarkdownWorkspaceMode.EditorOnly);
+                GeneratorMarkdownWorkspace.MarkdownApplied += (md) =>
+                {
+                    ApplyMarkdownToGeneratorPreview(md);
+                    if (PreviewSheetModeRadio != null) PreviewSheetModeRadio.IsChecked = true;
+                };
+                GeneratorMarkdownWorkspace.MarkdownFileLoaded += (doc) =>
+                {
+                    ApplyMarkdownToGeneratorPreview(doc.RawContent);
+                };
+            }
 
             ApplyThemeAndLocalization();
             ConfigureAdaptiveComplexity();
@@ -1006,8 +1022,6 @@ namespace CalculusApp.Dialogs
         {
             if (!_isInitialized || SamplesContainer == null) return;
 
-            SamplesContainer.Children.Clear();
-
             try
             {
                 int count = 4;
@@ -1017,8 +1031,95 @@ namespace CalculusApp.Dialogs
                 }
                 Parameters.QuestionCount = count;
                 _currentPreviewQuestions = _topic.GenerateQuestions(count, Parameters.QuestionType, Parameters, _rng);
-                var samples = _currentPreviewQuestions;
+                RenderPreviewQuestions(_currentPreviewQuestions);
+                SyncGeneratorMarkdownFromPreview();
+            }
+            catch (Exception ex)
+            {
+                SamplesContainer.Children.Clear();
+                SamplesContainer.Children.Add(new TextBlock
+                {
+                    Text = $"Error generating preview: {ex.Message}",
+                    Foreground = Brushes.Red
+                });
+            }
+        }
 
+        private void SyncGeneratorMarkdownFromPreview()
+        {
+            if (GeneratorMarkdownWorkspace == null || _isSyncingMarkdown) return;
+            _isSyncingMarkdown = true;
+            try
+            {
+                string md = AssignmentMarkdownAdapter.Instance.QuestionsToMarkdown(
+                    _currentPreviewQuestions,
+                    _topic.Title,
+                    _topic.Category,
+                    PreviewDirectionHeader?.Text ?? _topic.DefaultDirections,
+                    _topic.TopicId);
+                GeneratorMarkdownWorkspace.SetMarkdownContent(md);
+            }
+            finally
+            {
+                _isSyncingMarkdown = false;
+            }
+        }
+
+        private void ApplyMarkdownToGeneratorPreview(string markdownContent)
+        {
+            if (string.IsNullOrWhiteSpace(markdownContent)) return;
+            _isSyncingMarkdown = true;
+            try
+            {
+                var tempSet = new QuestionSet
+                {
+                    TopicId = _topic.TopicId,
+                    TopicTitle = _topic.Title,
+                    Category = _topic.Category,
+                    Directions = PreviewDirectionHeader?.Text ?? _topic.DefaultDirections,
+                    Parameters = Parameters.Clone(),
+                    Questions = _currentPreviewQuestions
+                };
+
+                var updatedSet = AssignmentMarkdownAdapter.Instance.FromMarkdown(markdownContent, tempSet);
+                if (updatedSet.Questions.Count > 0)
+                {
+                    _currentPreviewQuestions = updatedSet.Questions;
+                    Parameters.QuestionCount = _currentPreviewQuestions.Count;
+                    if (!string.IsNullOrWhiteSpace(updatedSet.Directions) && PreviewDirectionHeader != null)
+                    {
+                        PreviewDirectionHeader.Text = updatedSet.Directions;
+                        Parameters.CustomDirections = updatedSet.Directions;
+                    }
+
+                    bool prevInit = _isInitialized;
+                    _isInitialized = false;
+                    if (NumQuestionsBox != null)
+                    {
+                        NumQuestionsBox.Text = _currentPreviewQuestions.Count.ToString();
+                    }
+                    _isInitialized = prevInit;
+
+                    RenderPreviewQuestions(_currentPreviewQuestions);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al procesar el Markdown en el generador:\n" + ex.Message, "Markdown", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                _isSyncingMarkdown = false;
+            }
+        }
+
+        private void RenderPreviewQuestions(List<Question> samples)
+        {
+            if (SamplesContainer == null) return;
+            SamplesContainer.Children.Clear();
+
+            try
+            {
                 for (int i = 0; i < samples.Count; i++)
                 {
                     var q = samples[i];
@@ -1429,8 +1530,96 @@ namespace CalculusApp.Dialogs
             SamplesScrollViewer?.ScrollToTop();
         }
 
+        private void OnPreviewModeChanged(object sender, RoutedEventArgs e)
+        {
+            if (PaperPreviewBorder == null || MarkdownPreviewBorder == null) return;
+
+            if (PreviewMarkdownModeRadio?.IsChecked == true)
+            {
+                SyncGeneratorMarkdownFromPreview();
+                PaperPreviewBorder.Visibility = Visibility.Collapsed;
+                MarkdownPreviewBorder.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                if (GeneratorMarkdownWorkspace != null && GeneratorMarkdownWorkspace.CurrentDocument.IsDirty)
+                {
+                    ApplyMarkdownToGeneratorPreview(GeneratorMarkdownWorkspace.MarkdownText);
+                }
+                MarkdownPreviewBorder.Visibility = Visibility.Collapsed;
+                PaperPreviewBorder.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void OnLoadMarkdownInGeneratorClick(object sender, RoutedEventArgs e)
+        {
+            var doc = CalculusApp.Markdown.Services.MarkdownDocumentService.PromptOpenMarkdownFile("Cargar evaluación o serie desde archivo Markdown (.md)");
+            if (doc != null)
+            {
+                GeneratorMarkdownWorkspace?.SetMarkdownContent(doc.RawContent, doc.FilePath);
+                ApplyMarkdownToGeneratorPreview(doc.RawContent);
+            }
+        }
+
+        private void OnSaveMarkdownInGeneratorClick(object sender, RoutedEventArgs e)
+        {
+            if (PreviewMarkdownModeRadio?.IsChecked == true && GeneratorMarkdownWorkspace != null)
+            {
+                ApplyMarkdownToGeneratorPreview(GeneratorMarkdownWorkspace.MarkdownText);
+            }
+
+            string md = AssignmentMarkdownAdapter.Instance.QuestionsToMarkdown(
+                _currentPreviewQuestions,
+                _topic.Title,
+                _topic.Category,
+                PreviewDirectionHeader?.Text ?? _topic.DefaultDirections,
+                _topic.TopicId);
+
+            string? saved = CalculusApp.Markdown.Services.MarkdownDocumentService.PromptSaveMarkdownFile(md, $"{_topic.Title}.md", "Guardar serie generada como archivo Markdown (.md)");
+            if (!string.IsNullOrWhiteSpace(saved))
+            {
+                MessageBox.Show($"Serie guardada correctamente en formato Markdown:\n{saved}", "Guardar Markdown (.md)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void OnOpenMarkdownStudioClick(object sender, RoutedEventArgs e)
+        {
+            if (PreviewMarkdownModeRadio?.IsChecked == true && GeneratorMarkdownWorkspace != null)
+            {
+                ApplyMarkdownToGeneratorPreview(GeneratorMarkdownWorkspace.MarkdownText);
+            }
+
+            string initialMd = AssignmentMarkdownAdapter.Instance.QuestionsToMarkdown(
+                _currentPreviewQuestions,
+                _topic.Title,
+                _topic.Category,
+                PreviewDirectionHeader?.Text ?? _topic.DefaultDirections,
+                _topic.TopicId);
+
+            var dlg = new CalculusApp.Markdown.Dialogs.MarkdownEditorWindow(
+                initialMd,
+                title: $"📝 Editor Markdown — Generador: {_topic.Category} - {_topic.Title}",
+                subtitle: "Manipule o edite los ejercicios generados en Markdown, previsualice con LaTeX o guarde el archivo .md",
+                suggestedFileName: $"{_topic.Title}.md",
+                applyButtonText: "✅ Aplicar a Generador de Evaluación")
+            {
+                Owner = this
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                GeneratorMarkdownWorkspace?.SetMarkdownContent(dlg.ResultMarkdown, dlg.SavedFilePath);
+                ApplyMarkdownToGeneratorPreview(dlg.ResultMarkdown);
+            }
+        }
+
         private void OnAddContinueClick(object sender, RoutedEventArgs e)
         {
+            if (PreviewMarkdownModeRadio?.IsChecked == true && GeneratorMarkdownWorkspace != null)
+            {
+                ApplyMarkdownToGeneratorPreview(GeneratorMarkdownWorkspace.MarkdownText);
+            }
+
             int count = 4;
             if (int.TryParse(NumQuestionsBox.Text.Trim(), out int parsed) && parsed > 0 && parsed <= 50)
             {
@@ -1473,6 +1662,11 @@ namespace CalculusApp.Dialogs
 
         private void OnOkClick(object sender, RoutedEventArgs e)
         {
+            if (PreviewMarkdownModeRadio?.IsChecked == true && GeneratorMarkdownWorkspace != null)
+            {
+                ApplyMarkdownToGeneratorPreview(GeneratorMarkdownWorkspace.MarkdownText);
+            }
+
             int count = 4;
             if (int.TryParse(NumQuestionsBox.Text.Trim(), out int parsed) && parsed > 0 && parsed <= 50)
             {

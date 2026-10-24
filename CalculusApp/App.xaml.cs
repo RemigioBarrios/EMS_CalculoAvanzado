@@ -24,6 +24,11 @@ public partial class App : Application
         }
         catch { }
         Services.ThemeService.Initialize();
+        try
+        {
+            Services.SubjectTemplateBankService.EnsureAllSubjectBanksInitializedAndUpgraded();
+        }
+        catch { }
         var allArgs = new System.Collections.Generic.List<string>();
         allArgs.AddRange(Environment.GetCommandLineArgs());
         if (e.Args != null) allArgs.AddRange(e.Args);
@@ -37,6 +42,23 @@ public partial class App : Application
 
         for (int i = 0; i < args.Length; i++)
         {
+            if (args[i] == "--sync-template-banks")
+            {
+                try
+                {
+                    string report = Services.SubjectTemplateBankService.EnsureAllSubjectBanksInitializedAndUpgraded(@"C:\NEOSERV\FUENTES2\CALCULO\contenido");
+                    File.WriteAllText(Path.Combine(@"C:\NEOSERV\FUENTES2\CALCULO\contenido", "template_banks_report.txt"), report);
+                    Shutdown(0);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    File.WriteAllText(Path.Combine(@"C:\NEOSERV\FUENTES2\CALCULO\contenido", "template_banks_report.txt"), "ERROR: " + ex);
+                    Shutdown(1);
+                    return;
+                }
+            }
+
             if (args[i] == "--validate-formulas")
             {
                 try

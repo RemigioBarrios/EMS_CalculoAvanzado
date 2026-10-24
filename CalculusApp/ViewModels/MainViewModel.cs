@@ -41,6 +41,7 @@ namespace CalculusApp.ViewModels
     {
         public string Title { get; set; } = string.Empty;
         public string TopicId { get; set; } = string.Empty;
+        public string CategoryTitle { get; set; } = string.Empty;
         public bool IsCategory { get; set; }
         public ObservableCollection<TopicTreeItem> Children { get; set; } = new();
     }
@@ -58,6 +59,7 @@ namespace CalculusApp.ViewModels
         public event Action? RequestPreviewPdf;
         public event Action<QuestionSet>? RequestEditQuestionSet;
         public event Action<QuestionSet>? RequestEditQuestionsDirectly;
+        public event Action? SidebarStateChanged;
 
         public Assignment CurrentAssignment
         {
@@ -233,6 +235,10 @@ namespace CalculusApp.ViewModels
         public ICommand ToggleSortTopicsCommand { get; }
         public ICommand ExportIniCommand { get; }
         public ICommand ImportIniCommand { get; }
+        public ICommand OpenMarkdownStudioCommand { get; }
+        public ICommand ExportMarkdownCommand { get; }
+        public ICommand ImportMarkdownCommand { get; }
+        public ICommand EditSetMarkdownCommand { get; }
         public ICommand ValidateFormulasCommand { get; }
 
         // Edition commands (Estudiante, Profesor, Instituto)
@@ -283,8 +289,12 @@ namespace CalculusApp.ViewModels
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsPdfMode));
                     OnPropertyChanged(nameof(IsExamMode));
-                    AppSettingsService.Current.DocumentMode = value;
-                    AppSettingsService.Save();
+                    OnPropertyChanged(nameof(IsMarkdownMode));
+                    if (value != "markdown")
+                    {
+                        AppSettingsService.Current.DocumentMode = value;
+                        AppSettingsService.Save();
+                    }
                     RequestRender?.Invoke();
                 }
             }
@@ -298,6 +308,11 @@ namespace CalculusApp.ViewModels
         {
             get => _documentMode == "exam";
             set { if (value) DocumentMode = "exam"; }
+        }
+        public bool IsMarkdownMode
+        {
+            get => _documentMode == "markdown";
+            set { if (value) DocumentMode = "markdown"; }
         }
         public ICommand SetDocumentModeCommand { get; }
         public ICommand ToggleAutoFitCommand { get; }
@@ -385,9 +400,76 @@ namespace CalculusApp.ViewModels
             set { if (value) ActiveRibbonTab = "AYUDA"; }
         }
 
-        public Visibility StudentTabVisibility => EditionService.IsStudentAvailable ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility TeacherTabVisibility => (EditionService.IsTeacherAvailable || EditionService.IsInstituteAvailable) ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility InstituteTabVisibility => EditionService.IsInstituteAvailable ? Visibility.Visible : Visibility.Collapsed;
+        // Filtrado de pantallas y pestañas de funcionalidades según la Edición Seleccionada (Estudiante, Profesor, Instituto)
+        public Visibility StudentTabVisibility => EditionService.IsStudentActive ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TeacherTabVisibility => EditionService.IsTeacherActive ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility InstituteTabVisibility => EditionService.IsInstituteActive ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TeacherOrInstituteVisibility => (EditionService.IsTeacherActive || EditionService.IsInstituteActive) ? Visibility.Visible : Visibility.Collapsed;
+
+        // Visibilidad de opciones de selección de edición en el menú clásico
+        public Visibility StudentEditionMenuVisibility => EditionService.IsStudentAvailable ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TeacherEditionMenuVisibility => EditionService.IsTeacherAvailable ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility InstituteEditionMenuVisibility => EditionService.IsInstituteAvailable ? Visibility.Visible : Visibility.Collapsed;
+
+        private bool _isLeftSidebarOpen = true;
+        public bool IsLeftSidebarOpen
+        {
+            get => _isLeftSidebarOpen;
+            set
+            {
+                if (_isLeftSidebarOpen != value)
+                {
+                    _isLeftSidebarOpen = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(LeftSidebarToggleText));
+                    AppSettingsService.Current.IsLeftSidebarOpen = value;
+                    AppSettingsService.Save();
+                    SidebarStateChanged?.Invoke();
+                }
+            }
+        }
+
+        private bool _isRightSidebarOpen = true;
+        public bool IsRightSidebarOpen
+        {
+            get => _isRightSidebarOpen;
+            set
+            {
+                if (_isRightSidebarOpen != value)
+                {
+                    _isRightSidebarOpen = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(RightSidebarToggleText));
+                    AppSettingsService.Current.IsRightSidebarOpen = value;
+                    AppSettingsService.Save();
+                    SidebarStateChanged?.Invoke();
+                }
+            }
+        }
+
+        private bool _isSeriesPanelOpen = true;
+        public bool IsSeriesPanelOpen
+        {
+            get => _isSeriesPanelOpen;
+            set
+            {
+                if (_isSeriesPanelOpen != value)
+                {
+                    _isSeriesPanelOpen = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SeriesPanelExpandIcon));
+                    SidebarStateChanged?.Invoke();
+                }
+            }
+        }
+
+        public string LeftSidebarToggleText => _isLeftSidebarOpen ? "◧ Ocultar Temas" : "◧ Mostrar Temas";
+        public string RightSidebarToggleText => _isRightSidebarOpen ? "◨ Ocultar Asistente" : "◨ Mostrar Asistente";
+        public string SeriesPanelExpandIcon => _isSeriesPanelOpen ? "▼" : "▲";
+
+        public ICommand ToggleLeftSidebarCommand { get; }
+        public ICommand ToggleRightSidebarCommand { get; }
+        public ICommand ToggleSeriesPanelCommand { get; }
 
         public IReadOnlyList<IEditionModule> AvailableEditions => EditionService.AvailableEditions;
         public IEditionModule? ActiveEdition
@@ -398,6 +480,17 @@ namespace CalculusApp.ViewModels
                 if (value != null && EditionService.ActiveEdition != value)
                 {
                     EditionService.ActiveEdition = value;
+                    AppSettingsService.Current.LastEditionId = value.Id;
+                    AppSettingsService.Save();
+
+                    // Cambiar automáticamente a la pestaña de funcionalidades de la edición seleccionada
+                    if (value.Edition == EditionType.Student)
+                        ActiveRibbonTab = "ESTUDIANTE";
+                    else if (value.Edition == EditionType.Teacher)
+                        ActiveRibbonTab = "PROFESOR";
+                    else if (value.Edition == EditionType.Institute)
+                        ActiveRibbonTab = "INSTITUTO";
+
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ActiveEditionBadge));
                     OnPropertyChanged(nameof(WindowTitle));
@@ -439,8 +532,14 @@ namespace CalculusApp.ViewModels
                 AppSettingsService.Load();
                 _documentMode = string.IsNullOrEmpty(AppSettingsService.Current.DocumentMode) ? "pdf" : AppSettingsService.Current.DocumentMode;
                 _isRibbonMode = AppSettingsService.Current.IsRibbonMode;
+                _isLeftSidebarOpen = AppSettingsService.Current.IsLeftSidebarOpen;
+                _isRightSidebarOpen = AppSettingsService.Current.IsRightSidebarOpen;
                 _assignment.Columns = AppSettingsService.Current.Columns > 0 ? AppSettingsService.Current.Columns : 2;
                 _assignment.ZoomPercent = AppSettingsService.Current.ZoomPercent > 0 ? AppSettingsService.Current.ZoomPercent : 100.0;
+                if (!string.IsNullOrWhiteSpace(AppSettingsService.Current.LastEditionId))
+                {
+                    EditionService.SetActiveEditionById(AppSettingsService.Current.LastEditionId);
+                }
             }
             catch { }
 
@@ -531,6 +630,9 @@ namespace CalculusApp.ViewModels
 
             LoadSyllabusFileCommand = new RelayCommand(_ => PromptLoadSyllabusFile());
             ToggleRibbonModeCommand = new RelayCommand(_ => IsRibbonMode = !IsRibbonMode);
+            ToggleLeftSidebarCommand = new RelayCommand(_ => IsLeftSidebarOpen = !IsLeftSidebarOpen);
+            ToggleRightSidebarCommand = new RelayCommand(_ => IsRightSidebarOpen = !IsRightSidebarOpen);
+            ToggleSeriesPanelCommand = new RelayCommand(_ => IsSeriesPanelOpen = !IsSeriesPanelOpen);
             SetDocumentModeCommand = new RelayCommand(p =>
             {
                 if (p is string s) DocumentMode = s.ToLowerInvariant();
@@ -545,6 +647,10 @@ namespace CalculusApp.ViewModels
             });
             ExportIniCommand = new RelayCommand(_ => ExportToIni());
             ImportIniCommand = new RelayCommand(_ => ImportFromIni());
+            OpenMarkdownStudioCommand = new RelayCommand(_ => OpenAssignmentMarkdownStudio());
+            ExportMarkdownCommand = new RelayCommand(_ => ExportToMarkdown());
+            ImportMarkdownCommand = new RelayCommand(_ => ImportFromMarkdown());
+            EditSetMarkdownCommand = new RelayCommand(_ => EditSelectedSetInMarkdown(), _ => SelectedQuestionSet != null);
             ValidateFormulasCommand = new RelayCommand(_ => ValidateFormulas());
             SelectRibbonTabCommand = new RelayCommand(p =>
             {
@@ -585,10 +691,21 @@ namespace CalculusApp.ViewModels
                 if (p is string id)
                 {
                     EditionService.SetActiveEditionById(id);
+                    if (EditionService.ActiveEdition != null)
+                    {
+                        AppSettingsService.Current.LastEditionId = EditionService.ActiveEdition.Id;
+                        AppSettingsService.Save();
+                        if (EditionService.ActiveEdition.Edition == EditionType.Student)
+                            ActiveRibbonTab = "ESTUDIANTE";
+                        else if (EditionService.ActiveEdition.Edition == EditionType.Teacher)
+                            ActiveRibbonTab = "PROFESOR";
+                        else if (EditionService.ActiveEdition.Edition == EditionType.Institute)
+                            ActiveRibbonTab = "INSTITUTO";
+                    }
                 }
                 else if (p is IEditionModule mod)
                 {
-                    EditionService.ActiveEdition = mod;
+                    ActiveEdition = mod;
                 }
             });
 
@@ -749,6 +866,14 @@ namespace CalculusApp.ViewModels
             SubjectRegistry.SubjectsListChanged += OnSubjectsListChanged;
             EditionService.ActiveEditionChanged += OnActiveEditionChanged;
             EditionService.EditionsListChanged += OnActiveEditionChanged;
+            AiDocumentationService.Instance.ConfigurationChanged += () =>
+            {
+                OnPropertyChanged(nameof(AiEngineStatusText));
+            };
+            SubjectTemplateBankService.TemplateBankUpdated += () =>
+            {
+                Application.Current?.Dispatcher?.Invoke(() => LoadTopicsTree());
+            };
 
             LoadTopicsTree();
             CreateDefaultSampleAssignment();
@@ -777,11 +902,31 @@ namespace CalculusApp.ViewModels
 
         private void OnActiveEditionChanged()
         {
+            if (EditionService.ActiveEdition != null)
+            {
+                if (_activeRibbonTab == "ESTUDIANTE" && !EditionService.IsStudentActive)
+                {
+                    ActiveRibbonTab = EditionService.IsInstituteActive ? "INSTITUTO" : (EditionService.IsTeacherActive ? "PROFESOR" : "MATEMÁTICA AVANZADA");
+                }
+                else if (_activeRibbonTab == "PROFESOR" && !EditionService.IsTeacherActive)
+                {
+                    ActiveRibbonTab = EditionService.IsInstituteActive ? "INSTITUTO" : (EditionService.IsStudentActive ? "ESTUDIANTE" : "MATEMÁTICA AVANZADA");
+                }
+                else if (_activeRibbonTab == "INSTITUTO" && !EditionService.IsInstituteActive)
+                {
+                    ActiveRibbonTab = EditionService.IsTeacherActive ? "PROFESOR" : (EditionService.IsStudentActive ? "ESTUDIANTE" : "MATEMÁTICA AVANZADA");
+                }
+            }
+
             OnPropertyChanged(nameof(ActiveEdition));
             OnPropertyChanged(nameof(ActiveEditionBadge));
             OnPropertyChanged(nameof(StudentTabVisibility));
             OnPropertyChanged(nameof(TeacherTabVisibility));
             OnPropertyChanged(nameof(InstituteTabVisibility));
+            OnPropertyChanged(nameof(TeacherOrInstituteVisibility));
+            OnPropertyChanged(nameof(StudentEditionMenuVisibility));
+            OnPropertyChanged(nameof(TeacherEditionMenuVisibility));
+            OnPropertyChanged(nameof(InstituteEditionMenuVisibility));
             OnPropertyChanged(nameof(WindowTitle));
             OnPropertyChanged(string.Empty);
         }
@@ -833,6 +978,30 @@ namespace CalculusApp.ViewModels
         private void LoadTopicsTree()
         {
             TopicCategories.Clear();
+
+            // 1. Incluir el Banco de Plantillas específico de la Materia actual asociado al Generador Principal
+            var tplCategory = SubjectTemplateBankService.GetDynamicTemplateCategoryForSubject(SubjectRegistry.CurrentSubject);
+            if (tplCategory != null && tplCategory.Topics.Count > 0)
+            {
+                var tplCatItem = new TopicTreeItem
+                {
+                    Title = tplCategory.Name,
+                    CategoryTitle = tplCategory.Name,
+                    IsCategory = true
+                };
+                foreach (var topic in tplCategory.Topics)
+                {
+                    tplCatItem.Children.Add(new TopicTreeItem
+                    {
+                        Title = topic.Title,
+                        TopicId = topic.TopicId,
+                        CategoryTitle = tplCategory.Name,
+                        IsCategory = false
+                    });
+                }
+                TopicCategories.Add(tplCatItem);
+            }
+
             var categories = SubjectRegistry.CurrentSubject.Categories;
             var catsToProcess = _isSortedAlphabetically 
                 ? categories.OrderBy(c => c.Name).ToList() 
@@ -843,6 +1012,7 @@ namespace CalculusApp.ViewModels
                 var catItem = new TopicTreeItem
                 {
                     Title = cat.Name,
+                    CategoryTitle = cat.Name,
                     IsCategory = true
                 };
 
@@ -856,6 +1026,7 @@ namespace CalculusApp.ViewModels
                     {
                         Title = topic.Title,
                         TopicId = topic.TopicId,
+                        CategoryTitle = cat.Name,
                         IsCategory = false
                     });
                 }
@@ -875,7 +1046,15 @@ namespace CalculusApp.ViewModels
             TopicCategories.Clear();
             var term = _searchFilter.Trim().ToLowerInvariant();
 
-            foreach (var cat in SubjectRegistry.CurrentSubject.Categories)
+            var allCategories = new List<SubjectCategory>();
+            var tplCategory = SubjectTemplateBankService.GetDynamicTemplateCategoryForSubject(SubjectRegistry.CurrentSubject);
+            if (tplCategory != null && tplCategory.Topics.Count > 0)
+            {
+                allCategories.Add(tplCategory);
+            }
+            allCategories.AddRange(SubjectRegistry.CurrentSubject.Categories);
+
+            foreach (var cat in allCategories)
             {
                 var matched = cat.Topics.Where(t =>
                     t.Title.ToLowerInvariant().Contains(term) ||
@@ -889,6 +1068,7 @@ namespace CalculusApp.ViewModels
                     var catItem = new TopicTreeItem
                     {
                         Title = cat.Name,
+                        CategoryTitle = cat.Name,
                         IsCategory = true
                     };
                     foreach (var topic in matched)
@@ -897,6 +1077,7 @@ namespace CalculusApp.ViewModels
                         {
                             Title = topic.Title,
                             TopicId = topic.TopicId,
+                            CategoryTitle = cat.Name,
                             IsCategory = false
                         });
                     }
@@ -999,14 +1180,22 @@ namespace CalculusApp.ViewModels
         {
             var ofd = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Calculus Assignment (*.calc)|*.calc|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
-                Title = "Open Calculus Assignment"
+                Filter = "Evaluaciones (*.calc;*.md;*.json)|*.calc;*.md;*.markdown;*.json|Archivos Markdown (*.md;*.markdown)|*.md;*.markdown|Calculus Assignment (*.calc)|*.calc|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                Title = "Abrir Evaluación (.calc / .md / .json)"
             };
 
             if (ofd.ShowDialog() == true)
             {
                 try
                 {
+                    if (ofd.FileName.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
+                        ofd.FileName.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var mdDoc = CalculusApp.Markdown.Services.MarkdownDocumentService.LoadFromFile(ofd.FileName);
+                        ApplyMarkdownToCurrentAssignment(mdDoc.RawContent);
+                        return;
+                    }
+
                     string json = File.ReadAllText(ofd.FileName);
                     var loaded = JsonSerializer.Deserialize<Assignment>(json);
                     if (loaded != null)
@@ -1032,8 +1221,8 @@ namespace CalculusApp.ViewModels
         {
             var sfd = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Calculus Assignment (*.calc)|*.calc|JSON Files (*.json)|*.json",
-                Title = "Save Calculus Assignment",
+                Filter = "Calculus Assignment (*.calc)|*.calc|Archivo Markdown (*.md)|*.md|JSON Files (*.json)|*.json",
+                Title = "Guardar Evaluación (.calc / .md / .json)",
                 FileName = _assignment.Heading.Title + ".calc"
             };
 
@@ -1041,6 +1230,15 @@ namespace CalculusApp.ViewModels
             {
                 try
                 {
+                    if (sfd.FileName.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
+                        sfd.FileName.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string md = AssignmentMarkdownAdapter.Instance.ToMarkdown(_assignment);
+                        CalculusApp.Markdown.Services.MarkdownDocumentService.SaveTextToFile(sfd.FileName, md);
+                        MessageBox.Show($"¡Evaluación guardada en formato Markdown (.md)!\n{sfd.FileName}", "Guardar Markdown", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+
                     string json = JsonSerializer.Serialize(_assignment, new JsonSerializerOptions { WriteIndented = true });
                     File.WriteAllText(sfd.FileName, json);
                     string msg = LocalizationService.CurrentLanguage switch
@@ -1055,6 +1253,154 @@ namespace CalculusApp.ViewModels
                 {
                     MessageBox.Show("Failed to save: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+        }
+
+        public void ApplyMarkdownToCurrentAssignment(string markdownContent)
+        {
+            if (string.IsNullOrWhiteSpace(markdownContent)) return;
+            var updated = AssignmentMarkdownAdapter.Instance.FromMarkdown(markdownContent, _assignment);
+            _assignment = updated;
+            QuestionSets.Clear();
+            foreach (var qs in _assignment.QuestionSets)
+            {
+                QuestionSets.Add(qs);
+            }
+            SelectedQuestionSet = QuestionSets.FirstOrDefault();
+            OnPropertyChanged(nameof(CurrentAssignment));
+            OnPropertyChanged(nameof(WindowTitle));
+            UpdateStatus();
+            RaiseQuestionSetCommandsChanged();
+            RequestRender?.Invoke();
+        }
+
+        public void OpenAssignmentMarkdownStudio()
+        {
+            string initialMd = AssignmentMarkdownAdapter.Instance.ToMarkdown(_assignment);
+            var dlg = new CalculusApp.Markdown.Dialogs.MarkdownEditorWindow(
+                initialMd,
+                title: $"📝 Estudio Markdown de Evaluación — {_assignment.Heading.Title}",
+                subtitle: "Manipule, edite, importe o guarde la evaluación completa en archivo Markdown (.md) con soporte LaTeX",
+                suggestedFileName: $"{_assignment.Heading.Title}.md",
+                applyButtonText: "✅ Aplicar Cambios a la Evaluación")
+            {
+                Owner = Application.Current?.MainWindow
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                ApplyMarkdownToCurrentAssignment(dlg.ResultMarkdown);
+            }
+        }
+
+        public void ExportToMarkdown()
+        {
+            try
+            {
+                string md = AssignmentMarkdownAdapter.Instance.ToMarkdown(_assignment);
+                string? savedPath = CalculusApp.Markdown.Services.MarkdownDocumentService.PromptSaveMarkdownFile(
+                    md,
+                    $"{_assignment.Heading.Title}.md",
+                    "Guardar Evaluación en Formato Markdown (.md)");
+
+                if (!string.IsNullOrWhiteSpace(savedPath))
+                {
+                    MessageBox.Show(
+                        $"¡Evaluación guardada exitosamente en formato Markdown (.md)!\n\nRuta: {savedPath}",
+                        "Guardar Evaluación Markdown (.md)",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al guardar archivo Markdown: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void ImportFromMarkdown()
+        {
+            try
+            {
+                var doc = CalculusApp.Markdown.Services.MarkdownDocumentService.PromptOpenMarkdownFile(
+                    "Abrir / Importar Evaluación desde Archivo Markdown (.md)");
+                if (doc == null) return;
+
+                var result = MessageBox.Show(
+                    $"Archivo Markdown cargado: {doc.FileName}\n\n" +
+                    "• Presione [Sí] para REEMPLAZAR la evaluación actual con el archivo .md.\n" +
+                    "• Presione [No] para AGREGAR sus series a la evaluación actual.\n" +
+                    "• Presione [Cancelar] para abrirlo primero en el Editor Markdown.",
+                    "Importar Evaluación Markdown (.md)",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    ApplyMarkdownToCurrentAssignment(doc.RawContent);
+                }
+                else if (result == MessageBoxResult.No)
+                {
+                    var imported = AssignmentMarkdownAdapter.Instance.FromMarkdown(doc.RawContent, (Assignment?)null);
+                    foreach (var qs in imported.QuestionSets)
+                    {
+                        _assignment.QuestionSets.Add(qs);
+                        QuestionSets.Add(qs);
+                        SelectedQuestionSet = qs;
+                    }
+                    UpdateStatus();
+                    RaiseQuestionSetCommandsChanged();
+                    RequestRender?.Invoke();
+                }
+                else
+                {
+                    var dlg = new CalculusApp.Markdown.Dialogs.MarkdownEditorWindow(
+                        doc.RawContent,
+                        title: $"📝 Estudio Markdown — {doc.FileName}",
+                        suggestedFileName: doc.FileName)
+                    {
+                        Owner = Application.Current?.MainWindow
+                    };
+                    if (dlg.ShowDialog() == true)
+                    {
+                        ApplyMarkdownToCurrentAssignment(dlg.ResultMarkdown);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al abrir archivo Markdown: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void EditSelectedSetInMarkdown()
+        {
+            if (SelectedQuestionSet == null) return;
+
+            string initialMd = AssignmentMarkdownAdapter.Instance.ToMarkdown(SelectedQuestionSet);
+            var dlg = new CalculusApp.Markdown.Dialogs.MarkdownEditorWindow(
+                initialMd,
+                title: $"📝 Editor Markdown — Serie: {SelectedQuestionSet.TopicTitle}",
+                subtitle: "Manipule o guarde esta serie de la evaluación en formato Markdown (.md)",
+                suggestedFileName: $"{SelectedQuestionSet.TopicTitle}.md",
+                applyButtonText: "✅ Aplicar Cambios a la Serie")
+            {
+                Owner = Application.Current?.MainWindow
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var updatedSet = AssignmentMarkdownAdapter.Instance.FromMarkdown(dlg.ResultMarkdown, SelectedQuestionSet);
+                SelectedQuestionSet.TopicTitle = updatedSet.TopicTitle;
+                SelectedQuestionSet.Category = updatedSet.Category;
+                SelectedQuestionSet.Directions = updatedSet.Directions;
+                SelectedQuestionSet.Questions = updatedSet.Questions;
+                SelectedQuestionSet.QuestionCount = updatedSet.Questions.Count;
+                SelectedQuestionSet.DefaultType = updatedSet.DefaultType;
+
+                UpdateStatus();
+                RaiseQuestionSetCommandsChanged();
+                RequestRender?.Invoke();
             }
         }
 
@@ -1221,6 +1567,7 @@ namespace CalculusApp.ViewModels
             (ToggleHideSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (EditQuestionSetCommand as RelayCommand)?.RaiseCanExecuteChanged();
             (EditQuestionsDirectlyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (EditSetMarkdownCommand as RelayCommand)?.RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(QuestionSetsCountText));
         }
 

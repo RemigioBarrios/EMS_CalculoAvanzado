@@ -437,5 +437,262 @@ namespace CalculusApp.Services
                 }
             }
         }
+
+        public static string ExportAssistantMarkdownToPdf(string markdown, string documentTitle, string subtitle, string targetPath)
+        {
+            var doc = new PdfDocument();
+            doc.Info.Title = documentTitle;
+            doc.Info.Author = "Elida Math Studio - Asistente IA";
+            doc.Info.Subject = subtitle;
+
+            double pageWidth = XUnit.FromInch(8.5).Point;   // 612 pt
+            double pageHeight = XUnit.FromInch(11.0).Point; // 792 pt
+            double margin = 45.0;
+            double contentWidth = pageWidth - (margin * 2);
+            double bottomLimit = pageHeight - 50.0;
+
+            PdfPage currentPage = doc.AddPage();
+            currentPage.Width = XUnit.FromPoint(pageWidth);
+            currentPage.Height = XUnit.FromPoint(pageHeight);
+            XGraphics gfx = XGraphics.FromPdfPage(currentPage);
+            int pageNum = 1;
+
+            var fTitle = CreateFont("Times New Roman", 16, XFontStyleEx.Bold);
+            var fSubtitle = CreateFont("Times New Roman", 11, XFontStyleEx.Italic);
+            var fH1 = CreateFont("Times New Roman", 14.5, XFontStyleEx.Bold);
+            var fH2 = CreateFont("Times New Roman", 12.5, XFontStyleEx.Bold);
+            var fH3 = CreateFont("Times New Roman", 11.2, XFontStyleEx.Bold);
+            var fBody = CreateFont("Times New Roman", 10.5, XFontStyleEx.Regular);
+            var fFormulaFallback = CreateFont("Courier New", 10.0, XFontStyleEx.Italic);
+            var fFooter = CreateFont("Times New Roman", 8.5, XFontStyleEx.Regular);
+
+            var bPrimary = new XSolidBrush(XColor.FromArgb(255, 17, 24, 39));
+            var bAccent = new XSolidBrush(XColor.FromArgb(255, 2, 132, 199));
+            var bSubAccent = new XSolidBrush(XColor.FromArgb(255, 14, 116, 144));
+            var bMath = new XSolidBrush(XColor.FromArgb(255, 185, 28, 28));
+            var bMuted = new XSolidBrush(XColor.FromArgb(255, 107, 114, 128));
+
+            void DrawPageFooter(XGraphics g, int pNum)
+            {
+                g.DrawLine(new XPen(XColor.FromArgb(255, 209, 213, 219), 0.7), margin, pageHeight - 36, pageWidth - margin, pageHeight - 36);
+                g.DrawString($"{documentTitle} — Página {pNum}", fFooter, bMuted, new XRect(margin, pageHeight - 28, contentWidth, 16), XStringFormats.TopRight);
+            }
+
+            void EnsureSpace(double neededHeight, ref double y)
+            {
+                if (y + neededHeight > bottomLimit)
+                {
+                    DrawPageFooter(gfx, pageNum);
+                    gfx.Dispose();
+                    currentPage = doc.AddPage();
+                    currentPage.Width = XUnit.FromPoint(pageWidth);
+                    currentPage.Height = XUnit.FromPoint(pageHeight);
+                    gfx = XGraphics.FromPdfPage(currentPage);
+                    pageNum++;
+                    y = margin;
+                }
+            }
+
+            double curY = margin;
+
+            // Header Banner
+            gfx.DrawString(documentTitle, fTitle, bPrimary, new XRect(margin, curY, contentWidth, 22), XStringFormats.TopLeft);
+            curY += 22;
+            if (!string.IsNullOrWhiteSpace(subtitle))
+            {
+                gfx.DrawString(subtitle, fSubtitle, bAccent, new XRect(margin, curY, contentWidth, 16), XStringFormats.TopLeft);
+                curY += 18;
+            }
+            gfx.DrawLine(new XPen(XColor.FromArgb(255, 2, 132, 199), 1.2), margin, curY, pageWidth - margin, curY);
+            curY += 14;
+
+            var lines = (markdown ?? string.Empty).Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            bool inBlockMath = false;
+            var mathLines = new List<string>();
+
+            void DrawBlockFormula(string latex, ref double yPos)
+            {
+                latex = latex.Trim().Trim('$').Trim();
+                if (string.IsNullOrWhiteSpace(latex)) return;
+
+                try
+                {
+                    var fc = new FormulaControl
+                    {
+                        Formula = latex,
+                        Scale = 16.0,
+                        Foreground = new SolidColorBrush(Color.FromRgb(159, 18, 57))
+                    };
+                    fc.Measure(new Size(contentWidth, 220));
+                    fc.Arrange(new Rect(0, 0, fc.DesiredSize.Width, fc.DesiredSize.Height));
+                    fc.UpdateLayout();
+
+                    double wPt = Math.Max(20, fc.ActualWidth * 0.75);
+                    double hPt = Math.Max(14, fc.ActualHeight * 0.75);
+                    EnsureSpace(hPt + 12, ref yPos);
+
+                    double xPos = margin + Math.Max(0, (contentWidth - wPt) / 2.0);
+                    RenderFrameworkElementAsImage(fc, gfx, xPos, yPos + 2, wPt, hPt);
+                    yPos += hPt + 10;
+                    return;
+                }
+                catch
+                {
+                    EnsureSpace(20, ref yPos);
+                    DrawWrappedParagraph(gfx, latex, fFormulaFallback, bMath, margin + 12, ref yPos, contentWidth - 24, bottomLimit, () =>
+                    {
+                        DrawPageFooter(gfx, pageNum);
+                        gfx.Dispose();
+                        currentPage = doc.AddPage();
+                        currentPage.Width = XUnit.FromPoint(pageWidth);
+                        currentPage.Height = XUnit.FromPoint(pageHeight);
+                        gfx = XGraphics.FromPdfPage(currentPage);
+                        pageNum++;
+                        return margin;
+                    });
+                    yPos += 4;
+                }
+            }
+
+            foreach (var rawLine in lines)
+            {
+                string line = rawLine.Trim();
+
+                if (line.StartsWith("$$") && line.EndsWith("$$") && line.Length > 3)
+                {
+                    string fText = line.Substring(2, line.Length - 4).Trim();
+                    DrawBlockFormula(fText, ref curY);
+                    continue;
+                }
+
+                if (line == "$$")
+                {
+                    if (!inBlockMath)
+                    {
+                        inBlockMath = true;
+                        mathLines.Clear();
+                    }
+                    else
+                    {
+                        inBlockMath = false;
+                        DrawBlockFormula(string.Join(" ", mathLines), ref curY);
+                    }
+                    continue;
+                }
+
+                if (inBlockMath)
+                {
+                    mathLines.Add(line);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    curY += 5;
+                    continue;
+                }
+
+                if (line == "---")
+                {
+                    EnsureSpace(14, ref curY);
+                    curY += 4;
+                    gfx.DrawLine(new XPen(XColor.FromArgb(255, 209, 213, 219), 0.8), margin, curY, pageWidth - margin, curY);
+                    curY += 8;
+                    continue;
+                }
+
+                string cleanLine = line.Replace("**", "").Replace("`", "");
+
+                if (line.StartsWith("# "))
+                {
+                    EnsureSpace(26, ref curY);
+                    curY += 6;
+                    DrawWrappedParagraph(gfx, cleanLine.Substring(2), fH1, bPrimary, margin, ref curY, contentWidth, bottomLimit, null);
+                    curY += 4;
+                }
+                else if (line.StartsWith("## "))
+                {
+                    EnsureSpace(22, ref curY);
+                    curY += 5;
+                    DrawWrappedParagraph(gfx, cleanLine.Substring(3), fH2, bAccent, margin, ref curY, contentWidth, bottomLimit, null);
+                    curY += 3;
+                }
+                else if (line.StartsWith("### ") || line.StartsWith("#### "))
+                {
+                    int skip = line.StartsWith("#### ") ? 5 : 4;
+                    EnsureSpace(18, ref curY);
+                    curY += 4;
+                    DrawWrappedParagraph(gfx, cleanLine.Substring(skip), fH3, bSubAccent, margin, ref curY, contentWidth, bottomLimit, null);
+                    curY += 2;
+                }
+                else if (line.StartsWith("- ") || line.StartsWith("* "))
+                {
+                    EnsureSpace(16, ref curY);
+                    string bulletText = "• " + cleanLine.Substring(2);
+                    DrawWrappedParagraph(gfx, bulletText, fBody, bPrimary, margin + 10, ref curY, contentWidth - 10, bottomLimit, null);
+                    curY += 2;
+                }
+                else
+                {
+                    EnsureSpace(16, ref curY);
+                    DrawWrappedParagraph(gfx, cleanLine, fBody, bPrimary, margin, ref curY, contentWidth, bottomLimit, null);
+                    curY += 3;
+                }
+            }
+
+            DrawPageFooter(gfx, pageNum);
+            gfx.Dispose();
+
+            string? dir = System.IO.Path.GetDirectoryName(targetPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            doc.Save(targetPath);
+            return targetPath;
+        }
+
+        private static void DrawWrappedParagraph(
+            XGraphics gfx,
+            string text,
+            XFont font,
+            XBrush brush,
+            double x,
+            ref double y,
+            double maxWidth,
+            double bottomLimit,
+            Func<double>? onNewPage)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            double lineHeight = Math.Max(font.GetHeight(), font.Size * 1.32);
+            var words = text.Split(' ');
+            string currentLine = string.Empty;
+
+            foreach (var word in words)
+            {
+                string test = string.IsNullOrEmpty(currentLine) ? word : $"{currentLine} {word}";
+                if (gfx.MeasureString(test, font).Width > maxWidth && !string.IsNullOrEmpty(currentLine))
+                {
+                    gfx.DrawString(currentLine, font, brush, new XRect(x, y, maxWidth, lineHeight), XStringFormats.TopLeft);
+                    y += lineHeight;
+                    if (y + lineHeight > bottomLimit && onNewPage != null)
+                    {
+                        y = onNewPage();
+                    }
+                    currentLine = word;
+                }
+                else
+                {
+                    currentLine = test;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(currentLine))
+            {
+                gfx.DrawString(currentLine, font, brush, new XRect(x, y, maxWidth, lineHeight), XStringFormats.TopLeft);
+                y += lineHeight;
+            }
+        }
     }
 }
